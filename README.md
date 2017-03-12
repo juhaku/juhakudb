@@ -11,6 +11,8 @@ configure API it gives you levarage for managing databases in Adroid devices.
 
 With JuhakuDb managing SQLite database is fast and simply and it is quick to adapt on using the library. Libarary also provides annotated repositories with basic CRUD functionalities.
 
+> Note this is not yet available on jcenter but it will be in future in order to load it with dependency management application.
+
 ### ORM handling
 Annotation based ORM handling reminds a lot Hibernate. If Hibernate is something you are already familiar with 
 this should not be a too much to take then. There are similar annotations like ManyToOne, ManyToMany, OneToOne, OneToMany,
