@@ -1,0 +1,192 @@
+apply plugin: 'com.android.library'
+apply plugin: 'net.researchgate.release'
+apply plugin: 'maven'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url repositoryURL
+        credentials {
+            username = gradleArtifactoryUser
+            password = gradleArtifactoryPassword
+        }
+    }
+}
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 25
+    }
+    signingConfigs {
+        release {
+            storeFile file("keys/juhakussh.keystore")
+            storePassword keyStoreKey
+            keyPassword keyStoreKey
+        }
+    }
+    buildTypes {
+        debug {
+            debuggable true;
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+//    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:25.2.0'
+}
+
+release {
+    tagTemplate = "${rootProject.name}-$version".replace("-SNAPSHOT", "")
+    git {
+        requireBranch = 'newmaster'
+    }
+}
+
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
+configurations {
+    archives {
+        extendsFrom configurations.default
+    }
+    source {
+        sourceJar
+    }
+}
+
+artifacts {
+    archives sourceJar
+}
+
+uploadArchives {
+//    configuration = configurations.archives
+    repositories.mavenDeployer {
+//        configuration = configurations.deployerJars
+        repository(url: repositoryURL) {
+            authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
+        }
+        pom.project {
+            name rootProject.name
+            groupId 'juhaku-android'
+            artifactId 'juhaku-db'
+            packaging 'aar'
+            version = project.version
+            description 'Database ORM library for Android projects'
+            url repositoryURL
+        }
+    }
+}
+
+task updatePomVersion << {
+    uploadArchives.repositories.mavenDeployer.pom.version = version
+}
+
+task formatReleaseVersion << {
+    formatSinceJavaDocVersion(1)
+}
+
+task formatBuildVersion << {
+    formatSinceJavaDocVersion(0)
+}
+
+task revert(type: Exec) {
+    // linux version
+    commandLine revertCommand
+}
+revert.description = 'Rollback commit on release failure'
+
+task('uploadLocal', type: Upload.class) {
+    repositories.mavenInstaller {
+        configuration = configurations.archives
+        pom.project {
+            name rootProject.name
+            groupId 'juhaku-android'
+            artifactId 'juhaku-db'
+            packaging 'aar'
+            version = project.version
+            description 'Database ORM library for Android projects'
+            url repositoryURL
+        }
+    }
+}
+uploadLocal.dependsOn build
+uploadLocal.description = 'Uploads archives to local maven repository'
+
+preBuild.dependsOn formatBuildVersion
+checkSnapshotDependencies.dependsOn formatReleaseVersion
+
+createReleaseTag.dependsOn uploadArchives
+preTagCommit.dependsOn updatePomVersion
+
+def released = false
+gradle.taskGraph.beforeTask { Task task ->
+    if (task.getName().equals('release') && !released) {
+        released = true
+        project.ext['rollbackVersion'] = project.version
+    }
+}
+
+gradle.taskGraph.afterTask { Task task, TaskState state ->
+    if (state.failure && released) {
+        revert();
+    }
+}
+
+void restoreRollbackVersion() {
+    if (project.ext.has('rollbackVersion')) {
+        version = project.ext['rollbackVersion']
+        ant.propertyfile(file: 'gradle.properties') {
+            entry(key: 'version', value: project.ext['rollbackVersion'])
+        }
+    }
+}
+
+void revert() {
+    restoreRollbackVersion()
+    formatSinceJavaDocVersion(2)
+    revert.execute()
+}
+
+void formatSinceJavaDocVersion(int state) {
+    String source = android.sourceSets.main.java.srcDirs.collect {it}.toList().get(0)
+    FileTree tree = fileTree(new File(source)) {
+        include {
+            '**/*.java'
+        }
+    }
+    tree.each {File file ->
+        String content = file.text
+        String newContent
+        if (state == 1) { // release
+            newContent = content.replaceAll("@since \\d+\\.\\d+\\.\\d+-SNAPSHOT", "@since " + project.version)
+        } else if (state == 2) { // rollback
+            String rollback = project.version as String
+            rollback = rollback.replace("-SNAPSHOT", "")
+            newContent = content.replaceAll("@since $rollback(?!-SNAPSHOT)", "@since $project.version")
+        } else { // default build
+            newContent = content.replaceAll("@since((?! )|(?! \\d+\\.\\d+\\.\\d+(-SNAPSHOT)?))", "@since $project.version")
+//            newContent = content.replaceAll("\\{version\\}", project.version)
+        }
+        if (!content.equals(newContent)) {
+            file.write(newContent)
+        }
+    }
+}

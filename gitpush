@@ -1,0 +1,1 @@
+git add . && git commit -m 'auto revert commit for rollbacking release changes from memory' && git push
