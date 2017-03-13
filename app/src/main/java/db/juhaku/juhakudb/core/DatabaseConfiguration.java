@@ -18,6 +18,7 @@ public class DatabaseConfiguration {
     private int rollbackHistorySize;
     private SchemaCreationMode mode;
     private String[] repositoryLocations;
+    private boolean enableAutoInject;
 
     /**
      * @return String value of database name
@@ -148,6 +149,29 @@ public class DatabaseConfiguration {
     }
 
     /**
+     * Check is annotation based inject repositories enabled or not.
+     * @return true if auto inject repositories is enabled; false otherwise.
+     * @since 1.0.8-SNAPSHOT
+     */
+    public boolean isEnableAutoInject() {
+        return enableAutoInject;
+    }
+
+    /**
+     * Set annotation based inject repositories enabled. Automatic annotation based repository injection
+     * will only become effective on objects that calls
+     * {@link db.juhaku.juhakudb.core.android.DatabaseManager#lookupRepositories(Object)}
+     * method somewhere in application execution context before the repositories is being used.
+     *
+     * @param enableAutoInject boolean value to define whether annotation based repository injection
+     *                         is enabled.
+     * @since 1.0.8-SNAPSHOT
+     */
+    public void setEnableAutoInject(boolean enableAutoInject) {
+        this.enableAutoInject = enableAutoInject;
+    }
+
+    /**
      * @return new instance of {@link db.juhaku.juhakudb.core.DatabaseConfiguration.Builder} to
      * build configuration.
      */
@@ -241,6 +265,16 @@ public class DatabaseConfiguration {
          */
         public Builder setRepositoryLocations(String... repositoryLocations) {
             databaseConfiguration.setRepositoryLocations(repositoryLocations);
+            return this;
+        }
+
+        /**
+         * {@link DatabaseConfiguration#setEnableAutoInject(boolean)}
+         *
+         * @since 1.0.8-SNAPSHOT
+         */
+        public Builder setEnableAutoInject(boolean enableAutoInject) {
+            databaseConfiguration.setEnableAutoInject(enableAutoInject);
             return this;
         }
     }

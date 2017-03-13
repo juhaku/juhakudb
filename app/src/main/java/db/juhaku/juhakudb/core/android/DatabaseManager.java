@@ -40,11 +40,11 @@ import db.juhaku.juhakudb.exception.SchemaInitializationException;
  */
 public class DatabaseManager {
 
-
     private DatabaseConfiguration configuration;
     private DatabaseHelper databaseHelper;
     private Object[] repositories = new Object[0];
     private EntityManager em;
+    private RepositoryLookupInjector injector;
 
     /**
      * Initialize new DatabaseManager with current context and database configuration adapter.
@@ -74,6 +74,10 @@ public class DatabaseManager {
                     configuration.getRepositoryLocations().length);
             locations[locations.length - 1] = context.getApplicationInfo().packageName;
             initializeRepositories(resolveClasses(context, new RepositoryCriteria(locations)));
+        }
+
+        if (configuration.isEnableAutoInject()) {
+            injector = new RepositoryLookupInjector(this);
         }
     }
 
@@ -169,5 +173,40 @@ public class DatabaseManager {
         }
 
         return null;
+    }
+
+    /**
+     * Call this method to inject automatically repositories to given object. Automatic annotation
+     * based repository injection will be used if it is enabled by the {@link DatabaseConfiguration}.
+     *
+     * <p>See {@link RepositoryLookupInjector#lookupRepositories(Object)} for additional details of
+     * annotation based repository injection.</p>
+     *
+     * <p>Calling this method can be done from any object that has access to database manager but
+     * for sake of design it is only encouraged to do so from super Activities and super Fragments.
+     * For most cases calling this method is not necessary in other application classes.</p>
+     *
+     * <p>Since Android does not provide access to instantiated objects neither do we. You are free
+     * to write your own running objects mapping system and call this method from there if needed.</p>
+     *
+     * <p>This method is provided to give you leverage to execute repository lookup on creation
+     * of objects in "Android way" and that's how we think it should be. In example this could be
+     * something like following code executed in super activity.</p>
+     * <code>
+     *     public void onCreate(Bundle bundle) &#123;<br/>
+     *     &#9;&#9;super.onCreate(bundle);<br>
+     *     &#9;&#9;getDatabaseManager().lookupRepositories(this);<br>
+     *     &#125;
+     * </code>
+     *
+     * @param object Object to look for repositories to inject. e.g. your extended Activity.
+     *
+     * @since 1.0.8-SNAPSHOT
+     */
+    public void lookupRepositories(Object object) {
+        // safety check
+        if (configuration.isEnableAutoInject()) {
+            injector.lookupRepositories(object);
+        }
     }
 }
