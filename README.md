@@ -1,4 +1,4 @@
-# JuhakuDB current release: 1.0.7
+# JuhakuDB current release: 1.1.0
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 ## Introduction
@@ -62,6 +62,7 @@ Currently available annotation.
 |OneToOne| Defines one to one relation|
 |Repository| Marks interface as repository|
 |Transient| Marks class attribute as transient which will not be saved to database|
+|Inject| Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation|
 
 All store operations are cascading and storing will return stored item with populated database id.
 Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item.
@@ -159,6 +160,59 @@ Following snippet will allow you to retrieve instance of automatically initializ
 ```java
 repository = dbManager.getRepository(BookRepository.class);
 ```
+Alternatively you can use annotation based repository injection in your classes.
+```java
+dbManager = new DatabaseManager(this, new DatabaseConfigurationAdapter() {
+    @Override
+    public void configure(DatabaseConfiguration configuration) {
+        configuration.getBuilder()
+                .setName("testdb.db")
+                .setEnableAutoInject(true); // this will enable annotation based repository injection 
+
+                // .... add more configurations
+    }
+});
+
+// .... later in code
+getDbManager().lookupRepositories(this); // this will initiate repository lookup injection.
+
+// .... later in code
+@Inject
+private PersonRepository personRepository;
+```
+Above mentioned snipped is an example of process using Inject annotation with automatic repository lookup injection.
+
+The quick quide of annotation based repository injection comes as follows. 
+
+1. There should be only one database manager in super level of your Android application.
+2. Call lookupRepositories(this) in Activity or Fragment or inside ohter object that repositories is wished to be injected and is accessible to DatabaseManager. This method call should appear in super level of your component hierarcy.
+3. Use Inject annotation in any child or parent component where lookupRepositories(this) is already called.
+
+Following is quoted from java doc of lookupRepositories(object) method.
+
+> Call this method to inject automatically repositories to given object. Automatic annotation
+> based repository injection will be used if it is enabled by the DatabaseConfiguration.
+> 
+> See RepositoryLookupInjector#lookupRepositories(Object) for additional details of
+> annotation based repository injection.
+> 
+> Calling this method can be done from any object that has access to database manager but
+> for sake of design it is only encouraged to do so from super Activities and super Fragments.
+> For most cases calling this method is not necessary in other application classes.
+> 
+> Since Android does not provide access to instantiated objects neither do we. You are free
+> to write your own running objects mapping system and call this method from there if needed.
+> 
+> This method is provided to give you leverage to execute repository lookup on creation
+> of objects in "Android way" and that's how we think it should be. In example this could be
+> something like following code executed in super activity.
+> ```java
+> public void onCreate(Bundle bundle) {
+>    super.onCreate(bundle);
+>    getDatabaseManager().lookupRepositories(this);
+> }
+```
+
 ### Filter criteria API
 Following example is implemenation of simple person repository. This should give you an example of how you could work with 
 filter criterias. 
