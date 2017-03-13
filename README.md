@@ -182,7 +182,7 @@ private PersonRepository personRepository;
 ```
 Above mentioned snipped is an example of process using Inject annotation with automatic repository lookup injection.
 
-The quick quide of annotation based repository injection comes as follows. 
+##### The quick quide of annotation based repository injection comes as follows. 
 
 1. There should be only one database manager in super level of your Android application.
 2. Call lookupRepositories(this) in Activity or Fragment or inside ohter object that repositories is wished to be injected and is accessible to DatabaseManager. This method call should appear in super level of your component hierarcy.
