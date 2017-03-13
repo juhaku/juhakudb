@@ -58,7 +58,7 @@ dependencies {
 release {
     tagTemplate = "${rootProject.name}-$version".replace("-SNAPSHOT", "")
     git {
-        requireBranch = 'newmaster'
+        requireBranch = 'master'
     }
 }
 
