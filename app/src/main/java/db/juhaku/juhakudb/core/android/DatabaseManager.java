@@ -201,7 +201,7 @@ public class DatabaseManager {
      *
      * @param object Object to look for repositories to inject. e.g. your extended Activity.
      *
-     * @since 1.0.8-SNAPSHOT
+     * @since 1.1.0
      */
     public void lookupRepositories(Object object) {
         // safety check

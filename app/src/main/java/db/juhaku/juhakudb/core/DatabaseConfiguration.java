@@ -151,7 +151,7 @@ public class DatabaseConfiguration {
     /**
      * Check is annotation based inject repositories enabled or not.
      * @return true if auto inject repositories is enabled; false otherwise.
-     * @since 1.0.8-SNAPSHOT
+     * @since 1.1.0
      */
     public boolean isEnableAutoInject() {
         return enableAutoInject;
@@ -165,7 +165,7 @@ public class DatabaseConfiguration {
      *
      * @param enableAutoInject boolean value to define whether annotation based repository injection
      *                         is enabled.
-     * @since 1.0.8-SNAPSHOT
+     * @since 1.1.0
      */
     public void setEnableAutoInject(boolean enableAutoInject) {
         this.enableAutoInject = enableAutoInject;
@@ -271,7 +271,7 @@ public class DatabaseConfiguration {
         /**
          * {@link DatabaseConfiguration#setEnableAutoInject(boolean)}
          *
-         * @since 1.0.8-SNAPSHOT
+         * @since 1.1.0
          */
         public Builder setEnableAutoInject(boolean enableAutoInject) {
             databaseConfiguration.setEnableAutoInject(enableAutoInject);

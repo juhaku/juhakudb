@@ -16,7 +16,7 @@ import db.juhaku.juhakudb.util.ReflectionUtils;
  *
  * @author juha
  *
- * @since 1.0.8-SNAPSHOT
+ * @since 1.1.0
  */
 public class RepositoryLookupInjector {
 
