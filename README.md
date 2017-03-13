@@ -137,10 +137,10 @@ public interface BookRepository {
 ```
 To implement the repository you could write something like this:
 ```java
-public class BookRepositoryImpl extends SimpleRepository<Long, Book> implements DemoRepository {
+public class BookRepositoryImpl extends SimpleRepository<Long, Book> implements BookRepository {
 
-    public DemoRepositoryImpl(DatabaseHelper helper) {
-        super(helper);
+    public BookRepositoryImpl(EntityManager em) {
+        super(em);
     }
     
     @Override
@@ -148,7 +148,7 @@ public class BookRepositoryImpl extends SimpleRepository<Long, Book> implements 
         return store(book);
     }
     
-    @Override<br/>
+    @Override
     public List<Book> findBooks(Filters filters) {
         return find(filters);
     }
