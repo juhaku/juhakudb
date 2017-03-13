@@ -42,6 +42,9 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
@@ -49,6 +52,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
+    compile 'javax.annotation:javax.annotation-api:1.3'
 }
 
 release {
