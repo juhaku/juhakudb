@@ -175,7 +175,7 @@ public class QueryCreator {
             if (!token.equals(Predicate.PARAM_EQUALS.trim()) && !token.equals(Predicate.PARAM_NOT_EQUAL.trim())
                     && !token.equals(Predicate.PARAM_PLACE_HOLDER) && !ReservedWords.has(token)) {
 
-                // if table name is provided and token does not contain alias separator "." add default alias
+                // if table name is provided and token really is column name in database
                 if (!token.contains(".") && !token.startsWith("(") && !token.startsWith(Predicate.PARAM_PLACE_HOLDER) && tableName != null) {
                     formattedBuilder.append(defaultAlias(tableName).concat(".").concat(token));
                 } else {
