@@ -28,7 +28,7 @@ Filter based criteria API is fairly similar to Spring DATA's representation of c
 * Database manager
 * Annotations
 * Repositories
-* Filter criterias
+* Filter criteria API
 
 ### Database manager
 With following snippet you can create database manager. This is the core of the JuhakuDb which provides you configuration possibilities for database. Initializing of this class will automatically create your database by the given configurations.
@@ -211,16 +211,18 @@ Following is quoted from java doc of lookupRepositories(object) method.
 >    super.onCreate(bundle);
 >    getDatabaseManager().lookupRepositories(this);
 > }
-```
+> ```
 
 ### Filter criteria API
-##### Heads up
+
+#### Heads up
+
 With predicates by prefixing column with "this" or not prefixing it all is equal and will both be mapped to
 default alias for the root table.
 ```java
 predicates.add(Predicate.in("this.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("name", "kim")));
 ```
-So if table used is persons this could be written like:
+So if used table is persons this could be written like:
 ```java
 predicates.add(Predicate.in("p.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("p.name", "kim")));
 ```
