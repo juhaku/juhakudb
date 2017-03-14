@@ -1,6 +1,7 @@
 package db.juhaku.juhakudb.filter;
 
 import java.util.List;
+import java.util.StringTokenizer;
 
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.schema.Schema;
@@ -9,6 +10,7 @@ import db.juhaku.juhakudb.exception.QueryBuildException;
 import db.juhaku.juhakudb.filter.Predicate.Conjunction;
 import db.juhaku.juhakudb.filter.Predicate.Disjunction;
 import db.juhaku.juhakudb.filter.Predicate.Junction;
+import db.juhaku.juhakudb.util.ReservedWords;
 import db.juhaku.juhakudb.util.StringUtils;
 
 /**
@@ -39,7 +41,7 @@ public class QueryCreator {
         StringBuilder sql = new StringBuilder(generateSelect(currentTableName));
         createAssociations(filter, sql, root, predicates);
         String[] args = new String[0];
-        args = createWhere(args, sql, predicates);
+        args = createWhere(args, sql, predicates, currentTableName);
         String order = predicates.getSort();
         String page = predicates.getPage();
         if (!StringUtils.isBlank(order)) {
@@ -65,12 +67,12 @@ public class QueryCreator {
         }
     }
 
-    private String[] createWhere(String[] args, StringBuilder sql, Predicates predicates) {
+    private String[] createWhere(String[] args, StringBuilder sql, Predicates predicates, String tableName) {
         for (Predicate child : predicates.getPredicates()) {
             if (child instanceof Junction) {
                 sql.append("(");
                 for (Predicate junction : ((Junction) child).getPredicates()) {
-                    sql.append(junction.getClause());
+                    sql.append(formatClause(junction.getClause(), tableName));
                     if (child instanceof Disjunction
                             && !isLast(junction, ((Junction) child).getPredicates())) {
                         sql.append(" OR ");
@@ -85,7 +87,7 @@ public class QueryCreator {
                     sql.append(" AND ");
                 }
             } else {
-                sql.append(child.getClause());
+                sql.append(formatClause(child.getClause(), tableName));
                 if (!isLast(child, predicates.getPredicates())) {
                     sql.append(" AND ");
                 }
@@ -102,7 +104,7 @@ public class QueryCreator {
         filter.filter(root, predicates);
         String[] args = new String[0];
         StringBuilder sql = new StringBuilder();
-        args = createWhere(args, sql, predicates);
+        args = createWhere(args, sql, predicates, null);
 
         return new Query(sql.toString(), args);
     }
@@ -113,7 +115,7 @@ public class QueryCreator {
 
     private String generateSelect(String tableName) {
         Schema table = schema.getElement(tableName);
-        String alias = String.valueOf(tableName.charAt(0));
+        String alias = defaultAlias(tableName);
         StringBuilder select = new StringBuilder("SELECT ");
         int loop = 0;
         for (String column : table.getElements().keySet()) {
@@ -134,5 +136,72 @@ public class QueryCreator {
         System.arraycopy(args, 0, newArray, array.length, args.length);
 
         return newArray;
+    }
+
+    /**
+     * Formats WHERE clause without WHERE text appended to follow rules of database.
+     *
+     * <ul>
+     *     <li>Formats clause's "this" prefixes as default alias used for the table if table name is provided.</li>
+     *     <li>Formats empty prefixed columns with default alias used for the table if table name is provided.</li>
+     *     <li>Formats .id fields as ._id since Android primary key field is prefixed with "_" underscore.</li>
+     * </ul>
+     *
+     * @param clause String sql clause to format aliases.
+     * @param tableName String value of table name to take alias from. Can be null if no formatting is required.
+     * @return String value of clause formatted if table name was provided otherwise returns the original
+     * clause.
+     * @hide
+     *
+     * @since 1.1.2-SNAPSHOT
+     */
+    private String formatClause(String clause, String tableName) {
+        String formatted = clause;
+
+        // format "this" prefixes to use default alias
+        if (tableName != null) {
+            formatted = clause.replace("this", defaultAlias(tableName));
+        }
+
+        // format .id fields to match correct primary key by adding "_" underscore in front.
+        formatted = formatted.replace(".id", "._id");
+
+        StringTokenizer tokens = new StringTokenizer(formatted, " ");
+        StringBuilder formattedBuilder = new StringBuilder();
+        while (tokens.hasMoreElements()) {
+            String token = tokens.nextToken();
+
+            // check that token is not a reserved word nor symbol
+            if (!token.equals(Predicate.PARAM_EQUALS.trim()) && !token.equals(Predicate.PARAM_NOT_EQUAL.trim())
+                    && !token.equals(Predicate.PARAM_PLACE_HOLDER) && !ReservedWords.has(token)) {
+
+                // if table name is provided and token does not contain alias separator "." add default alias
+                if (!token.contains(".") && !token.startsWith("(") && !token.startsWith(Predicate.PARAM_PLACE_HOLDER) && tableName != null) {
+                    formattedBuilder.append(defaultAlias(tableName).concat(".").concat(token));
+                } else {
+                    formattedBuilder.append(token); // otherwise add token.
+                }
+            } else {
+                formattedBuilder.append(token); // just add token as it does not contain relative information
+            }
+
+            // lastly add " " space to text.
+            if (tokens.hasMoreElements()) {
+                formattedBuilder.append(" ");
+            }
+        }
+
+        return formattedBuilder.toString();
+    }
+
+    /**
+     * Generate default alias for table by taking first character of table.
+     * @param tableName String value of table name.
+     * @return String default alias.
+     * @hide
+     * @since 1.1.2-SNAPSHOT
+     */
+    private String defaultAlias(String tableName) {
+        return String.valueOf(tableName.charAt(0));
     }
 }

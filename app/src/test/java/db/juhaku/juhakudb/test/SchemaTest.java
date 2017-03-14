@@ -66,7 +66,7 @@ public class SchemaTest {
             public void filter(Root<Person> root, Predicates predicates) {
                 root.join("rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN).join("groups", "g", JoinMode.INNER_JOIN);
 
-                predicates.add(Predicate.in("p.name", "matti", "kimmo")).add(Predicate.not(Predicate.eq("p.name", "lauri")));
+                predicates.add(Predicate.in("this.name", "matti", "kimmo")).add(Predicate.not(Predicate.eq("name", "lauri")));
 
 //                predicate.in("p.name", "matti", "kimmo").not(predicate.eq("p.name", "lauri"));
 

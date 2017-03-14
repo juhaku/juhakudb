@@ -22,9 +22,9 @@ public class Predicate {
 
     private Object[] args;
 
-    private static final String PARAM_PLACE_HOLDER = "?";
-    private static final String PARAM_EQUALS = " = ";
-    private static final String PARAM_NOT_EQUAL = " != ";
+    static final String PARAM_PLACE_HOLDER = "?";
+    static final String PARAM_EQUALS = " = ";
+    static final String PARAM_NOT_EQUAL = " != ";
 
     public Predicate() {
 //        this.predicates = new ArrayList<>();
