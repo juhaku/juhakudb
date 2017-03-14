@@ -21,7 +21,7 @@ Entiy, Id, Column etc. and they work in similar way to Hibernite.
 Annotated classes will be mapped accordingly and database tables will be automatically created with relations by the 
 annotations.
 
-### Filter based criteria api
+### Filter based criteria API
 Filter based criteria API is fairly similar to Spring DATA's representation of criteria API but in comparizon this is a lot simplier and easier to use. It provides easy way to create joint queries from multiple tables with easy to use filter chain syntax. This syntax allows you to create complex queries wihtout writing single line of sql.
 
 ## Usage
@@ -53,16 +53,16 @@ Currently available annotation.
 
 |Annotation| Description|
 |------------------------------| --- |
-|Column| Define column name for class attribute, can only be added to non-relation attribute|
-|Entity| Define table name for class|
-|Id| Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently|
-|ManyToMany| Defines many to many relation|
-|ManyToOne| Defines many to one relation|
-|OneToMany| Defines one to many relation|
-|OneToOne| Defines one to one relation|
-|Repository| Marks interface as repository|
-|Transient| Marks class attribute as transient which will not be saved to database|
-|Inject| Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation|
+|Column| Define column name for class attribute, can only be added to non-relation attribute.|
+|Entity| Define table name for class.|
+|Id| Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
+|ManyToMany| Defines many to many relation.|
+|ManyToOne| Defines many to one relation.|
+|OneToMany| Defines one to many relation.|
+|OneToOne| Defines one to one relation.|
+|Repository| Marks interface as repository.|
+|Transient| Marks class attribute as transient which will not be saved to database.|
+|Inject| Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation.|
 
 All store operations are cascading and storing will return stored item with populated database id.
 Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item.
@@ -214,6 +214,23 @@ Following is quoted from java doc of lookupRepositories(object) method.
 ```
 
 ### Filter criteria API
+##### Heads up
+With predicates by prefixing column with "this" or not prefixing it all is equal and will both be mapped to
+default alias for the root table.
+```java
+predicates.add(Predicate.in("this.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("name", "kim")));
+```
+So if table used is persons this could be written like:
+```java
+predicates.add(Predicate.in("p.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("p.name", "kim")));
+```
+
+In predicate using .id or ._id as colum name is mapped as to be equal and both will refer to primary key column. In Adroid primary key column is mapped to "_id" column thus made this convention for nicer code.
+```java
+predicates.add(Predicate.eq("this.id", "1"));
+predicates.add(Predicate.eq("this._id", "1"));
+```
+
 Following example is implemenation of simple person repository. This should give you an example of how you could work with 
 filter criterias. 
 ```java
