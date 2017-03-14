@@ -153,7 +153,7 @@ public class QueryCreator {
      * clause.
      * @hide
      *
-     * @since 1.1.2-SNAPSHOT
+     * @since 1.1.2
      */
     private String formatClause(String clause, String tableName) {
         String formatted = clause;
@@ -199,7 +199,7 @@ public class QueryCreator {
      * @param tableName String value of table name.
      * @return String default alias.
      * @hide
-     * @since 1.1.2-SNAPSHOT
+     * @since 1.1.2
      */
     private String defaultAlias(String tableName) {
         return String.valueOf(tableName.charAt(0));

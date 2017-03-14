@@ -5,7 +5,7 @@ package db.juhaku.juhakudb.util;
  * <p>Utility enum for mapping reserved words for SQL queries and ORM mapping.</p>
  *
  * @author juha
- * @since 1.1.2-SNAPSHOT
+ * @since 1.1.2
  */
 public enum ReservedWords {
 
@@ -16,7 +16,7 @@ public enum ReservedWords {
      * Check if given word belongs to reserved words. Word match is searched case insensitive.
      * @param word String value of word to look for.
      * @return true if reserved words has given word; false otherwise.
-     * @since 1.1.2-SNAPSHOT
+     * @since 1.1.2
      */
     public static boolean has(String word) {
         for (ReservedWords reservedWord : ReservedWords.values()) {
