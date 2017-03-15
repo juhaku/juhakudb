@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import db.juhaku.juhakudb.repository.android.SimpleRepository;
+import db.juhaku.juhakudb.repository.android.SimpleAndroidRepository;
 
 /**
  * Created by juha on 15/04/16.
@@ -19,5 +19,5 @@ import db.juhaku.juhakudb.repository.android.SimpleRepository;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Repository {
-    Class<? extends SimpleRepository> value();
+    Class<? extends SimpleAndroidRepository> value();
 }

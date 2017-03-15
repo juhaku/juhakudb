@@ -34,51 +34,11 @@ public class EntityConverter {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-    /**
-     * Converts {@link Cursor} to entity with given class. This is used when single item or item
-     * in list of multiple items is converted to entity. However this should not be used if
-     * custom query is being executed against database.
-     * <p>To convert custom queries use {@link ResultTransformer}.</p>
-     *
-     * @param cursor {@link Cursor} returned from database call.
-     * @param clazz Class of entity to convert cursor to.
-     * @param moved boolean value whether cursor is moved to first line.
-     * @return instance entity having given class.
-     *
-     * @throws ConversionException if any exception occurs on conversion.
-     *
-     * @since 1.0.2
-     */
-    public <T> T cursorToEntity(Cursor cursor, Class<?> clazz, boolean moved) throws ConversionException {
-        if (!moved) { // move cursor to correct position, if not moved
-            cursor.moveToFirst();
-        }
-        Object entity = instantiate(clazz);
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            // ignore join columns
-            if (field.isAnnotationPresent(ManyToMany.class) || field.isAnnotationPresent(ManyToOne.class)
-                    || field.isAnnotationPresent(OneToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
-                continue;
-            }
-
-            try {
-                String columnName = NameResolver.resolveName(field);
-                Field entityField = entity.getClass().getDeclaredField(field.getName());
-                entityField.setAccessible(true);
-                Object retVal = getColumnValue(cursor, columnName, field.getType());
-                if (retVal != null) {
-                    entityField.set(entity, retVal);
-                }
-            } catch (Exception e) {
-                throw new ConversionException("Failed to convert entity", e);
-            }
-        }
-        return (T) entity;
-    }
-
     public List<ResultSet> cursorToResultSetList(Cursor cursor, Class<?> rootClass, boolean custom) throws ConversionException {
         List<ResultSet> retVal = new ArrayList<>();
+//        for (String col : cursor.getColumnNames()) { //TODO debug log, remove this
+//            Log.d(getClass().getName(), "column:" + col);
+//        }
         while (cursor.moveToNext()) {
             if (custom) {
                 retVal.add(cursorToCustomResultSet(cursor));
@@ -121,14 +81,6 @@ public class EntityConverter {
         }
 
         return resultSet;
-    }
-
-    private <T> T instantiate(Class<?> clazz) throws ConversionException {
-        try {
-            return (T) clazz.newInstance();
-        } catch (Exception e) {
-            throw new ConversionException("Failed to convert to entity: " + clazz.getName());
-        }
     }
 
     /*
@@ -208,30 +160,6 @@ public class EntityConverter {
     }
 
     /**
-     * Converts {@link Cursor} to entity list. This used when list of items is returned from database and
-     * wished to convert as list of entities with given class. However this not recommended to
-     * convert custom queries.
-     * <p>To convert custom queries use {@link ResultTransformer}.</p>
-     *
-     * @param cursor {@link Cursor} returned from database.
-     * @param clazz Class of entity to convert cursor to.
-     * @return List of entities with given class.
-     *
-     * @throws ConversionException if any exception occurs during conversion.
-     *
-     * @since 1.0.2
-     */
-    public <T> List<T> cursorToEntityList(Cursor cursor, Class<?> clazz) throws ConversionException {
-        List<T> entityList = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            T entity = cursorToEntity(cursor, clazz, true);
-            entityList.add(entity);
-        }
-
-        return entityList;
-    }
-
-    /**
      * Converts entity to content values. {@link ContentValues} is used when entity is stored to
      * database. And in the content values is put column name and and value which will be stored.
      *
@@ -306,18 +234,14 @@ public class EntityConverter {
      * @hide
      */
     private Object getIdFieldValue(Object object, Field item) {
-//        try {
-            Object val = ReflectionUtils.getFieldValue(object, item);
-            if (val != null) {
-                Field idField = ReflectionUtils.findIdField(val.getClass());
+        Object val = ReflectionUtils.getFieldValue(object, item);
+        if (val != null) {
+            Field idField = ReflectionUtils.findIdField(val.getClass());
 
-                return ReflectionUtils.getFieldValue(val, idField);
-            } else {
-                return null;
-            }
-//        } catch (NameResolveException e) {
-//            throw new ConversionException("Failed to query id field value for entity: " + item.getClass());
-//        }
+            return ReflectionUtils.getFieldValue(val, idField);
+        } else {
+            return null;
+        }
     }
 
     /**

@@ -100,6 +100,10 @@ public class AssociationProcessor {
             associationField = ReflectionUtils.findField(associateEntity, association);
         }
 
+        if (associationField == null) {
+            throw new QueryBuildException("association field cannot be determined by name: " + child.getAssociation() + " from parent: " + rootClazz.getName());
+        }
+
         String rootTable;
         String associateTable;
         try {
