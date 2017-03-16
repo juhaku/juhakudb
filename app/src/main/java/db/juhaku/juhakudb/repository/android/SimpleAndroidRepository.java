@@ -18,7 +18,7 @@ import db.juhaku.juhakudb.util.ReflectionUtils;
 import db.juhaku.juhakudb.util.TypedClass;
 
 /**
- * Created by juha on 13/04/16.
+ * Created by juha on 15/03/17.
  *<p>Super repository class for all repositories in Android devices. This repository provides
  * simple access to database to perform queries.</p>
  * <p>There is no need to initialize repositories manually as they are initialized by
@@ -58,7 +58,7 @@ import db.juhaku.juhakudb.util.TypedClass;
  * @see db.juhaku.juhakudb.core.android.DatabaseManager
  * @see db.juhaku.juhakudb.annotation.Repository
  *
- * @since 1.0.2
+ * @since 1.1.3-SNAPSHOT
  */
 public abstract class SimpleAndroidRepository<K, T> {
 

@@ -18,6 +18,7 @@ import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.SchemaInitializationException;
 import db.juhaku.juhakudb.util.ReflectionUtils;
+import db.juhaku.juhakudb.util.ReservedWords;
 import db.juhaku.juhakudb.util.StringUtils;
 
 /**
@@ -61,6 +62,10 @@ public class SchemaFactory {
             Log.e(getClass().getName(), "Failed to create schema", e);
             throw new SchemaInitializationException("Schema initialization failed", e);
         }
+
+        // check table name before it is created.
+        checkReservedWords(tableName);
+
         Schema dbTable;
         if (schema.getElement(tableName) == null) {
             dbTable = new Schema();
@@ -134,6 +139,10 @@ public class SchemaFactory {
             Log.e(getClass().getName(), "Schema initialization failed", e);
             throw new SchemaInitializationException("Schema initialization failed", e);
         }
+
+        // check column name before it is created.
+        checkReservedWords(columnName);
+
         dbColumn.setName(columnName);
         dbColumn.setType(resolveType(column));
         if (column.isAnnotationPresent(Id.class)) {
@@ -243,6 +252,25 @@ public class SchemaFactory {
         }
 
         return "TEXT";
+    }
+
+    /**
+     * Check reserved words from name of table or column before it is created. Checking will be executed against
+     * reserved words and if name is not included in reserved words no exception will be thrown.
+     *
+     * @param name String value of name to be checked against reserved words.
+     * @throws SchemaInitializationException if name is found from reserved words the schema creation
+     * cannot be proceed.
+     *
+     * @since
+     *
+     * @hide
+     */
+    private static void checkReservedWords(String name) throws SchemaInitializationException {
+        if (ReservedWords.has(name)) {
+            throw new SchemaInitializationException("Found illegal word from table name or column name. " +
+                    " Given value: " + name);
+        }
     }
 
 }
