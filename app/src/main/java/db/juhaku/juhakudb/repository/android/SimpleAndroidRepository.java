@@ -58,7 +58,7 @@ import db.juhaku.juhakudb.util.TypedClass;
  * @see db.juhaku.juhakudb.core.android.DatabaseManager
  * @see db.juhaku.juhakudb.annotation.Repository
  *
- * @since 1.1.3-SNAPSHOT
+ * @since 1.1.3
  */
 public abstract class SimpleAndroidRepository<K, T> {
 

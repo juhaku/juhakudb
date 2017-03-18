@@ -262,7 +262,7 @@ public class SchemaFactory {
      * @throws SchemaInitializationException if name is found from reserved words the schema creation
      * cannot be proceed.
      *
-     * @since
+     * @since 1.1.3
      *
      * @hide
      */
