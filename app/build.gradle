@@ -69,6 +69,7 @@ task sourceJar(type: Jar) {
 
 task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
+    failOnError false
     destinationDir = file('../javadoc')
 }
 

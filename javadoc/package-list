@@ -1,0 +1,9 @@
+db.juhaku.juhakudb.annotation
+db.juhaku.juhakudb.core
+db.juhaku.juhakudb.core.android
+db.juhaku.juhakudb.core.android.transaction
+db.juhaku.juhakudb.core.schema
+db.juhaku.juhakudb.exception
+db.juhaku.juhakudb.filter
+db.juhaku.juhakudb.repository.android
+db.juhaku.juhakudb.util
