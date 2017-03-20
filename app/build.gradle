@@ -67,6 +67,16 @@ task sourceJar(type: Jar) {
     classifier 'sources'
 }
 
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    destinationDir = file('../javadoc')
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier 'javadoc'
+}
+
 configurations {
     archives {
         extendsFrom configurations.default
@@ -74,16 +84,17 @@ configurations {
     source {
         sourceJar
     }
+    javadoc {
+        javadocJar
+    }
 }
 
 artifacts {
-    archives sourceJar
+    archives sourceJar, javadocJar
 }
 
 uploadArchives {
-//    configuration = configurations.archives
     repositories.mavenDeployer {
-//        configuration = configurations.deployerJars
         repository(url: repositoryURL) {
             authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
         }
@@ -95,9 +106,67 @@ uploadArchives {
             version = project.version
             description 'Database ORM library for Android projects'
             url repositoryURL
+
+            scm {
+                connection repositoryURL
+                developerConnection repositoryURL
+                url repositoryURL
+            }
+
+            licenses {
+                license {
+                    name 'The MIT License'
+                    url 'https://opensource.org/licenses/MIT'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'juhaku'
+                    name 'Juha Kukkonen'
+                }
+            }
         }
     }
 }
+
+task uploadCentral(type: Upload) {
+    repositories.mavenDeployer {
+        repository(url: repositoryURL) {
+            authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
+        }
+        pom.project {
+            name rootProject.name
+            groupId 'juhaku-android'
+            artifactId 'juhaku-db'
+            packaging 'aar'
+            version = project.version
+            description 'Database ORM library for Android projects'
+            url repositoryURL
+
+            scm {
+                connection repositoryURL
+                developerConnection repositoryURL
+                url repositoryURL
+            }
+
+            licenses {
+                license {
+                    name 'The MIT License'
+                    url 'https://opensource.org/licenses/MIT'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'juhaku'
+                    name 'Juha Kukkonen'
+                }
+            }
+        }
+    }
+}
+uploadCentral.description = 'Upload archives to maven central'
 
 task updatePomVersion << {
     release.tagTemplate = "${rootProject.name}-$version"
@@ -140,6 +209,8 @@ checkSnapshotDependencies.dependsOn formatReleaseVersion
 
 createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
+
+uploadCentral.dependsOn uploadArchives
 
 def released = false
 gradle.taskGraph.beforeTask { Task task ->
