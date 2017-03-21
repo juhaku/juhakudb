@@ -212,6 +212,7 @@ createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
 
 uploadCentral.dependsOn uploadArchives
+uploadCentral.shouldRunAfter uploadArchives
 
 def released = false
 gradle.taskGraph.beforeTask { Task task ->
