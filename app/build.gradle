@@ -101,9 +101,12 @@ signing {
 
 uploadArchives {
     repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
         repository(url: repositoryURL) {
             authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
         }
+
         pom.project {
             name rootProject.name
             groupId 'juhaku-android'
