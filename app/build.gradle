@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'maven'
+apply plugin: 'signing'
 
 repositories {
     mavenCentral()
@@ -94,6 +95,10 @@ artifacts {
     archives sourceJar, javadocJar
 }
 
+signing {
+    sign configurations.archives
+}
+
 uploadArchives {
     repositories.mavenDeployer {
         repository(url: repositoryURL) {
@@ -133,9 +138,12 @@ uploadArchives {
 
 task uploadCentral(type: Upload) {
     repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
         repository(url: ossrhRepositoryURL) {
             authentication(userName: ossrhUsername, password: ossrhPassword)
         }
+
         pom.project {
             name rootProject.name
             groupId 'juhaku-android'
