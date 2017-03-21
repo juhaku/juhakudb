@@ -133,8 +133,8 @@ uploadArchives {
 
 task uploadCentral(type: Upload) {
     repositories.mavenDeployer {
-        repository(url: repositoryURL) {
-            authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
+        repository(url: ossrhRepositoryURL) {
+            authentication(userName: ossrhUsername, password: ossrhPassword)
         }
         pom.project {
             name rootProject.name
