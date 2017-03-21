@@ -220,7 +220,7 @@ checkSnapshotDependencies.dependsOn formatReleaseVersion
 createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
 
-uploadArchives.dependsOn uploadCentral
+createReleaseTag.dependsOn uploadCentral
 uploadCentral.shouldRunAfter uploadArchives
 
 def released = false
