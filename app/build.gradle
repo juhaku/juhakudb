@@ -141,8 +141,8 @@ uploadArchives {
 
 task uploadCentral(type: Upload) {
     repositories.mavenDeployer {
-        configuration = configurations.archives
-        
+//        configuration = configurations.archives
+
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
         repository(url: ossrhRepositoryURL) {
