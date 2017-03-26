@@ -140,7 +140,7 @@ uploadArchives {
 }
 
 task uploadCentral(type: Upload) {
-    configuration = project.configurations.archives
+    configuration = uploadArchives.repositories.mavenDeployer.configuration
     repositories.mavenDeployer {
 
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
