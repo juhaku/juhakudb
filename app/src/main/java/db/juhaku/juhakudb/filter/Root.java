@@ -6,14 +6,13 @@ import java.util.List;
 
 import db.juhaku.juhakudb.exception.IllegalJoinException;
 import db.juhaku.juhakudb.util.ReflectionUtils;
-import db.juhaku.juhakudb.util.TypedClass;
 
 /**
  * Created by juha on 19/04/16.
  *
  * @author juha
  *
- * @since
+ * @since 1.1.3-SNAPSHOT
  */
 public class Root<T> {
 
@@ -27,24 +26,24 @@ public class Root<T> {
     }
 
     public Root<T> join(String target, String alias, JoinMode joinMode) {
-        Joint joint = new Joint(target, alias, joinMode, resolveJointModal(this.model, target), false);
-        joins.add(joint);
+        Join join = new Join(target, alias, joinMode, resolveJoinModal(this.model, target), false);
+        joins.add(join);
 
-        return joint;
+        return join;
     }
 
     public Root<T> fetch(String target, String alias, JoinMode joinMode) {
-        Joint joint = new Joint(target, alias, joinMode, resolveJointModal(this.model, target), true);
-        this.joins.add(joint);
+        Join join = new Join(target, alias, joinMode, resolveJoinModal(this.model, target), true);
+        this.joins.add(join);
 
-        return joint;
+        return join;
     }
 
     /**
      * Get list of joins added to this root. Joins can either be regular joins or fetch joins.
      * @return instance of {@link ArrayList} containing joins added.
      *
-     * @since
+     * @since 1.1.3-SNAPSHOT
      */
     List<Root<T>> getJoins() {
         if (joins == null) {
@@ -55,17 +54,27 @@ public class Root<T> {
     }
 
     /**
+     * Get model class of this root object.
+     * @return instance of {@link Class} representing class of database model entity.
+     *
+     * @since
+     */
+    Class<?> getModel() {
+        return model;
+    }
+
+    /**
      * Resolves model class for next joint.
      *
      * @param model Class<?> instance of current model.
      * @param target String value of target model property in current model.
      * @return Class<?> value of resolved model class from current model.
      *
-     * @since
+     * @since 1.1.3-SNAPSHOT
      *
      * @hide
      */
-    private static Class<?> resolveJointModal(Class<?> model, String target) {
+    private static Class<?> resolveJoinModal(Class<?> model, String target) {
         Field targetField = ReflectionUtils.findField(model, target);
         if (targetField == null) {
             throw new IllegalJoinException("Could not form a join to: " + target + " no such field in:" + model);
@@ -76,18 +85,18 @@ public class Root<T> {
 
 
     /**
-     * Joint represents a relation in database between two tables.
+     * Join represents a relation in database between two tables.
      *
      * @author juha
-     * @since
+     * @since 1.1.3-SNAPSHOT
      */
-    class Joint extends Root<T> {
+    class Join extends Root<T> {
         private String target;
         private String alias;
         private JoinMode joinMode;
         private boolean fetch;
 
-        public Joint(String target, String alias, JoinMode joinMode, Class<?> model, boolean fetch) {
+        public Join(String target, String alias, JoinMode joinMode, Class<?> model, boolean fetch) {
             super(model);
             this.target = target;
             this.alias = alias;
