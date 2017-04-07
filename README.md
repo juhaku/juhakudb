@@ -1,4 +1,4 @@
-# JuhakuDB current release: 1.1.3
+# JuhakuDB current release: 1.1.6
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 ## Introduction
@@ -21,6 +21,26 @@ annotations.
 
 ### Filter based criteria API
 Filter based criteria API is fairly similar to Spring DATA's representation of criteria API but in comparizon this is a lot simplier and easier to use. It provides easy way to create joint queries from multiple tables with easy to use filter chain syntax. This syntax allows you to create complex queries wihtout writing single line of sql.
+
+## Installation
+
+Currently available from central repository.
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.juhaku</groupId>
+    <artifactId>juhaku-db</artifactId>
+    <version>1.1.6</version>
+<dependency>
+```
+
+### Gradle
+
+```java
+    compile 'io.github.juhaku:juhaku-db:1.1.6'
+```
 
 ## Usage
 * Database manager
