@@ -156,7 +156,7 @@ task uploadCentral(type: Upload) {
             packaging 'aar'
             version = project.version.replace("-SNAPSHOT", "")
             description 'Database ORM library for Android projects'
-            url repositoryURL
+            url ossrhRepositoryURL
 
             scm {
                 connection repositoryURL
