@@ -103,8 +103,8 @@ uploadArchives {
     repositories.mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-        repository(url: ossrhRepositoryURL) { //repositoryURL
-            authentication(userName: ossrhUsername, password: ossrhPassword) //gradleArtifactoryUser, gradleArtifactoryPassword
+        repository(url: repositoryURL) { //repositoryURL
+            authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword) //gradleArtifactoryUser, gradleArtifactoryPassword
         }
 
         pom.project {
@@ -151,10 +151,10 @@ task uploadCentral(type: Upload) {
 
         pom.project {
             name rootProject.name
-            groupId 'juhaku-android'
+            groupId 'io.github.juhaku'
             artifactId 'juhaku-db'
             packaging 'aar'
-            version = project.version
+            version = project.version.replace("-SNAPSHOT", "")
             description 'Database ORM library for Android projects'
             url repositoryURL
 
@@ -224,8 +224,8 @@ checkSnapshotDependencies.dependsOn formatReleaseVersion
 createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
 
-//createReleaseTag.dependsOn uploadCentral
-//uploadArchives.shouldRunAfter uploadCentral
+createReleaseTag.dependsOn uploadCentral
+uploadArchives.shouldRunAfter uploadCentral
 
 def released = false
 gradle.taskGraph.beforeTask { Task task ->
