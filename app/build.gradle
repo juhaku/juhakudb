@@ -188,6 +188,9 @@ task updatePomVersion << {
 }
 
 task formatReleaseVersion << {
+    if (version.endsWith("-SNAPSHOST")) {
+        version = version.replace("-SNAPSHOT", "")
+    }
     formatSinceJavaDocVersion(1)
 }
 
