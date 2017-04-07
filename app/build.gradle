@@ -103,8 +103,8 @@ uploadArchives {
     repositories.mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-        repository(url: repositoryURL) {
-            authentication(userName: gradleArtifactoryUser, password: gradleArtifactoryPassword)
+        repository(url: ossrhRepositoryURL) { //repositoryURL
+            authentication(userName: ossrhUsername, password: ossrhPassword) //gradleArtifactoryUser, gradleArtifactoryPassword
         }
 
         pom.project {
@@ -188,9 +188,6 @@ task updatePomVersion << {
 }
 
 task formatReleaseVersion << {
-    if (project.version.endsWith("-SNAPSHOST")) {
-        project.version = version.replace("-SNAPSHOT", "")
-    }
     formatSinceJavaDocVersion(1)
 }
 
@@ -227,8 +224,8 @@ checkSnapshotDependencies.dependsOn formatReleaseVersion
 createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
 
-createReleaseTag.dependsOn uploadCentral
-uploadArchives.shouldRunAfter uploadCentral
+//createReleaseTag.dependsOn uploadCentral
+//uploadArchives.shouldRunAfter uploadCentral
 
 def released = false
 gradle.taskGraph.beforeTask { Task task ->
