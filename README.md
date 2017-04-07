@@ -33,7 +33,7 @@ Currently available from central repository.
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
     <version>1.1.6</version>
-<dependency>
+</dependency>
 ```
 
 ### Gradle
