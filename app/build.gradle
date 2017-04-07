@@ -225,11 +225,11 @@ createReleaseTag.dependsOn uploadArchives
 preTagCommit.dependsOn updatePomVersion
 
 createReleaseTag.dependsOn uploadCentral
-uploadCentral.shouldRunAfter uploadArchives
+uploadArchives.shouldRunAfter uploadCentral
 
 def released = false
 gradle.taskGraph.beforeTask { Task task ->
-    if (task.getName().equals('release') && !released) {
+    if (task.name == 'release' && !released) {
         released = true
         project.ext['rollbackVersion'] = project.version
     }
@@ -276,7 +276,7 @@ void formatSinceJavaDocVersion(int state) {
             newContent = content.replaceAll("@since((?! )|(?! \\d+\\.\\d+\\.\\d+(-SNAPSHOT)?))", "@since $project.version")
 //            newContent = content.replaceAll("\\{version\\}", project.version)
         }
-        if (!content.equals(newContent)) {
+        if (content != newContent) {
             file.write(newContent)
         }
     }
