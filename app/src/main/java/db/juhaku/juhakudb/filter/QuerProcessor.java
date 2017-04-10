@@ -6,8 +6,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import db.juhaku.juhakudb.annotation.Id;
 import db.juhaku.juhakudb.annotation.ManyToMany;
+import db.juhaku.juhakudb.annotation.ManyToOne;
+import db.juhaku.juhakudb.annotation.OneToMany;
+import db.juhaku.juhakudb.annotation.OneToOne;
 import db.juhaku.juhakudb.core.NameResolver;
+import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.QueryBuildException;
@@ -25,7 +30,6 @@ import db.juhaku.juhakudb.util.StringUtils;
 public class QuerProcessor {
 
     private Schema schema;
-    private JoinProcessor joinProcessor = new JoinProcessor();
 
     public QuerProcessor(Schema schema) {
         this.schema = schema;
@@ -52,7 +56,7 @@ public class QuerProcessor {
 
         alterSelect(root, sql);
 
-        sql.append(" FROM ").append(resolveTableName(model)).append(" ").append(Alias.forModel(model)).append(" ");
+        sql.append(" FROM ").append(resolveName(model)).append(" ").append(Alias.forModel(model)).append(" ");
 
     }
 
@@ -70,7 +74,7 @@ public class QuerProcessor {
     }
 
     private String generateSelectForModel(Class<?> model) {
-        Schema table = schema.getElement(resolveTableName(model));
+        Schema table = schema.getElement(resolveName(model));
         String alias = Alias.forModel(model);
 
         StringBuilder select = new StringBuilder();
@@ -90,13 +94,15 @@ public class QuerProcessor {
     }
 
     /**
-     * Resolve table name throwing silently exception if resolving table name will fail.
-     * @param model Instance of {@link Class} of model class of entity.
-     * @return String name of table resolved for the model class.
+     * Resolves table's name or table column's name silently. If any exception will occur then {@link QueryBuildException}
+     * will be thrown.
+     *
+     * @param model Instance of {@link Class} of entity model.
+     * @return String table name or column name depending on what is being resolved.
      *
      * @since
      */
-    private static String resolveTableName(Class<?> model) {
+    private static <T> String resolveName(T model) {
         try {
 
             return NameResolver.resolveName(model);
@@ -105,8 +111,99 @@ public class QuerProcessor {
         }
     }
 
+    /**
+     * Resolves table's primary key column's name for given model class. The model class must be an
+     * entity in database. Resolving is made silently and if any error will occur a {@link QueryBuildException}
+     * will be thrown.
+     *
+     * @param model Instance of {@link Class} of model class of entity.
+     * @return String primary key column name.
+     *
+     * @since
+     */
+    private static String resolvePrimaryKey(Class<?> model) {
+        try {
+            return NameResolver.resolveIdName(model);
+        } catch (NameResolveException e) {
+            throw new QueryBuildException("Failed to build query, reason: " + e.getMessage(), e);
+        }
+    }
+
     public Query createWhere(Class<?> modelClass, Filter<?> filter) {
         return null;
+    }
+
+
+    // TODO implement joins
+//        left join persons p on p.id = pp.person_id
+//
+//        left join person_books bp on p.id = pb.person_id left join books b on b.id = bp.book_id
+
+    private void createJoins(Root<?> root, StringBuilder sql) {
+        Class<?> model = root.getModel();
+
+        String rootAlias = Alias.forModel(model);
+        String rootTable = resolveName(model);
+
+        for (Root<?> r : root.getJoins()) {
+            Join join = (Join) r;
+
+            Field targetField = ReflectionUtils.findField(model, join.getTarget());
+
+            if (targetField.isAnnotationPresent(ManyToMany.class)) {
+
+
+            } else if (targetField.isAnnotationPresent(ManyToOne.class) ||
+                    (targetField.isAnnotationPresent(OneToOne.class)
+                            && StringUtils.isBlank(targetField.getAnnotation(OneToOne.class).mappedBy()))) {
+
+                /*
+                 *
+                 */
+                joinSql(sql, join.getJoinMode(), resolveName(join.getModel()),
+                        resolveName(targetField), rootAlias, resolvePrimaryKey(join.getModel()),
+                        Alias.forJoin(join));
+            } else {
+
+                /*
+                 *
+                 */
+
+                //TODO if target field has column annotation use it as the name
+                joinSql(sql, join.getJoinMode(), rootTable, resolveName(targetField).concat(NameResolver.ID_FIELD_SUFFIX),
+                        Alias.forJoin(join), resolvePrimaryKey(model), rootAlias);
+            }
+
+            if (!join.getJoins().isEmpty()) {
+                createJoins(join, sql);
+            }
+        }
+    }
+
+    private void middleTableJoin(Root<?> root, StringBuilder sql) {
+
+    }
+
+    /**
+     * Creates join sql with given join mode to target table according given parameters.
+     *
+     * @param sql Instance of {@link StringBuilder} where to append the sql.
+     * @param joinMode Instance of {@link JoinMode} that is being used with this join.
+     * @param toTable String name of the table that join is being made.
+     * @param fromColumn String name of the from join column.
+     * @param fromAlias String alias of from join column.
+     * @param toColumn String name of the to join column.
+     * @param toAlias String alias of to join column.
+     *
+     * @since
+     *
+     * @hide
+     */
+    private void joinSql(StringBuilder sql, JoinMode joinMode, String toTable, String fromColumn,
+                         String fromAlias, String toColumn, String toAlias) {
+        sql.append(" ").append(joinMode.getValue()).append(" ").append(toTable)
+                .append(" ").append(toAlias).append(" ON ").append(fromAlias).append(".")
+                .append(fromColumn).append(" = ").append(toAlias).append(".").append(toColumn);
     }
 
     public static class Alias {
@@ -136,7 +233,7 @@ public class QuerProcessor {
              * If alias is not cached generate new and place it to cache.
              */
             if (StringUtils.isBlank(alias)) {
-                alias = generateAlias(resolveTableName(model));
+                alias = generateAlias(resolveName(model));
                 aliasMap.put(model, alias);
             }
 
@@ -164,70 +261,5 @@ public class QuerProcessor {
             }
         }
 
-    }
-
-    private static class JoinProcessor {
-
-// TODO implement joins
-//        left join persons p on p.id = pp.person_id
-//
-//        left join person_books bp on p.id = pb.person_id left join books b on b.id = bp.book_id
-
-        void createJoins(Root<?> root, StringBuilder sql) {
-            Class<?> model = root.getModel();
-
-            String rootAlias = Alias.forModel(model);
-            String rootTable = resolveTableName(model);
-
-            for (Root<?> r : root.getJoins()) {
-                Join join = (Join) r;
-
-                Field targetField = ReflectionUtils.findField(model, join.getTarget());
-
-                if (targetField.isAnnotationPresent(ManyToMany.class)) {
-
-                } else {
-
-                }
-
-                sql.append(" ").append(join.getJoinMode().getValue()).append(" ")
-                        .append(rootAlias).append(".").append(rootTable).append(" = ")
-                        .append(Alias.forJoin(join)).append(".").append(resolveTableName(join.getModel()));
-
-                if (!join.getJoins().isEmpty()) {
-                    createJoins(join, sql);
-                }
-            }
-        }
-
-        private void middleTableJoin(Root<?> root, StringBuilder sql) {
-
-        }
-
-        private void ownerJoin(Root<?> root, StringBuilder sql) {
-
-        }
-
-        /**
-         * Creates join sql with given join mode to target table according given parameters.
-         *
-         * @param sql Instance of {@link StringBuilder} where to append the sql.
-         * @param joinMode Instance of {@link JoinMode} that is being used with this join.
-         * @param toTable String name of the table that join is being made.
-         * @param fromColumn String name of the from join column.
-         * @param fromAlias String alias of from join column.
-         * @param toColumn String name of the to join column.
-         * @param toAlias String alias of to join column.
-         *
-         * @since
-         *
-         * @hide
-         */
-        private void joinSql(StringBuilder sql, JoinMode joinMode, String toTable, String fromColumn,
-                             String fromAlias, String toColumn, String toAlias) {
-            sql.append(" ").append(joinMode.getValue()).append(" ").append(toTable)
-                    .append(" ").append(toAlias).append(" ON ").append(fromAlias).append(".")
-                    .append(fromColumn).append(" = ").append(toAlias).append(".").append(toColumn);
-        }
     }
 }
