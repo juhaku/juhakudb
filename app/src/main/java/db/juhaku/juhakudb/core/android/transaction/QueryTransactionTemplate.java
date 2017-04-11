@@ -1,7 +1,6 @@
 package db.juhaku.juhakudb.core.android.transaction;
 
 import android.database.Cursor;
-import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -100,7 +99,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
 
                     // if field references to a foreign key in another table fetch items if necessary
                     if (isPrimaryKeyAssociationFetchAllowed(field, query, referenceTable) && !StringUtils.isBlank(referenceTable) && !isCached(type.getName())) {
-                        Query primaryKeySubQuery = getCreator().create(type, new Filter() {
+                        Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                             @Override
                             public void filter(Root root, Predicates predicates) {
                                 String alias = String.valueOf(resolveTableName(rootClass).charAt(0));
@@ -114,7 +113,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                     } else if (isForeignKeyAssociationFetchAllowed(field, query, referenceTable)) {
                         // if field is referenced by other primary key, fetch item if necessary
                         if (column != null && column.getColumnValue() != null) {
-                            Query associatedSubQuery = getCreator().create(column.getColumnType(), new Filter() {
+                            Query associatedSubQuery = getProcessor().createQuery(column.getColumnType(), new Filter() {
                                 @Override
                                 public void filter(Root root, Predicates predicates) {
                                     String alias = String.valueOf(resolveTableName(column.getColumnType()).charAt(0));

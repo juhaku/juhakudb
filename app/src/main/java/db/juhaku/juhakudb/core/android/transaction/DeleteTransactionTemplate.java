@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
 
         int deleted = 0;
         for (final T item : items) {
-            Query query = getCreator().createWhereClause(new Filter() {
+            Query query = getProcessor().createWhere(null, new Filter() {
                 @Override
                 public void filter(Root root, Predicates predicates) {
                     predicates.add(Predicate.eq(resolveIdColumn(getRootClass()), item.toString()));
@@ -128,7 +127,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
     }
 
     private int executeDelete(final String table, final Object[][] columnValues) {
-        Query query = getCreator().createWhereClause(new Filter() {
+        Query query = getProcessor().createWhere(null, new Filter() {
             @Override
             public void filter(Root root, Predicates predicates) {
                 for (Object[] column : columnValues) {

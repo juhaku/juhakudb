@@ -11,6 +11,7 @@ import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.filter.QueryCreator;
+import db.juhaku.juhakudb.filter.QueryProcessor;
 
 /**
  * Created by juha on 12/05/16.
@@ -24,7 +25,7 @@ public abstract class TransactionTemplate<T> {
     private T result;
     private Schema schema;
     private Class<?> rootClass;
-    private QueryCreator creator;
+    private QueryProcessor processor;
     private EntityConverter converter;
     private boolean successful = false;
     private List<String> tableCache;
@@ -127,13 +128,13 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Set query creator for template that is used to create database queries in simplified manner.
-     * @param creator instance of {@link QueryCreator}.
+     * Set query processor for template that is used to create database queries in simplified manner.
+     * @param processor instance of {@link QueryProcessor}.
      *
-     * @since 1.0.2
+     * @since 1.2.0-SNAPSHOT
      */
-    public final void setCreator(QueryCreator creator) {
-        this.creator = creator;
+    public final void setProcessor(QueryProcessor processor) {
+        this.processor = processor;
     }
 
     /**
@@ -157,13 +158,13 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Get the previously put query creator.
-     * @return instance of {@link QueryCreator}.
+     * Get the previously put query processor.
+     * @return instance of {@link QueryProcessor}.
      *
-     * @since 1.0.2
+     * @since 1.2.0-SNAPSHOT
      */
-    QueryCreator getCreator() {
-        return creator;
+    QueryProcessor getProcessor() {
+        return processor;
     }
 
     /**

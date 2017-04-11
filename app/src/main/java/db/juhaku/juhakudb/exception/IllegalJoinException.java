@@ -6,7 +6,7 @@ package db.juhaku.juhakudb.exception;
  *
  * @author juha
  *
- * @since 1.1.3-SNAPSHOT
+ * @since 1.2.0-SNAPSHOT
  */
 public class IllegalJoinException extends RuntimeException {
 

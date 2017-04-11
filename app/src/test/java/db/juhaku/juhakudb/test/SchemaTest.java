@@ -14,6 +14,7 @@ import db.juhaku.juhakudb.filter.Predicate.Disjunction;
 import db.juhaku.juhakudb.filter.Predicates;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.QueryCreator;
+import db.juhaku.juhakudb.filter.QueryProcessor;
 import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.test.bean.Authority;
 import db.juhaku.juhakudb.test.bean.ClassRoom;
@@ -58,13 +59,14 @@ public class SchemaTest {
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
                 Teacher.class, Person.class, ClassRoom.class, Group.class});
 
-        QueryCreator builder = new QueryCreator(schema);
+        QueryProcessor processor = new QueryProcessor(schema);
 
         Filters filters = new Filters();
         filters.add(new Filter<Person>() {
             @Override
             public void filter(Root<Person> root, Predicates predicates) {
-                root.join("rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN).join("groups", "g", JoinMode.INNER_JOIN);
+                root.join("this.rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN);
+                root.join("this.groups", "g", JoinMode.INNER_JOIN);
 
                 predicates.add(Predicate.in("this.name", "matti", "kimmo")).add(Predicate.not(Predicate.eq("name", "lauri")));
 
@@ -84,7 +86,7 @@ public class SchemaTest {
             }
         });
 
-        Query query = builder.create(Person.class, filters);
+        Query query = processor.createQuery(Person.class, filters);
         assertNotNull("query not null", query);
         StringBuilder argBuilder = new StringBuilder();
         for (String arg : query.getArgs()) {
@@ -102,7 +104,7 @@ public class SchemaTest {
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
                 Teacher.class, Person.class, ClassRoom.class, Group.class});
 
-        QueryCreator builder = new QueryCreator(schema);
+        QueryProcessor processor = new QueryProcessor(schema);
 
         Filters filters = new Filters();
         filters.add(new Filter<Teacher>() {
@@ -112,7 +114,7 @@ public class SchemaTest {
             }
         });
 
-        Query query = builder.create(Teacher.class, filters);
+        Query query = processor.createQuery(Teacher.class, filters);
         assertNotNull("query not null", query);
         System.out.println(query);
     }
@@ -126,7 +128,7 @@ public class SchemaTest {
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
                 Teacher.class, Person.class, ClassRoom.class, Group.class});
 
-        QueryCreator builder = new QueryCreator(schema);
+        QueryProcessor processor = new QueryProcessor(schema);
 
         Filters filters = new Filters();
         filters.add(new Filter<Group>() {
@@ -136,7 +138,7 @@ public class SchemaTest {
             }
         });
 
-        Query query = builder.create(Group.class, filters);
+        Query query = processor.createQuery(Group.class, filters);
         assertNotNull("query not null", query);
         System.out.println(query);
     }
@@ -150,7 +152,7 @@ public class SchemaTest {
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
                 Teacher.class, Person.class, ClassRoom.class, Group.class});
 
-        QueryCreator builder = new QueryCreator(schema);
+        QueryProcessor processor = new QueryProcessor(schema);
 
         Filters filters = new Filters();
         filters.add(new Filter<ClassRoom>() {
@@ -160,7 +162,71 @@ public class SchemaTest {
             }
         });
 
-        Query query = builder.create(ClassRoom.class, filters);
+        Query query = processor.createQuery(ClassRoom.class, filters);
+        assertNotNull("query not null", query);
+        System.out.println(query);
+    }
+
+    @Test
+    public void testFilter5() throws Exception {
+        DatabaseConfiguration configuration = new DatabaseConfiguration();
+        configuration.setName("testdb");
+        configuration.setBasePackages("db.juhaku.juhakudb.test.bean");
+        configuration.setVersion(1);
+        Schema schema = Schema.newInstance(configuration, new Class<?>[]{
+                Teacher.class, Person.class, ClassRoom.class, Group.class});
+
+        QueryProcessor processor = new QueryProcessor(schema);
+
+        Filters filters = new Filters(new Filter<ClassRoom>() {
+            @Override
+            public void filter(Root<ClassRoom> root, Predicates predicates) {
+                root.join("persons", JoinMode.INNER_JOIN);
+            }
+        }, new Filter<ClassRoom>() {
+            @Override
+            public void filter(Root<ClassRoom> root, Predicates predicates) {
+                root.join("this.teacher", "t", JoinMode.LEFT_JOIN);
+
+                predicates.add(Predicate.ge("id", 1));
+            }
+        }, new Filter<ClassRoom>() {
+            @Override
+            public void filter(Root<ClassRoom> root, Predicates predicates) {
+                predicates.add(Predicate.eq("t.name", "tester"));
+            }
+        });
+
+        Query query = processor.createQuery(ClassRoom.class, filters);
+        assertNotNull("query not null", query);
+        System.out.println(query);
+    }
+
+    @Test
+    public void testFilter6() throws Exception {
+        DatabaseConfiguration configuration = new DatabaseConfiguration();
+        configuration.setName("testdb");
+        configuration.setBasePackages("db.juhaku.juhakudb.test.bean");
+        configuration.setVersion(1);
+        Schema schema = Schema.newInstance(configuration, new Class<?>[]{
+                Teacher.class, Person.class, ClassRoom.class, Group.class});
+
+        QueryProcessor processor = new QueryProcessor(schema);
+
+        Filters filters = new Filters(new Filter<Person>() {
+            @Override
+            public void filter(Root<Person> root, Predicates predicates) {
+                root.fetch("groups", JoinMode.INNER_JOIN);
+                root.fetch("rooms", "r", JoinMode.LEFT_JOIN);
+            }
+        }, new Filter<Person>() {
+            @Override
+            public void filter(Root<Person> root, Predicates predicates) {
+                predicates.add(Predicate.eq("this.name", "tester"));
+            }
+        });
+
+        Query query = processor.createQuery(Person.class, filters);
         assertNotNull("query not null", query);
         System.out.println(query);
     }
@@ -174,7 +240,7 @@ public class SchemaTest {
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
                 Teacher.class, Person.class, ClassRoom.class, Group.class});
 
-        QueryCreator creator = new QueryCreator(schema);
+        QueryProcessor processor = new QueryProcessor(schema);
 
         Filters filters = new Filters();
         filters.add(new Filter<ClassRoom>() {
@@ -185,7 +251,7 @@ public class SchemaTest {
             }
         });
 
-        Query query = creator.create(ClassRoom.class, filters);
+        Query query = processor.createQuery(ClassRoom.class, filters);
         assertNotNull("query not null", query);
         System.out.println(query);
     }

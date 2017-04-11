@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map.Entry;
 
 import db.juhaku.juhakudb.annotation.ManyToMany;
 import db.juhaku.juhakudb.annotation.ManyToOne;
@@ -166,7 +165,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         table = findManyToManyTable(rootTableName, associateTableName);
 
         final String fromTable = rootTableName;
-        Query query = getCreator().createWhereClause(new Filter() {
+        Query query = getProcessor().createWhere(null, new Filter() {
             @Override
             public void filter(Root root, Predicates predicates) {
                 predicates.add(Predicate.eq(fromTable.concat(NameResolver.ID_FIELD_SUFFIX), transaction.getStoredId()));
