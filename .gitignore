@@ -13,3 +13,4 @@ juhaku-db.iml
 gradlew.bat
 gradlew
 gradle
+findbugs*.xml

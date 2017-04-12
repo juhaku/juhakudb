@@ -107,6 +107,11 @@ public class SchemaFactory {
         }
         if (!StringUtils.isBlank(mappedBy)) {
             Field referencedField = ReflectionUtils.findField(table, mappedBy);
+
+            if (referencedField == null) {
+                throw new SchemaInitializationException("Field not found by mappedBy value: " + mappedBy);
+            }
+
             String referenceColumnName;
             try {
                 referenceColumnName = NameResolver.resolveName(referencedField);
@@ -116,9 +121,7 @@ public class SchemaFactory {
             }
             Schema col = createNamedColumn(referenceColumnName, "INTEGER");
             dbTable.addColumn(col);
-            if (referencedField == null) {
-                throw new SchemaInitializationException("Field not found by mappedBy value: " + mappedBy);
-            }
+
             try {
                 dbTable.getReferences().add(new Reference(referenceColumnName, referencedField));
             } catch (NameResolveException e) {
