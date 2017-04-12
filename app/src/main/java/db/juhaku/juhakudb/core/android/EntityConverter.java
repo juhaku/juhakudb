@@ -32,6 +32,11 @@ import db.juhaku.juhakudb.util.StringUtils;
  */
 public class EntityConverter {
 
+
+    //TODO loop all columns and cather all column and values together. Resolve what objects are "fetched"
+    //TODO and populate them. Later check that if object is fetched do not obey fetch annotation strategy to fetch EAGERLY.
+    //TODO Look custom resultset conversion to get an idea of getting all the fields.
+
     public List<ResultSet> cursorToResultSetList(Cursor cursor, Class<?> rootClass, boolean custom) throws ConversionException {
         List<ResultSet> retVal = new ArrayList<>();
 //        for (String col : cursor.getColumnNames()) { //TODO debug log, remove this

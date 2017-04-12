@@ -106,7 +106,7 @@ public class QueryProcessor {
         Class<?> model = root.getModel();
 
         sql.append("SELECT ");
-        sql.append(generateSelectForModel(model));
+        sql.append(generateSelectForModel(model, Alias.forModel(model)));
 
         alterSelect(root, sql);
 
@@ -128,8 +128,8 @@ public class QueryProcessor {
         for (Root r : root.getJoins()) {
             Join join = (Join) r;
             if (join.isFetch()) {
-                sql.append(" ");
-                sql.append(generateSelectForModel(join.getModel()));
+                sql.append(", ");
+                sql.append(generateSelectForModel(join.getModel(), Alias.forJoin(join)));
             }
             if (!root.getJoins().isEmpty()) {
                 alterSelect(join, sql);
@@ -143,15 +143,15 @@ public class QueryProcessor {
      * will be returned.
      *
      * @param model Instance of {@link Class} of model class of database table entities.
+     * @param alias String alias for model class.
      * @return String containing select statement without "SELECT" in the beginning for given model.
      *
      * @sine
      *
      * @hide
      */
-    private String generateSelectForModel(Class<?> model) {
+    private String generateSelectForModel(Class<?> model, String alias) {
         Schema table = schema.getElement(resolveName(model));
-        String alias = Alias.forModel(model);
 
         StringBuilder select = new StringBuilder();
 
