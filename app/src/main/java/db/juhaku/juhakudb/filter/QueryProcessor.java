@@ -466,6 +466,21 @@ public class QueryProcessor {
         }
     }
 
+    /**
+     * Resolves reverse join column name from given model class's table. Reverse join column name
+     * is returned if reverse join table name is same as provided reverse join model.
+     *
+     * <p>Column is resolved by looking it for from {@link Schema} in order to maintain integrity.</p>
+     *
+     * @param model Instance of {@link Class} of model class of table where the join is made from.
+     * @param reverseModel Instance of {@link Class} of reverse join model of table where the join is made to.
+     * @return String reverse join column name from join table if found. If not found join processing
+     * will fail to an exception.
+     *
+     * @since
+     *
+     * @hide
+     */
     private String resolveReverseJoinColumnName(Class<?> model, Class<?> reverseModel) {
         Schema table = findTableByName(resolveName(model));
         String reverseJoinTableName = resolveName(reverseModel);
