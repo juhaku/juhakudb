@@ -27,6 +27,7 @@ import db.juhaku.juhakudb.filter.JoinMode;
 import db.juhaku.juhakudb.filter.Predicate;
 import db.juhaku.juhakudb.filter.Predicates;
 import db.juhaku.juhakudb.filter.Query;
+import db.juhaku.juhakudb.filter.QueryProcessor.Alias;
 import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.util.ReflectionUtils;
 import db.juhaku.juhakudb.util.StringUtils;
@@ -102,7 +103,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                         Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                             @Override
                             public void filter(Root root, Predicates predicates) {
-                                String alias = String.valueOf(resolveTableName(rootClass).charAt(0));
+                                String alias = Alias.forModel(rootClass);
                                 root.join(getAssociatedRootClassFieldNameByType(type, rootClass), alias, JoinMode.LEFT_JOIN);
                                 predicates.add(Predicate.eq(String.valueOf(alias).concat(".").concat(resolveIdColumn(rootClass)),
                                         idColumn.getColumnValue()));
@@ -116,7 +117,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                             Query associatedSubQuery = getProcessor().createQuery(column.getColumnType(), new Filter() {
                                 @Override
                                 public void filter(Root root, Predicates predicates) {
-                                    String alias = String.valueOf(resolveTableName(column.getColumnType()).charAt(0));
+                                    String alias = Alias.forModel(column.getColumnType());
                                     predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(column.getColumnType())), column.getColumnValue()));
                                 }
                             });
@@ -159,7 +160,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
-    private <E> E instantiate(Class<?> clazz) throws ConversionException {
+    private <E> E instantiate(Class<?> clazz) {
         try { // on beans try using default constructor
             return (E) clazz.newInstance();
         } catch (Exception e) {

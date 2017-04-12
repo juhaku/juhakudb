@@ -13,7 +13,6 @@ import db.juhaku.juhakudb.filter.Predicate;
 import db.juhaku.juhakudb.filter.Predicate.Disjunction;
 import db.juhaku.juhakudb.filter.Predicates;
 import db.juhaku.juhakudb.filter.Query;
-import db.juhaku.juhakudb.filter.QueryCreator;
 import db.juhaku.juhakudb.filter.QueryProcessor;
 import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.test.bean.Authority;

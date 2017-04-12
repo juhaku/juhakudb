@@ -34,7 +34,7 @@ public class Root<T> {
         if (target.contains(".")) {
             target = target.substring(target.indexOf(".") + 1);
         }
-        Join join = new Join(target, alias, joinMode, resolveJoinModal(this.model, target), false);
+        Join join = new Join(target, alias, joinMode, resolveJoinModel(this.model, target), false);
         joins.add(join);
 
         return join;
@@ -49,7 +49,7 @@ public class Root<T> {
         if (target.contains(".")) {
             target = target.substring(target.indexOf(".") + 1);
         }
-        Join join = new Join(target, alias, joinMode, resolveJoinModal(this.model, target), true);
+        Join join = new Join(target, alias, joinMode, resolveJoinModel(this.model, target), true);
         this.joins.add(join);
 
         return join;
@@ -90,7 +90,7 @@ public class Root<T> {
      *
      * @hide
      */
-    private static Class<?> resolveJoinModal(Class<?> model, String target) {
+    private static Class<?> resolveJoinModel(Class<?> model, String target) {
         Field targetField = ReflectionUtils.findField(model, target);
         if (targetField == null) {
             throw new IllegalJoinException("Could not form a join to: " + target + " no such field in: " + model);

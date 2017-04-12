@@ -10,7 +10,6 @@ import db.juhaku.juhakudb.core.android.EntityConverter;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.exception.NameResolveException;
-import db.juhaku.juhakudb.filter.QueryCreator;
 import db.juhaku.juhakudb.filter.QueryProcessor;
 
 /**

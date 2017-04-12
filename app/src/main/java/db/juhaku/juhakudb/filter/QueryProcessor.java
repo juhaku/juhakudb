@@ -13,6 +13,7 @@ import db.juhaku.juhakudb.annotation.OneToOne;
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
+import db.juhaku.juhakudb.exception.IllegalJoinException;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.QueryBuildException;
 import db.juhaku.juhakudb.filter.Predicate.Conjunction;
@@ -31,7 +32,7 @@ import db.juhaku.juhakudb.util.StringUtils;
  *
  * @author juha
  *
- * @since 1.1.3-SNAPSHOT
+ * @since 1.2.0-SNAPSHOT
  */
 public class QueryProcessor {
 
@@ -42,6 +43,8 @@ public class QueryProcessor {
      * tables for sql queries and joins.
      *
      * @param schema instance of {@link Schema}.
+     *
+     * @since 1.2.0-SNAPSHOT
      */
     public QueryProcessor(Schema schema) {
         this.schema = schema;
@@ -183,7 +186,11 @@ public class QueryProcessor {
      */
     private String[] createWhere(Root<?> root, StringBuilder sql, Predicates predicates) {
         String[] args = new String[0];
-        String alias = Alias.forModel(root.getModel());
+        String alias = null;
+
+        if (root.getModel() != null) {
+            alias = Alias.forModel(root.getModel());
+        }
 
         Iterator<Predicate> junctionIterator = predicates.getPredicates().iterator();
 
@@ -282,11 +289,13 @@ public class QueryProcessor {
             String token = tokens.nextToken();
 
             // check that token is not a reserved word nor symbol
-            if (!token.equals(Predicate.PARAM_EQUALS.trim()) && !token.equals(Predicate.PARAM_NOT_EQUAL.trim())
-                    && !token.equals(Predicate.PARAM_PLACE_HOLDER) && !ReservedWords.has(token)) {
+            if (!Predicate.isSymbol(token) && !ReservedWords.has(token)) {
 
                 // if token really is column name in database and alias is provided
                 if (!token.contains(".") && !token.startsWith("(") && !token.startsWith(Predicate.PARAM_PLACE_HOLDER) && !StringUtils.isBlank(alias)) {
+                    if (token.equals("id")) {
+                        token = NameResolver.ID_FIELD_SUFFIX;
+                    }
                     formattedBuilder.append(alias.concat(".").concat(token));
                 } else {
                     formattedBuilder.append(token); // otherwise add token.
@@ -391,14 +400,14 @@ public class QueryProcessor {
 
             } else if (targetField.isAnnotationPresent(ManyToOne.class) ||
                     (targetField.isAnnotationPresent(OneToOne.class)
-                            && !StringUtils.isBlank(targetField.getAnnotation(OneToOne.class).mappedBy()))) {
+                            && StringUtils.isBlank(targetField.getAnnotation(OneToOne.class).mappedBy()))) {
 
                 /*
                  * Join sql for join where root table is the owner of the join.
                  */
                 joinSql(sql, join.getJoinMode(), resolveName(join.getModel()),
-                        resolveName(targetField), rootAlias, resolvePrimaryKey(join.getModel()),
-                        Alias.forJoin(join), false);
+                        resolvePrimaryKey(model), rootAlias, resolveReverseJoinColumnName(model, join.getModel()),
+                        Alias.forJoin(join), true);
             } else {
 
                 /*
@@ -406,8 +415,8 @@ public class QueryProcessor {
                  */
 
                 //TODO if target field has column annotation use it as the name
-                joinSql(sql, join.getJoinMode(), resolveName(join.getModel()), resolveName(model).concat(NameResolver.ID_FIELD_SUFFIX),
-                        rootAlias, resolvePrimaryKey(model), Alias.forJoin(join), true);
+                joinSql(sql, join.getJoinMode(), resolveName(join.getModel()), resolvePrimaryKey(model),
+                        rootAlias, resolveReverseJoinColumnName(join.getModel(), model), Alias.forJoin(join), false);
             }
 
             if (!join.getJoins().isEmpty()) {
@@ -455,6 +464,20 @@ public class QueryProcessor {
                         middleTableAlias, NameResolver.ID_FIELD_SUFFIX, Alias.forJoin(join), false);
             }
         }
+    }
+
+    private String resolveReverseJoinColumnName(Class<?> model, Class<?> reverseModel) {
+        Schema table = findTableByName(resolveName(model));
+        String reverseJoinTableName = resolveName(reverseModel);
+
+        for (Reference reference : table.getReferences()) {
+            if (reference.getReferenceTableName().equals(reverseJoinTableName)) {
+                return reference.getColumnName();
+            }
+        }
+
+        throw new IllegalJoinException("Failed to create join from entity: " + model.getName()
+                + " to: " + reverseModel.getName() + " no reverse join column in table: " + table.getName());
     }
 
     /**

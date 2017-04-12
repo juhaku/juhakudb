@@ -26,10 +26,6 @@ public class Predicate {
     static final String PARAM_EQUALS = " = ";
     static final String PARAM_NOT_EQUAL = " != ";
 
-    public Predicate() {
-//        this.predicates = new ArrayList<>();
-    }
-
     private void addArgs(Object... args) {
         this.args = args;
     }
@@ -67,10 +63,6 @@ public class Predicate {
         return null;
     }
 
-//    public List<Predicate> getPredicates() {
-//        return predicates;
-//    }
-
     public static Predicate in(String field, Object... args) {
         Predicate predicate = new Predicate();
         StringBuilder inBuilder = new StringBuilder(field);
@@ -85,8 +77,6 @@ public class Predicate {
         predicate.in = inBuilder.toString();
         predicate.addArgs(args);
 
-//        addPredicate(predicate);
-
         return predicate;
     }
 
@@ -99,7 +89,6 @@ public class Predicate {
     }
 
     public static Predicate not(Predicate predicate) {
-//        Predicate child = getLastPredicate(root);
         if (!StringUtils.isBlank(predicate.in)) {
             predicate.in = predicate.in.replace("IN", "NOT IN");
 
@@ -129,8 +118,6 @@ public class Predicate {
         Predicate predicate = new Predicate();
         predicate.is = "IS NULL ".concat(field);
 
-//        addPredicate(predicate);
-
         return predicate;
     }
 
@@ -143,37 +130,33 @@ public class Predicate {
         predicate.between = between.toString();
         predicate.addArgs(arg0, arg1);
 
-//        addPredicate(predicate);
-
         return predicate;
     }
 
     public static Predicate gt(String field, Object arg) {
-        return operatorPredicate(field, arg, ">");
+        return operatorPredicate(field, arg, " > ");
     }
 
     public static Predicate ge(String field, Object arg) {
-        return operatorPredicate(field, arg, ">=");
+        return operatorPredicate(field, arg, " >= ");
     }
 
     public static Predicate lt(String field, Object arg) {
-        return operatorPredicate(field, arg, "<");
+        return operatorPredicate(field, arg, " < ");
     }
 
     public static Predicate le(String field, Object arg) {
-        return operatorPredicate(field, arg, "<=");
+        return operatorPredicate(field, arg, " <= ");
     }
 
     public static Predicate like(String field, Object arg) {
         Predicate predicate = new Predicate();
 
         StringBuilder like = new StringBuilder(field);
-        like.append(" LIKE").append(PARAM_PLACE_HOLDER);
+        like.append(" LIKE ").append(PARAM_PLACE_HOLDER);
 
         predicate.like = like.toString();
         predicate.addArgs(arg);
-
-//        addPredicate(predicate);
 
         return predicate;
     }
@@ -193,29 +176,29 @@ public class Predicate {
         predicate.eq = eqBuilder.toString();
         predicate.addArgs(arg);
 
-//        addPredicate(predicate);
-
         return predicate;
     }
 
-//    private Predicate getLastPredicate(Predicate root) {
-//        return root.getPredicates().query(root.getPredicates().size() - 1);
-//    }
-
-//    protected void addPredicate(Predicate predicate) {
-//        predicates.add(predicate);
-//    }
+    /**
+     * Check whether given value is symbol used by sql queries.
+     *
+     * @param value String value to check.
+     * @return boolean true if given value is symbol; false otherwise.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    static boolean isSymbol(String value) {
+        return value.equals(">") || value.equals("<") || value.equals(">=") || value.equals("<=")
+                || value.equals(PARAM_PLACE_HOLDER) || value.equals(PARAM_NOT_EQUAL.trim())
+                || value.equals(PARAM_EQUALS.trim());
+    }
 
     public static Disjunction disjunction() {
-//        Disjunction disjunction = new Disjunction();
-//        predicates.add(disjunction);
 
         return new Disjunction();
     }
 
     public static Conjunction conjunction() {
-//        Conjunction conjunction = new Conjunction();
-//        predicates.add(conjunction);
 
         return new Conjunction();
     }
