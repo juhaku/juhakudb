@@ -5,12 +5,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Map.Entry;
 
 import db.juhaku.juhakudb.core.schema.Schema;
@@ -185,7 +187,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (!schemaFolder.exists()) {
             Log.i(getClass().getName(), "folder: " + schemaFolder.getAbsolutePath()
                     + " did not found, it will be created!");
-            schemaFolder.mkdirs();
+            if (!schemaFolder.mkdirs()) {
+                Log.w(getClass().getName(), "Failed to create schema folder location!");
+            }
         }
 
         return schemaFolder;
@@ -208,10 +212,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         File schemaFile = new File(schemaFolder.getAbsolutePath(), schemaFileName);
         if (schemaFile.exists()) {
+            ObjectInputStream in = null;
             try {
-                schema = (Schema) new ObjectInputStream(new FileInputStream(schemaFile)).readObject();
+                in =  new ObjectInputStream(new FileInputStream(schemaFile));
+                schema = (Schema) in.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 Log.e(getClass().getName(), "Schema restoration failed", e);
+            } finally {
+                // try closing the stream
+                closeStream(in);
             }
         }
 
@@ -230,13 +239,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         File schemaFile = new File(getSchemaFolder(), generateSchemaName(databaseConfiguration));
 
+        ObjectOutputStream out = null;
         try {
-            new ObjectOutputStream(new FileOutputStream(schemaFile)).writeObject(schema);
+            out = new ObjectOutputStream(new FileOutputStream(schemaFile));
+            out.writeObject(schema);
+
         } catch (IOException e) {
             Log.e(getClass().getName(), "Schema persis failure", e);
             return false;
+        } finally {
+            // try closing the stream
+            closeStream(out);
         }
 
         return true;
+    }
+
+    /**
+     * Closes any closable stream or object. Errors during closing will be logged.
+     * @param closeable Instance of {@link Closeable} to close.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static void closeStream(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException e) {
+            Log.e(DatabaseHelper.class.getName(), "Failed to close object stream", e);
+        }
     }
 }

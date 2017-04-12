@@ -36,7 +36,7 @@ public class RepositoryLookupInjector {
      */
     void lookupRepositories(Object obj) {
         if (obj == null) {
-            throw new IllegalStateException("Object: " + obj + " provided must not be null");
+            throw new IllegalStateException("Object provided must not be null");
         }
         Class<?> lookup = obj.getClass();
         while (lookup.getSuperclass() != null) {

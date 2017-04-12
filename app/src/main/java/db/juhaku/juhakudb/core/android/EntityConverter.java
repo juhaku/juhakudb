@@ -32,8 +32,6 @@ import db.juhaku.juhakudb.util.StringUtils;
  */
 public class EntityConverter {
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
     public List<ResultSet> cursorToResultSetList(Cursor cursor, Class<?> rootClass, boolean custom) throws ConversionException {
         List<ResultSet> retVal = new ArrayList<>();
 //        for (String col : cursor.getColumnNames()) { //TODO debug log, remove this
@@ -115,7 +113,7 @@ public class EntityConverter {
             String val = cursor.getString(index);
             if (clazz != null && Date.class.isAssignableFrom(clazz)) {
                 try {
-                    return (T) sdf.parse(val);
+                    return (T) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(val);
                 } catch (ParseException e) {
                     Log.w(getClass().getName(), "incompatible date: " + val + " returning null");
                     return null;
@@ -215,6 +213,11 @@ public class EntityConverter {
                 } else if (String.class.isAssignableFrom(field.getType())) {
                     values.put(columnName, (String) field.get(object));
                 }
+            } catch (RuntimeException e) {
+                /*
+                 * Catch runtime exceptions so that they are not left behind the scene and re-throw them.
+                 */
+                throw e;
             } catch (Exception e) {
                 throw new ConversionException("Failed to convert entity to content values", e);
             }

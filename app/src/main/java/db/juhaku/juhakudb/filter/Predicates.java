@@ -102,7 +102,7 @@ public class Predicates {
         StringBuilder orderBuilder = new StringBuilder();
         for (String col : cols) {
             orderBuilder.append(col);
-            if (col != cols[cols.length - 1]) {
+            if (!col.equals(cols[cols.length - 1])) {
                 orderBuilder.append(", ");
             }
         }

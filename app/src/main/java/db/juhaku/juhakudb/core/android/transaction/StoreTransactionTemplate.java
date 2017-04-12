@@ -57,7 +57,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
             } else {
                 PendingTransaction rootEntry = null;
                 for (PendingTransaction transaction : cascadeList) {
-                    if (transaction.getStoredId() == id && transaction.getTo().equals(parentClass)) {
+                    if (transaction.getStoredId().longValue() == id.longValue() && transaction.getTo().equals(parentClass)) {
                         rootEntry = transaction;
                     }
                 }
@@ -131,7 +131,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
                     for (PendingTransaction transaction : cascadeList) {
                         if (transaction.getTo().equals(type) && transaction.getFrom().isAssignableFrom(item.getClass())) {
                             transactions.add(transaction);
-                        } else if (transaction.getStoredId() == id && transaction.getFrom().isAssignableFrom(item.getClass())) {
+                        } else if (transaction.getStoredId().longValue() == id.longValue() && transaction.getFrom().isAssignableFrom(item.getClass())) {
                             rootTransaction = transaction;
                         }
                     }
