@@ -477,7 +477,7 @@ public class QueryProcessor {
      * @return String reverse join column name from join table if found. If not found join processing
      * will fail to an exception.
      *
-     * @since
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
