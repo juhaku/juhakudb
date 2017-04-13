@@ -26,6 +26,11 @@ public class Predicate {
     static final String PARAM_EQUALS = " = ";
     static final String PARAM_NOT_EQUAL = " != ";
 
+
+    private Predicate() {
+        // not intializable by outside world.
+    }
+
     private void addArgs(Object... args) {
         this.args = args;
     }
@@ -214,7 +219,7 @@ public class Predicate {
 
         private List<Predicate> predicates;
 
-        public Disjunction() {
+        Disjunction() {
             this.predicates = new ArrayList<>();
         }
 
@@ -235,7 +240,7 @@ public class Predicate {
 
         private List<Predicate> predicates;
 
-        public Conjunction() {
+        Conjunction() {
             this.predicates = new ArrayList<>();
         }
 

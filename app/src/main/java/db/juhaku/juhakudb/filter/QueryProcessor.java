@@ -89,7 +89,10 @@ public class QueryProcessor {
 
         Alias.clearCache();
 
-        return new Query(sql.toString(), args);
+        Query query = new Query(sql.toString(), args);
+        query.setRoot(root);
+
+        return query;
     }
 
     /**

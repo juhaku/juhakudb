@@ -163,7 +163,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         Query query = new Query(sqlBuilder.toString(), new String[]{value.toString()});
 
         Cursor result = getDb().rawQuery(query.getSql(), query.getArgs());
-        List<ResultSet> resultSets = getConverter().cursorToResultSetList(result, null, true);
+        List<ResultSet> resultSets = getConverter().convertCursorToCustomResultSetList(result);
         List<T> referencedIds = new ArrayList<>();
         for (ResultSet resultSet : resultSets) {
             // We are expecting only one column, which is id column

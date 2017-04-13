@@ -111,20 +111,49 @@ public class NameResolver {
         }
     }
 
-    private static <T> String resolveJoinColumnName(T type) throws NameResolveException {
-        Class<?> resolveClazz = ReflectionUtils.getFieldType(type);
+    //TODO fix name resolving for joins once for all
 
-        if (resolveClazz.isAnnotationPresent(Entity.class)) {
-            String name = resolveClazz.getAnnotation(Entity.class).name();
-            if (!StringUtils.isBlank(name)) {
-                return name.concat(ID_FIELD_SUFFIX);
+    private static <T> String resolveJoinColumnName(T type) throws NameResolveException {
+        return camelCaseToUnderscored(((Field) type).getName()).concat(ID_FIELD_SUFFIX);
+
+//        Class<?> resolveClazz = ReflectionUtils.getFieldType(type);
+
+//        if (resolveClazz.isAnnotationPresent(Entity.class)) {
+//            String name = resolveClazz.getAnnotation(Entity.class).name();
+//            if (!StringUtils.isBlank(name)) {
+//                return name.concat(ID_FIELD_SUFFIX);
+//            } else {
+//                throw new NameResolveException("name attribute not specified in " +
+//                        Entity.class.getName() + " annotation");
+//            }
+//        } else {
+//            throw new NameResolveException("Annotation (" + Entity.class.getName() + ") is not " +
+//                    "provided, cannot resolve name");
+//        }
+    }
+
+    /**
+     * Transforms camelCaseText to underscored format e.g. camelCaseText would look like camel_case_text.
+     * @param fieldName String field name to transform to underscored format.
+     * @return String formatted to underscored format.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static String camelCaseToUnderscored(String fieldName) {
+        StringBuilder underscored = new StringBuilder();
+        for (int i = 0; i < fieldName.length(); i ++) {
+            char letter = fieldName.charAt(i);
+
+            if (Character.isUpperCase(letter)) {
+                underscored.append("_").append(Character.toLowerCase(letter));
+
             } else {
-                throw new NameResolveException("name attribute not specified in " +
-                        Entity.class.getName() + " annotation");
+                underscored.append(letter);
             }
-        } else {
-            throw new NameResolveException("Annotation (" + Entity.class.getName() + ") is not " +
-                    "provided, cannot resolve name");
         }
+
+        return underscored.toString();
     }
 }

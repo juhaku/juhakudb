@@ -13,15 +13,12 @@ import java.util.TreeSet;
 
 import db.juhaku.juhakudb.annotation.ManyToMany;
 import db.juhaku.juhakudb.annotation.ManyToOne;
+import db.juhaku.juhakudb.annotation.OneToMany;
 import db.juhaku.juhakudb.annotation.OneToOne;
 import db.juhaku.juhakudb.core.Fetch;
-import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.android.ResultSet;
-import db.juhaku.juhakudb.core.android.ResultSet.Result;
 import db.juhaku.juhakudb.core.android.ResultTransformer;
-import db.juhaku.juhakudb.exception.ConversionException;
 import db.juhaku.juhakudb.exception.MappingException;
-import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.JoinMode;
 import db.juhaku.juhakudb.filter.Predicate;
@@ -61,83 +58,111 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
 
     private void query(Query query, Class<?> rootClass, Object parentEntity, Field parentField) {
         Cursor retVal = getDb().rawQuery(query.getSql(), query.getArgs());
+
         if (transformer != null) {
-            List<ResultSet> result = getConverter().cursorToResultSetList(retVal, rootClass, true);
+
+            // For custom transformer perform a custom query and return after setting result
+            List<ResultSet> result = getConverter().convertCursorToCustomResultSetList(retVal);
             setResult(transformer.transformResult(result));
+
             return;
         } else {
-            List<ResultSet> result = getConverter().cursorToResultSetList(retVal, rootClass, false);
-            cascadeQuery(result, rootClass, query);
+
+            List<?> result = getConverter().convertCursorToEntityList(retVal, query.getRoot());
+
+            // Cascade the query for fetches & provide root always.
+            cascadeQuery(result, rootClass, query, query.getRoot());
+
             if (parentEntity != null) {
-                if (parentField.isAnnotationPresent(ManyToMany.class)) {
-                    setFieldValue(parentField, parentEntity, resultSetListToCollection(result, parentField.getType()));
-                } else { // otherwise it will be one to one primary key association
-                    setFieldValue(parentField, parentEntity, result.get(0).getPopulatedEntity());
+                if (parentField.isAnnotationPresent(ManyToMany.class) || parentField.isAnnotationPresent(OneToMany.class)) {
+
+                    ReflectionUtils.setFieldValue(parentField, parentEntity, resultsToCollection(result, parentField.getType()));
+                } else {
+
+                    // Otherwise it will be one to one primary key association
+                    // Add only if has results
+                    if (!result.isEmpty()) {
+                        ReflectionUtils.setFieldValue(parentField, parentEntity, result.get(0));
+                    }
                 }
+
             } else {
-                setResult(resultSetListToCollection(result, ArrayList.class));
+                setResult(result);
             }
         }
     }
 
-    private <E> void cascadeQuery(List<ResultSet> result, final Class<?> rootClass, Query query) {
-        for (ResultSet resultSet : result) {
-            E entity = instantiate(rootClass);
+    private <E> void cascadeQuery(List<E> result, final Class<?> rootClass, final Query query, final Root<?> root) {
+        for (final E entity : result) {
+//            E entity = instantiate(rootClass);
 
             // set primary key associations if available
             for (Field field : rootClass.getDeclaredFields()) {
                 field.setAccessible(true);
-                try {
-                    final Result column = resultSet.get(NameResolver.resolveName(field));
-                    final Result idColumn = resultSet.get(resolveIdColumn(rootClass));
-                    final Class<?> type = ReflectionUtils.getFieldType(field);
-                    String referenceTable = null;
-                    try {
-                        referenceTable = NameResolver.resolveName(type);
-                    } catch (NameResolveException e) {
-                        // Just ignore the error because field's type is not a table in database.
-                    }
 
-                    // if field references to a foreign key in another table fetch items if necessary
-                    if (isPrimaryKeyAssociationFetchAllowed(field, query, referenceTable) && !StringUtils.isBlank(referenceTable) && !isCached(type.getName())) {
+//                try {
+
+//                    final Result column = entity.get(NameResolver.resolveName(field));
+//                    final Result idColumn = entity.get(resolveIdColumn(rootClass));
+                    final Object fieldValue = ReflectionUtils.getFieldValue(entity, field);
+                    final Class<?> type = ReflectionUtils.getFieldType(field);
+
+//                    String referenceTable = null;
+//                    try {
+//                        referenceTable = NameResolver.resolveName(type);
+//                    } catch (NameResolveException e) {
+//                        // Just ignore the error because field's type is not a table in database.
+//                    }
+
+                    // If field references to a foreign key in another table fetch items if necessary
+                    if (isPrimaryKeyAssociationFetchAllowed(field) && !isCached(type.getName())) {
+
                         Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                             @Override
                             public void filter(Root root, Predicates predicates) {
                                 String alias = Alias.forModel(rootClass);
-                                root.join(getAssociatedRootClassFieldNameByType(type, rootClass), alias, JoinMode.LEFT_JOIN);
-                                predicates.add(Predicate.eq(String.valueOf(alias).concat(".").concat(resolveIdColumn(rootClass)),
-                                        idColumn.getColumnValue()));
+                                Object id = ReflectionUtils.getFieldValue(entity, ReflectionUtils.findIdField(entity.getClass()));
+
+                                root.join(getAssociatedRootClassFieldNameByType(type, rootClass),
+                                        alias, JoinMode.LEFT_JOIN);
+
+                                predicates.add(Predicate.eq(String.valueOf(alias)
+                                        .concat(".").concat(resolveIdColumn(rootClass)), id));
                             }
                         });
                         cache(entity.getClass().getName());
                         query(primaryKeySubQuery, type, entity, field);
-                    } else if (isForeignKeyAssociationFetchAllowed(field, query, referenceTable)) {
-                        // if field is referenced by other primary key, fetch item if necessary
-                        if (column != null && column.getColumnValue() != null) {
-                            Query associatedSubQuery = getProcessor().createQuery(column.getColumnType(), new Filter() {
-                                @Override
-                                public void filter(Root root, Predicates predicates) {
-                                    String alias = Alias.forModel(column.getColumnType());
-                                    predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(column.getColumnType())), column.getColumnValue()));
-                                }
-                            });
-                            query(associatedSubQuery, column.getColumnType(), entity, field);
-                        }
-                    } else {
-                        if (column != null && column.getColumnValue() != null
-                                && column.getColumnType().isAssignableFrom(column.getColumnValue().getClass())) {
-                            setFieldValue(field, entity, column.getColumnValue());
-                        }
+
+                    } else if (isForeignKeyAssociationFetchAllowed(field) && fieldValue != null) {
+
+                        Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
+                            @Override
+                            public void filter(Root root, Predicates predicates) {
+                                String alias = Alias.forModel(type);
+                                Object id = ReflectionUtils.getFieldValue(fieldValue, ReflectionUtils.findIdField(fieldValue.getClass()));
+
+                                predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(type)), id));
+                            }
+                        });
+                        query(associatedSubQuery, type, entity, field);
+
                     }
-                } catch (NameResolveException e) {
-                    throw new MappingException("Failed to map column name for entity's field", e);
-                }
+//                    else {
+//
+//                        if (column != null && column.getColumnValue() != null
+//                                && column.getColumnType().isAssignableFrom(column.getColumnValue().getClass())) {
+//                            setFieldValue(field, entity, column.getColumnValue());
+//                        }
+//                    }
+//                } catch (NameResolveException e) {
+//                    throw new MappingException("Failed to map column name for entity's field", e);
+//                }
             }
-            resultSet.setPopulatedEntity(entity);
+//            entity.setPopulatedEntity(entity);
         }
     }
 
-    private String getAssociatedRootClassFieldNameByType(Class<?> clazz, Class<?> type) {
+    private static String getAssociatedRootClassFieldNameByType(Class<?> clazz, Class<?> type) {
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
             if (field.isAnnotationPresent(ManyToMany.class) && ReflectionUtils.getFieldType(field).isAssignableFrom(type)) {
@@ -151,67 +176,63 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         return null;
     }
 
-    private static void setFieldValue(Field field, Object entity, Object result) {
-        try {
-            field.set(entity, result);
-        } catch (IllegalAccessException e) {
-            throw new MappingException("Could not set value: " + result + " to field: "
-                    + field.getName(), e);
-        }
-    }
+//    private static void setFieldValue(Field field, Object entity, Object result) {
+//        try {
+//            field.set(entity, result);
+//        } catch (IllegalAccessException e) {
+//            throw new MappingException("Could not set value: " + result + " to field: "
+//                    + field.getName(), e);
+//        }
+//    }
 
-    private <E> E instantiate(Class<?> clazz) {
-        try { // on beans try using default constructor
-            return (E) clazz.newInstance();
-        } catch (Exception e) {
-            throw new MappingException("Failed to initialize class: " + clazz.getName()
-                    + ", missing default constructor", e);
-        }
-    }
+//    private static  <E> E instantiate(Class<?> clazz) {
+//        try { // on beans try using default constructor
+//            return (E) clazz.newInstance();
+//        } catch (Exception e) {
+//            throw new MappingException("Failed to initialize class: " + clazz.getName()
+//                    + ", missing default constructor", e);
+//        }
+//    }
 
-    private <E> Collection<E> resultSetListToCollection(List<ResultSet> resultSets, Class<?> type) {
-        List<E> elements = new ArrayList<>();
-        for (ResultSet set : resultSets) {
-            elements.add((E) set.getPopulatedEntity());
-        }
+    private <E> Collection<E> resultsToCollection(List<E> result, Class<?> type) {
         if (Set.class.isAssignableFrom(type)) {
             if (HashSet.class.isAssignableFrom(type)) {
-                return new HashSet<>(elements);
+                return new HashSet<>(result);
             } else if (TreeSet.class.isAssignableFrom(type)) {
-                return new TreeSet<>(elements);
+                return new TreeSet<>(result);
             } else {
                 throw new MappingException("Given type does not inherit: " + HashSet.class.getName() + " nor " + TreeSet.class.getName());
             }
         }
         if (List.class.isAssignableFrom(type)) {
             if (LinkedList.class.isAssignableFrom(type)) {
-                return new LinkedList<>(elements);
+                return new LinkedList<>(result);
             } else {
-                return new ArrayList<>(elements);
+                return new ArrayList<>(result);
             }
         }
 
         return null;
     }
 
-    private static boolean isForeignKeyAssociationFetchAllowed(Field field, Query query, String table) {
+    private static boolean isForeignKeyAssociationFetchAllowed(Field field) {
         return (field.isAnnotationPresent(ManyToOne.class) && field.getAnnotation(ManyToOne.class).fetch() == Fetch.EAGER)
-                || (field.isAnnotationPresent(ManyToOne.class) && checkQueryContainsTable(query, table))
+//                || (field.isAnnotationPresent(ManyToOne.class) && checkQueryContainsTable(query, table))
                 || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER)
-                    && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
-                || (field.isAnnotationPresent(OneToOne.class) && checkQueryContainsTable(query, table));
+                && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
+                || (field.isAnnotationPresent(OneToOne.class) && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
     }
 
-    private static boolean isPrimaryKeyAssociationFetchAllowed(Field field, Query query, String table) {
+    private static boolean isPrimaryKeyAssociationFetchAllowed(Field field) {
         return ((field.isAnnotationPresent(ManyToMany.class) && field.getAnnotation(ManyToMany.class).fetch() == Fetch.EAGER))
-                || (field.isAnnotationPresent(ManyToMany.class) && checkQueryContainsTable(query, table))
+//                || (field.isAnnotationPresent(ManyToMany.class) && checkQueryContainsTable(query, table))
                 || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER
-                    && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()))
-                || (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
-                    && checkQueryContainsTable(query, table));
+                    && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
+//                || (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
+//                    && checkQueryContainsTable(query, table));
     }
 
-    private static boolean checkQueryContainsTable(Query query, String table) {
-        return (!StringUtils.isBlank(table) && query.getSql().contains(table));
-    }
+//    private static boolean checkQueryContainsTable(Query query, String table) {
+//        return (!StringUtils.isBlank(table) && query.getSql().contains(table));
+//    }
 }

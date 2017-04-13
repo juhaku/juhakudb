@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import db.juhaku.juhakudb.annotation.Id;
+import db.juhaku.juhakudb.annotation.Repository;
 
 /**
  * Created by juha on 06/04/16.
@@ -143,5 +144,41 @@ public class ReflectionUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Search field from given object by the provided name and set the given value to that object.
+     * Any error that occurs during execution will be logged.
+     *
+     * @param name String name of the field to look for.
+     * @param o {@link Object} whose field will be modified with given value.
+     * @param value T type object that will be placed to the field of given object.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    public static final <T> void setFieldValue(String name, Object o, T value) {
+        Field field = findField(o.getClass(), name);
+
+        if (field != null) {
+            setFieldValue(field, o, value);
+        }
+    }
+
+    /**
+     * Sets given value to the provided {@link Field}. Field must be field of given object.
+     * Any error that occurs during execution will be logged.
+     *
+     * @param field {@link Field} of object that will be modified.
+     * @param o {@link Object} whose field will be modified with given value.
+     * @param value T type object that will be placed to the field of given object.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    public static final <T> void setFieldValue(Field field, Object o, T value) {
+        try {
+            field.set(o, value);
+        } catch (IllegalAccessException e) {
+            Log.e(ReflectionUtils.class.getName(), "Failed to set value: " + value + " to object: " + o, e);
+        }
     }
 }
