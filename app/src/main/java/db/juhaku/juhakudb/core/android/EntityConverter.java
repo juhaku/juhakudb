@@ -71,6 +71,7 @@ public class EntityConverter {
                 throw new ConversionException("Could not convert class: " + rootClass.getName() + " to result set", e);
             }
         }
+        
 
         return result;
     }
