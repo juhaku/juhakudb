@@ -16,7 +16,6 @@ public class Teacher {
     @Id
     private Integer id;
 
-    @Column(name = "name")
     private String name;
 
     @OneToOne

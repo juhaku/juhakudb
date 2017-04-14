@@ -14,7 +14,9 @@ import db.juhaku.juhakudb.annotation.OneToMany;
 import db.juhaku.juhakudb.annotation.OneToOne;
 import db.juhaku.juhakudb.core.Cascade;
 import db.juhaku.juhakudb.core.NameResolver;
+import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
+import db.juhaku.juhakudb.exception.IllegalJoinException;
 import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.Predicate;
@@ -42,18 +44,22 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
 
     @Override
     void onTransaction() {
-        store(items, getRootClass(), null);
+        store(items, getRootClass(), null, null);
         cascadeList.clear();
         setResult(items);
         commit();
     }
 
-    private void store(Collection<T> items, Class<?> parentClass, Long id) {
+    private void store(Collection<T> items, Class<?> parentClass, Long id, Class<?> toType) {
         for (T item : items) {
+
             cascadeBefore(item);
+
             Long storedId = -1L;
+
             if (id == null) {
                 storedId = getDb().replace(resolveTableName(item.getClass()), null, getConverter().entityToContentValues(item));
+
             } else {
                 PendingTransaction rootEntry = null;
                 for (PendingTransaction transaction : cascadeList) {
@@ -61,18 +67,32 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
                         rootEntry = transaction;
                     }
                 }
+
                 if (rootEntry != null) {
+                    /*
+                     * Convert item to content values. Item will not have reference id so we
+                     * need to add it afterwards.
+                     */
                     ContentValues contentValues = getConverter().entityToContentValues(item);
-                    // add reference id to associated table
-                    contentValues.put(resolveTableName(rootEntry.getTo()).concat(NameResolver.ID_FIELD_SUFFIX), rootEntry.getStoredId());
+
+                    /*
+                     * Add reference id to associated table.
+                     *
+                     * TODO NOTE! Multiple joins might break the functionality.
+                     */
+                    contentValues.put(resolveReverseJoinColumnName(toType, parentClass), rootEntry.getStoredId());
+
                     storedId = getDb().replace(resolveTableName(item.getClass()), null, contentValues);
                 }
             }
+
+            // After successful store add pending transaction to trace back successful transactions.
             if (storedId != -1) {
                 PendingTransaction transaction = new PendingTransaction(storedId, parentClass, item.getClass());
                 cascadeList.add(transaction);
                 setIdToItem(item, storedId);
             }
+
             cascadeAfter(item, storedId);
         }
     }
@@ -107,12 +127,9 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
 
     private void storeCascadeBefore(T item, Field field) {
         T value = ReflectionUtils.getFieldValue(item, field);
+
         if (value != null) {
-            if (Collection.class.isAssignableFrom(value.getClass())) {
-                store((Collection<T>) value, item.getClass(), null);
-            } else {
-                store(Arrays.asList(value), item.getClass(), null);
-            }
+            store(toCollection(value), item.getClass(), null, null);
         }
     }
 
@@ -143,17 +160,45 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
             if (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
                     || field.isAnnotationPresent(OneToMany.class)) {
                 T value = ReflectionUtils.getFieldValue(item, field);
+
                 if (value != null) {
-                    Collection<T> values;
-                    if (Collection.class.isAssignableFrom(value.getClass())) {
-                        values = (Collection<T>) value;
-                    } else {
-                        values = Arrays.asList(value);
-                    }
-                    store(values, item.getClass(), id);
+                    store(toCollection(value), item.getClass(), id, type);
                 }
             }
         }
+    }
+
+    /**
+     * Maps given value to collection if value itself is not assignable from collection.
+     * @param value Object value to map.
+     * @return Collection containing given value or if value is collection then itself will be returned.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static <T> Collection<T> toCollection(T value) {
+        if (Collection.class.isAssignableFrom(value.getClass())) {
+            return (Collection<T>) value;
+        } else {
+            return Arrays.asList(value);
+        }
+    }
+
+    private String resolveReverseJoinColumnName(Class<?> model, Class<?> reverseModel) {
+        Schema table = getSchema().getElement(resolveTableName(model));
+
+        if (table != null) {
+            String reverseJoinTableName = resolveTableName(reverseModel);
+
+            for (Reference reference : table.getReferences()) {
+                if (reference.getReferenceTableName().equals(reverseJoinTableName)) {
+                    return reference.getColumnName();
+                }
+            }
+        }
+
+        return null;
     }
 
     private void storeCascadeManyToMany(final List<PendingTransaction> transactions, final PendingTransaction transaction) {

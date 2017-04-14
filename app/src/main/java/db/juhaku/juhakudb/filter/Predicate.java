@@ -121,7 +121,7 @@ public class Predicate {
 
     public static Predicate isNull(String field) {
         Predicate predicate = new Predicate();
-        predicate.is = "IS NULL ".concat(field);
+        predicate.is = field.concat(" IS NULL");
 
         return predicate;
     }

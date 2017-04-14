@@ -18,7 +18,6 @@ public class Group {
     @Id
     private Integer id;
 
-    @Column(name = "name")
     private String name;
 
     @ManyToOne

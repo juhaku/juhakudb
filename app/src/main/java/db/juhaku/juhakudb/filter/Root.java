@@ -150,7 +150,7 @@ public class Root<T> {
     private static Class<?> resolveJoinModel(Class<?> model, String target) {
         Field targetField = ReflectionUtils.findField(model, target);
         if (targetField == null) {
-            throw new IllegalJoinException("Could not form a join to: " + target + " no such field in: " + model);
+            throw new IllegalJoinException("Could not form a join to: " + target + ", no such field in: " + model);
         }
 
         return ReflectionUtils.getFieldType(targetField);

@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -103,23 +104,24 @@ public class EntityConverter {
                  * result has its own value to collection.
                  */
                 if (Collection.class.isAssignableFrom(targetField.getType())) {
-                    Object value = ReflectionUtils.getFieldValue(entity, targetField);
+                    Collection value = ReflectionUtils.getFieldValue(entity, targetField);
 
                     if (value == null) {
-                        Collection<?> collection = instantiateByDefaultConstructor(targetField.getType());
-                        ReflectionUtils.setFieldValue(targetField, entity, collection);
-                    } else {
+                        if (List.class.isAssignableFrom(targetField.getType())) {
+                            value = instantiateByDefaultConstructor(ArrayList.class);
 
-                        if (HashSet.class.isAssignableFrom(targetField.getType())) {
-                            ((HashSet) value).add(fieldEntity);
-                        } else if (TreeSet.class.isAssignableFrom(targetField.getType())) {
-                            ((TreeSet) value).add(fieldEntity);
-                        } else if (LinkedList.class.isAssignableFrom(targetField.getType())) {
-                            ((LinkedList) value).add(fieldEntity);
+                        } else if (Set.class.isAssignableFrom(targetField.getType())) {
+                            value= instantiateByDefaultConstructor(TreeSet.class);
+
                         } else {
-                            ((ArrayList) value).add(fieldEntity);
+
+                            value = instantiateByDefaultConstructor(targetField.getType());
                         }
+
+                        ReflectionUtils.setFieldValue(targetField, entity, value);
                     }
+
+                    value.add(fieldEntity);
 
                 } else {
                     ReflectionUtils.setFieldValue(targetField, entity, fieldEntity);
@@ -177,11 +179,14 @@ public class EntityConverter {
                 Field idField = ReflectionUtils.findIdField(type);
                 Object value = getColumnValue(cursor, ReflectionUtils.getFieldType(idField), index.get());
 
-                // Instantiate new entity
-                Object fieldEntity = instantiateByDefaultConstructor(type);
+                // Add entity with value to the mapping entity if value is found from database query.
+                if (value != null) {
+                    // Instantiate new entity
+                    Object fieldEntity = instantiateByDefaultConstructor(type);
 
-                ReflectionUtils.setFieldValue(ReflectionUtils.findIdField(fieldEntity.getClass()), fieldEntity, value);
-                ReflectionUtils.setFieldValue(field.getName(), entity, fieldEntity);
+                    ReflectionUtils.setFieldValue(ReflectionUtils.findIdField(fieldEntity.getClass()), fieldEntity, value);
+                    ReflectionUtils.setFieldValue(field.getName(), entity, fieldEntity);
+                }
 
             } else {
                 // Get the value and add a new resource to result set.
@@ -241,7 +246,7 @@ public class EntityConverter {
             // on models try using default constructor
             return (T) type.newInstance();
         } catch (Exception e) {
-            throw new ConversionException("Failed to initialize model: " + type.getName()
+            throw new ConversionException("Failed to initialize type: " + type.getName()
                     + ", missing default constructor", e);
         }
     }
@@ -389,9 +394,11 @@ public class EntityConverter {
             }
             try {
                 String columnName;
+
                 if (field.isAnnotationPresent(ManyToOne.class)
                         || (field.isAnnotationPresent(OneToOne.class) && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()))) {
-                    columnName = NameResolver.resolveName(ReflectionUtils.getFieldType(field)).concat(NameResolver.ID_FIELD_SUFFIX);
+                    columnName = NameResolver.resolveName(field);
+
                     Object value = getIdFieldValue(object, field);
                     // id is either long or integer
                     if (value != null) {
@@ -403,8 +410,10 @@ public class EntityConverter {
                     }
                     continue;
                 } else {
+
                     columnName = NameResolver.resolveName(field);
                 }
+
                 if (Integer.class.isAssignableFrom(field.getType()) || Integer.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Integer) field.get(object));
                 } else if (Short.class.isAssignableFrom(field.getType()) || Short.TYPE.isAssignableFrom(field.getType())) {

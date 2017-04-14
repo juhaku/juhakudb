@@ -74,7 +74,10 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         List<String> references = findReferences(tableName);
         for (String referenceTable : references) {
             for (T item : items) {
-                String columnName = resolveReferenceColumnIdName(tableName);
+
+                // Find reverse join column from reverse join table where join is formed to primary key table
+                String columnName = resolveReferenceColumnIdName(referenceTable, tableName);
+
                 Query count = createCountQuery(referenceTable, columnName, item);
                 if (executeCountQuery(count) > 0) {
                     Reference manyToMany = getManyToManyReference(referenceTable, columnName);
@@ -109,8 +112,18 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
-    private static String resolveReferenceColumnIdName(String table) {
-        return table.concat(NameResolver.ID_FIELD_SUFFIX);
+    private String resolveReferenceColumnIdName(String tableName, String reverseJoinTable) {
+        Schema table = getSchema().getElement(tableName);
+
+        if (table != null) {
+            for (Reference reference : table.getReferences()) {
+                if (reference.getReferenceTableName().equals(reverseJoinTable)) {
+                    return reference.getColumnName();
+                }
+            }
+        }
+
+        return null;
     }
 
     private List<String> findReferences(String tableName) {

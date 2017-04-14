@@ -104,32 +104,14 @@ public class NameResolver {
                 || clazz.isAnnotationPresent(OneToOne.class) || clazz.isAnnotationPresent(OneToMany.class)) {
             return resolveJoinColumnName(clazz);
         } else {
-            //TODO provide name resolving for fields without annotation
-            throw new NameResolveException("Annotation (" + Column.class.getName()
-                    + " or " + ManyToMany.class.getName() + ") is not " +
-                    "provided, cannot resolve name for class: " + clazz);
+
+            // Resolve name by the fields name.
+            return camelCaseToUnderscored(clazz.getName());
         }
     }
 
-    //TODO fix name resolving for joins once for all
-
     private static <T> String resolveJoinColumnName(T type) throws NameResolveException {
         return camelCaseToUnderscored(((Field) type).getName()).concat(ID_FIELD_SUFFIX);
-
-//        Class<?> resolveClazz = ReflectionUtils.getFieldType(type);
-
-//        if (resolveClazz.isAnnotationPresent(Entity.class)) {
-//            String name = resolveClazz.getAnnotation(Entity.class).name();
-//            if (!StringUtils.isBlank(name)) {
-//                return name.concat(ID_FIELD_SUFFIX);
-//            } else {
-//                throw new NameResolveException("name attribute not specified in " +
-//                        Entity.class.getName() + " annotation");
-//            }
-//        } else {
-//            throw new NameResolveException("Annotation (" + Entity.class.getName() + ") is not " +
-//                    "provided, cannot resolve name");
-//        }
     }
 
     /**
@@ -155,5 +137,40 @@ public class NameResolver {
         }
 
         return underscored.toString();
+    }
+
+    /**
+     * Transforms given field name to camelCase format. e.g. user_name would become userName.
+     * <p>This is useful when field name is being validated against field in entity class.</p>
+     *
+     * @param fieldName String field name to transform.
+     * @return String transformed field name.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    public static String underscoredToCamelCase(String fieldName) {
+        /*
+         * If fields is not primary key then remove the _id suffix from the field as it is
+         * computed anyway thus not really part of field name.
+         */
+        if (fieldName.length() > 3) {
+            fieldName = fieldName.substring(0, fieldName.lastIndexOf(ID_FIELD_SUFFIX));
+        }
+
+        StringBuilder camelCased = new StringBuilder();
+        for (int i = 0; i < fieldName.length(); i ++) {
+            char letter = fieldName.charAt(i);
+
+            // For "_" underscores fasten the cycle and uppercase next character for "_".
+            if (letter == '_') {
+                i++;
+                camelCased.append(Character.toUpperCase(fieldName.charAt(i)));
+
+            } else {
+                camelCased.append(letter);
+            }
+        }
+
+        return camelCased.toString();
     }
 }
