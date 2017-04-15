@@ -126,6 +126,8 @@ public class EntityConverter {
 
                 //TODO support maps?
 
+
+                // TODO distinct root entity ?
                 /*
                  * Determine whether field is a collection or object and act accordingly.
                  * Update the collection fields and replace other values.
