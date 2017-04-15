@@ -39,6 +39,7 @@ import db.juhaku.juhakudb.util.StringUtils;
 public class EntityConverter {
 
     private static AtomicInteger index = new AtomicInteger();
+    
     /**
      * Convert cursor of SQL query result to list of entities. Root stands for root of SQL
      * query containing joins to other tables if defined.
@@ -83,14 +84,14 @@ public class EntityConverter {
      * Find existing entity from entities list by id of the entity.
      *
      * @param id Object id value of the entity to look for existing entity.
-     * @param entities List of entities to look for entity.
+     * @param entities Collection of entities to look for entity.
      * @return Found entity or null if was not found.
      *
      * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
-    private static <T> T findEntityById(Object id, List<T> entities) {
+    private static <T> T findEntityById(Object id, Collection<T> entities) {
         for (T entity : entities) {
             if (id.equals(ReflectionUtils.getIdFieldValue(entity))) {
 
@@ -126,8 +127,6 @@ public class EntityConverter {
 
                 //TODO support maps?
 
-
-                // TODO distinct root entity ?
                 /*
                  * Determine whether field is a collection or object and act accordingly.
                  * Update the collection fields and replace other values.
@@ -153,7 +152,20 @@ public class EntityConverter {
                         ReflectionUtils.setFieldValue(targetField, entity, value);
                     }
 
-                    value.add(fieldEntity);
+                    /*
+                     * Do found checking only for entities, other typed values does not have joins
+                     * forward so they can be safely added to the collection.
+                     */
+                    if (fieldEntity.getClass().isAnnotationPresent(Entity.class)) {
+
+                        // If converted entity is not found from the collection add it.
+                        if (findEntityById(ReflectionUtils.getIdFieldValue(fieldEntity), value) == null) {
+                            value.add(fieldEntity);
+                        }
+
+                    } else {
+                        value.add(fieldEntity);
+                    }
 
                 } else {
                     ReflectionUtils.setFieldValue(targetField, entity, fieldEntity);
@@ -237,7 +249,7 @@ public class EntityConverter {
             }
             index.incrementAndGet();
 
-            field.setAccessible(accessible); // restore original state
+            field.setAccessible(accessible); // restore original status
         }
 
         return (T) entity;
@@ -489,11 +501,12 @@ public class EntityConverter {
      */
     private static Object getIdFieldValue(Object object, Field item) {
         Object val = ReflectionUtils.getFieldValue(object, item);
-        if (val != null) {
-            Field idField = ReflectionUtils.findIdField(val.getClass());
 
-            return ReflectionUtils.getFieldValue(val, idField);
+        if (val != null) {
+
+            return ReflectionUtils.getIdFieldValue(val);
         } else {
+
             return null;
         }
     }

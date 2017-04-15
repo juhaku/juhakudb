@@ -27,7 +27,7 @@ public abstract class TransactionTemplate<T> {
     private QueryProcessor processor;
     private EntityConverter converter;
     private boolean successful = false;
-    private List<String> tableCache;
+    private List<Object> resultCache;
 
     /**
      * This method will execute the query inside a transaction against database. Do not
@@ -188,8 +188,8 @@ public abstract class TransactionTemplate<T> {
      * Clears the table cache.
      * @hide
      */
-    private void clearCache() {
-        tableCache = null;
+    void clearCache() {
+        resultCache = null;
     }
 
     /**
@@ -269,30 +269,30 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Check whether table is cached to table cache.
-     * <p>Table cache will be cleared always at end of transaction automatically.</p>
-     * @param table String value of table name.
-     * @return boolean value; true if table is cached; otherwise false;
+     * Check whether result is cached to result cache.
+     * <p>Result cache will be cleared always at end of transaction automatically.</p>
+     * @param result String value of result name.
+     * @return boolean value; true if result is cached; otherwise false;
      *
      * @since 1.0.2
      */
-    final boolean isCached(String table) {
-        return (tableCache == null ? false : (tableCache.contains(table)));
+    final boolean isCached(Object result) {
+        return (resultCache == null ? false : (resultCache.contains(result)));
     }
 
     /**
-     * Insert table to table cache for later checking. Each table can only be set once to cache.
-     * <p>Table cache will be cleared always at end of transaction automatically.</p>
-     * @param table String value of table name.
+     * Insert object to object cache for later checking. Each object can only be set once to cache.
+     * <p>Result cache will be cleared always at end of transaction automatically.</p>
+     * @param result Object to put to the cache.
      *
      * @since 1.0.2
      */
-    final void cache(String table) {
-        if (tableCache == null) {
-            tableCache = new ArrayList<>();
+    final void cache(Object result) {
+        if (resultCache == null) {
+            resultCache = new ArrayList<>();
         }
-        if (!isCached(table)) {
-            tableCache.add(table);
+        if (!isCached(result)) {
+            resultCache.add(result);
         }
     }
 }

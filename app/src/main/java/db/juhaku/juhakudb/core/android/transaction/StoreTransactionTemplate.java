@@ -94,14 +94,6 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
             }
 
             cascadeAfter(item, storedId);
-
-            /*
-             * Clear cascade list always after each root object, so all the items won't have all
-             * the joins.
-             */
-//            if (id == null) {
-//                cascadeList.clear();
-//            }
         }
     }
 
@@ -163,6 +155,14 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
                     if (rootTransaction != null && transactions.size() > 0) {
                         storeCascadeManyToMany(transactions, rootTransaction);
                     }
+
+                    // After storing many to many cascading values continue cascade.
+
+//                    T value = ReflectionUtils.getFieldValue(item, field);
+//
+//                    if (value != null) {
+//                        store(toCollection(value), item.getClass(), null, null);
+//                    }
                 }
             }
             if (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
