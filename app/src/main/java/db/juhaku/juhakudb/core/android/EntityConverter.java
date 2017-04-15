@@ -39,7 +39,7 @@ import db.juhaku.juhakudb.util.StringUtils;
 public class EntityConverter {
 
     private static AtomicInteger index = new AtomicInteger();
-    
+
     /**
      * Convert cursor of SQL query result to list of entities. Root stands for root of SQL
      * query containing joins to other tables if defined.

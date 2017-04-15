@@ -155,14 +155,6 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
                     if (rootTransaction != null && transactions.size() > 0) {
                         storeCascadeManyToMany(transactions, rootTransaction);
                     }
-
-                    // After storing many to many cascading values continue cascade.
-
-//                    T value = ReflectionUtils.getFieldValue(item, field);
-//
-//                    if (value != null) {
-//                        store(toCollection(value), item.getClass(), null, null);
-//                    }
                 }
             }
             if (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
