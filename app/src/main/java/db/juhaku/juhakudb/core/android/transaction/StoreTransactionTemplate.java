@@ -94,6 +94,14 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
             }
 
             cascadeAfter(item, storedId);
+
+            /*
+             * Clear cascade list always after each root object, so all the items won't have all
+             * the joins.
+             */
+//            if (id == null) {
+//                cascadeList.clear();
+//            }
         }
     }
 

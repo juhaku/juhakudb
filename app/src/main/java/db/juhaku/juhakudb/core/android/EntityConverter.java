@@ -11,8 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -45,6 +43,8 @@ public class EntityConverter {
      * Convert cursor of SQL query result to list of entities. Root stands for root of SQL
      * query containing joins to other tables if defined.
      *
+     * <p>Entities are converted distinctly for root entity.</p>
+     *
      * @param cursor {@link Cursor} containing SQL query result.
      * @param root {@link Root} of SQL query.
      * @return List of converted entities from cursor's returned rows.
@@ -59,16 +59,46 @@ public class EntityConverter {
         while (cursor.moveToNext()) {
             // convert the main object first.
             T entity = convertCursorToEntity(cursor, root.getModel());
-            entities.add(entity);
+            T foundEntity = findEntityById(ReflectionUtils.getIdFieldValue(entity), entities);
+
+            /*
+             * If entity is not found add it to the list, otherwise do not add new one. Transform
+             * distinctly for root entity.
+             */
+            if (foundEntity == null) {
+                entities.add(entity);
+            }
 
             // convert joins from this model class.
-            alterEntityConvertJoins(cursor, root, entity);
+            alterEntityConvertJoins(cursor, root, foundEntity == null ? entity : foundEntity);
 
             // reset index.
             index.set(0);
         }
 
         return entities;
+    }
+
+    /**
+     * Find existing entity from entities list by id of the entity.
+     *
+     * @param id Object id value of the entity to look for existing entity.
+     * @param entities List of entities to look for entity.
+     * @return Found entity or null if was not found.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static <T> T findEntityById(Object id, List<T> entities) {
+        for (T entity : entities) {
+            if (id.equals(ReflectionUtils.getIdFieldValue(entity))) {
+
+                return entity;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -157,7 +187,8 @@ public class EntityConverter {
             field.setAccessible(true);
 
             /*
-             * Ignore fields that has primary key as reverse join because there is nothing to.
+             * Ignore fields that has primary key as reverse join because there is no such column
+             * in database thus nothing to do.
              */
             if (hasPrimaryKeyJoin(field)) {
                 continue;
@@ -454,7 +485,7 @@ public class EntityConverter {
      *
      * @hide
      */
-    private Object getIdFieldValue(Object object, Field item) {
+    private static Object getIdFieldValue(Object object, Field item) {
         Object val = ReflectionUtils.getFieldValue(object, item);
         if (val != null) {
             Field idField = ReflectionUtils.findIdField(val.getClass());
@@ -466,9 +497,15 @@ public class EntityConverter {
     }
 
     /**
-     * Check does given field of Class have a primary key referenced association.
-     * @param field {@link Field} of class to check primary key association for.
-     * @return Returns boolean value; true if field has primary key association; false otherwise.
+     * Check is given field annotated with one of {@link ManyToMany}, {@link OneToMany} or {@link OneToOne}
+     * with mapped by value empty.
+     *
+     * <p>If field is annotated with one of these annotations the join to other table is made from
+     * primary key of field's owning class. This means that field with annotation {@link db.juhaku.juhakudb.annotation.Id}
+     * is being used to make the join.</p>
+     *
+     * @param field {@link Field} of class to check primary key join for.
+     * @return Returns boolean value; true if field has primary key join; false otherwise.
      *
      * @since 1.0.2
      *

@@ -147,6 +147,32 @@ public class ReflectionUtils {
     }
 
     /**
+     * Get field's value by searching field by given name.
+     * @param name String name of the field whose value should be returned.
+     * @param o Object to look for field's value from.
+     * @return Value of the field.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    public static final <T> T getFieldValue(String name, Object o) {
+        return getFieldValue(o, findField(o.getClass(), name));
+    }
+
+    /**
+     * Helper method to retrieve id field's value from given object. Given object must be a database
+     * entity with annotation {@link db.juhaku.juhakudb.annotation.Entity} and it must have id field
+     * annotated with {@link Id}. If requirements are missing null will be returned.
+     *
+     * @param o Object instance of database entity to get id field's value from.
+     * @return Value of id field.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    public static final <T> T getIdFieldValue(Object o) {
+        return getFieldValue(o, findIdField(o.getClass()));
+    }
+
+    /**
      * Search field from given object by the provided name and set the given value to that object.
      * Any error that occurs during execution will be logged.
      *
