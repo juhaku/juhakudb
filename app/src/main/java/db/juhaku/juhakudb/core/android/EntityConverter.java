@@ -92,10 +92,12 @@ public class EntityConverter {
      * @hide
      */
     private static <T> T findEntityById(Object id, Collection<T> entities) {
-        for (T entity : entities) {
-            if (id.equals(ReflectionUtils.getIdFieldValue(entity))) {
+        if (id != null) {
+            for (T entity : entities) {
+                if (id.equals(ReflectionUtils.getIdFieldValue(entity))) {
 
-                return entity;
+                    return entity;
+                }
             }
         }
 
@@ -124,6 +126,9 @@ public class EntityConverter {
                 T fieldEntity = convertCursorToEntity(cursor, join.getModel());
 
                 Field targetField = ReflectionUtils.findField(root.getModel(), join.getTarget());
+
+                // Take the id of the converted entity
+                Object id = ReflectionUtils.getIdFieldValue(fieldEntity);
 
                 //TODO support maps?
 
@@ -159,7 +164,12 @@ public class EntityConverter {
                     if (fieldEntity.getClass().isAnnotationPresent(Entity.class)) {
 
                         // If converted entity is not found from the collection add it.
-                        if (findEntityById(ReflectionUtils.getIdFieldValue(fieldEntity), value) == null) {
+
+                        /*
+                         * If id of the entity is not null add the entity otherwise skip it as it is
+                         * an empty row from database caused by fetch join.
+                         */
+                        if (findEntityById(id, value) == null && id != null) {
                             value.add(fieldEntity);
                         }
 
@@ -168,13 +178,19 @@ public class EntityConverter {
                     }
 
                 } else {
-                    ReflectionUtils.setFieldValue(targetField, entity, fieldEntity);
+                    /*
+                     * If id of the entity is not null add the entity otherwise skip it as it is
+                     * an empty row from database caused by fetch join.
+                     */
+                    if (id != null) {
+                        ReflectionUtils.setFieldValue(targetField, entity, fieldEntity);
+                    }
                 }
-            }
 
-            // If join has joins to even further convert them as well.
-            if (!join.getJoins().isEmpty()) {
-                alterEntityConvertJoins(cursor, join, entity);
+                // If join has joins to even further convert them as well.
+                if (!join.getJoins().isEmpty()) {
+                    alterEntityConvertJoins(cursor, join, fieldEntity);
+                }
             }
         }
     }
