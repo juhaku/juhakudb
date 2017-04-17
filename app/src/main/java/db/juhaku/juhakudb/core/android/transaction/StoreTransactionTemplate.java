@@ -7,18 +7,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import db.juhaku.juhakudb.annotation.ManyToMany;
 import db.juhaku.juhakudb.annotation.ManyToOne;
 import db.juhaku.juhakudb.annotation.OneToMany;
 import db.juhaku.juhakudb.annotation.OneToOne;
-import db.juhaku.juhakudb.core.Cascade;
-import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
-import db.juhaku.juhakudb.exception.IllegalJoinException;
-import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.Predicate;
 import db.juhaku.juhakudb.filter.Predicates;
