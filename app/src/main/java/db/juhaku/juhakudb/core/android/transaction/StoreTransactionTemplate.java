@@ -59,7 +59,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param items {@link Collection} of items to store.
      * @param parent Object parent entity that is being used to make foreign key relation to parent table.
      *
-     * @since
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
@@ -99,7 +99,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      *
      * @param item T item that is being cascade stored.
      *
-     * @since
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
@@ -129,7 +129,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      *
      * @param item T item that is being cascade stored.
      *
-     * @since
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
@@ -175,7 +175,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param item T item from table item.
      * @param items {@link Collection} of to table items.
      *
-     * @since
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
