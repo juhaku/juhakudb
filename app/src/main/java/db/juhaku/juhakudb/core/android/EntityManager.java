@@ -12,7 +12,7 @@ import db.juhaku.juhakudb.core.android.transaction.TransactionTemplateFactory;
 import db.juhaku.juhakudb.core.android.transaction.TransactionTemplateFactory.Type;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.Query;
-import db.juhaku.juhakudb.filter.QueryCreator;
+import db.juhaku.juhakudb.filter.QueryProcessor;
 
 /**
  * Created by juha on 12/05/16.
@@ -24,7 +24,7 @@ public class EntityManager {
 
     private DatabaseHelper databaseHelper;
     private EntityConverter converter = new EntityConverter();
-    private QueryCreator creator;
+    private QueryProcessor processor;
 
     private static TransactionTemplateFactory factory;
 
@@ -34,7 +34,7 @@ public class EntityManager {
 
     public EntityManager(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
-        this.creator = new QueryCreator(databaseHelper.getSchema());
+        this.processor = new QueryProcessor(databaseHelper.getSchema());
     }
 
     public <K> int delete(Class<?> rootClass, Collection<K> args) {
@@ -83,7 +83,7 @@ public class EntityManager {
     }
 
     public <T> T query(Class<?> rootClass, Filter filter) {
-        return (T) fireQuery(rootClass, creator.create(rootClass, filter), null);
+        return (T) fireQuery(rootClass, processor.createQuery(rootClass, filter), null);
     }
 
     private Object fireQuery(Class<?> rootClass, Query query, ResultTransformer transformer) {
@@ -98,7 +98,7 @@ public class EntityManager {
     private Object executeTemplate(TransactionTemplate template) {
         template.setSchema(databaseHelper.getSchema());
         template.setDb(databaseHelper.getDb());
-        template.setCreator(creator);
+        template.setProcessor(processor);
         template.setConverter(converter);
         template.execute();
 

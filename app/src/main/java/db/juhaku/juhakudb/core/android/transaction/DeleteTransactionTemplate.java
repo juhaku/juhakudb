@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
 
         int deleted = 0;
         for (final T item : items) {
-            Query query = getCreator().createWhereClause(new Filter() {
+            Query query = getProcessor().createWhere(null, new Filter() {
                 @Override
                 public void filter(Root root, Predicates predicates) {
                     predicates.add(Predicate.eq(resolveIdColumn(getRootClass()), item.toString()));
@@ -75,7 +74,10 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         List<String> references = findReferences(tableName);
         for (String referenceTable : references) {
             for (T item : items) {
-                String columnName = resolveReferenceColumnIdName(tableName);
+
+                // Find reverse join column from reverse join table where join is formed to primary key table
+                String columnName = resolveReferenceColumnIdName(referenceTable, tableName);
+
                 Query count = createCountQuery(referenceTable, columnName, item);
                 if (executeCountQuery(count) > 0) {
                     Reference manyToMany = getManyToManyReference(referenceTable, columnName);
@@ -110,8 +112,18 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
-    private static String resolveReferenceColumnIdName(String table) {
-        return table.concat(NameResolver.ID_FIELD_SUFFIX);
+    private String resolveReferenceColumnIdName(String tableName, String reverseJoinTable) {
+        Schema table = getSchema().getElement(tableName);
+
+        if (table != null) {
+            for (Reference reference : table.getReferences()) {
+                if (reference.getReferenceTableName().equals(reverseJoinTable)) {
+                    return reference.getColumnName();
+                }
+            }
+        }
+
+        return null;
     }
 
     private List<String> findReferences(String tableName) {
@@ -128,7 +140,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
     }
 
     private int executeDelete(final String table, final Object[][] columnValues) {
-        Query query = getCreator().createWhereClause(new Filter() {
+        Query query = getProcessor().createWhere(null, new Filter() {
             @Override
             public void filter(Root root, Predicates predicates) {
                 for (Object[] column : columnValues) {
@@ -164,7 +176,7 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         Query query = new Query(sqlBuilder.toString(), new String[]{value.toString()});
 
         Cursor result = getDb().rawQuery(query.getSql(), query.getArgs());
-        List<ResultSet> resultSets = getConverter().cursorToResultSetList(result, null, true);
+        List<ResultSet> resultSets = getConverter().convertCursorToCustomResultSetList(result);
         List<T> referencedIds = new ArrayList<>();
         for (ResultSet resultSet : resultSets) {
             // We are expecting only one column, which is id column

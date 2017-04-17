@@ -321,13 +321,13 @@ public class Schema implements Serializable {
      * Comparator to provide comparison for schemas.
      * Schema table elements are compared by their {@link #getOrder()}.
      */
-    private static class SchemaComparator implements Comparator<Schema> {
+    private static class SchemaComparator implements Comparator<Schema>, Serializable {
         @Override
         public int compare(Schema lhs, Schema rhs) {
-            if (lhs == null || (lhs != null && lhs.order == null)) {
+            if (lhs == null || lhs.order == null) {
                 return -1;
             }
-            if (rhs == null || (rhs != null && rhs.order == null)) {
+            if (rhs == null || rhs.order == null) {
                 return 1;
             }
 

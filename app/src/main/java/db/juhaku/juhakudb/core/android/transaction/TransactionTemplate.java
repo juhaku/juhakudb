@@ -10,7 +10,7 @@ import db.juhaku.juhakudb.core.android.EntityConverter;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.exception.NameResolveException;
-import db.juhaku.juhakudb.filter.QueryCreator;
+import db.juhaku.juhakudb.filter.QueryProcessor;
 
 /**
  * Created by juha on 12/05/16.
@@ -24,10 +24,10 @@ public abstract class TransactionTemplate<T> {
     private T result;
     private Schema schema;
     private Class<?> rootClass;
-    private QueryCreator creator;
+    private QueryProcessor processor;
     private EntityConverter converter;
     private boolean successful = false;
-    private List<String> tableCache;
+    private List<Object> resultCache;
 
     /**
      * This method will execute the query inside a transaction against database. Do not
@@ -127,13 +127,13 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Set query creator for template that is used to create database queries in simplified manner.
-     * @param creator instance of {@link QueryCreator}.
+     * Set query processor for template that is used to create database queries in simplified manner.
+     * @param processor instance of {@link QueryProcessor}.
      *
-     * @since 1.0.2
+     * @since 1.2.0-SNAPSHOT
      */
-    public final void setCreator(QueryCreator creator) {
-        this.creator = creator;
+    public final void setProcessor(QueryProcessor processor) {
+        this.processor = processor;
     }
 
     /**
@@ -157,13 +157,13 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Get the previously put query creator.
-     * @return instance of {@link QueryCreator}.
+     * Get the previously put query processor.
+     * @return instance of {@link QueryProcessor}.
      *
-     * @since 1.0.2
+     * @since 1.2.0-SNAPSHOT
      */
-    QueryCreator getCreator() {
-        return creator;
+    QueryProcessor getProcessor() {
+        return processor;
     }
 
     /**
@@ -188,8 +188,8 @@ public abstract class TransactionTemplate<T> {
      * Clears the table cache.
      * @hide
      */
-    private void clearCache() {
-        tableCache = null;
+    void clearCache() {
+        resultCache = null;
     }
 
     /**
@@ -269,30 +269,44 @@ public abstract class TransactionTemplate<T> {
     }
 
     /**
-     * Check whether table is cached to table cache.
-     * <p>Table cache will be cleared always at end of transaction automatically.</p>
-     * @param table String value of table name.
-     * @return boolean value; true if table is cached; otherwise false;
+     * Check whether result is cached to result cache.
+     * <p>Result cache will be cleared always at end of transaction automatically.</p>
+     * @param result String value of result name.
+     * @return boolean value; true if result is cached; otherwise false;
      *
      * @since 1.0.2
      */
-    final boolean isCached(String table) {
-        return (tableCache == null ? false : (tableCache.contains(table)));
+    final boolean isCached(Object result) {
+        return (resultCache == null ? false : (resultCache.contains(result)));
     }
 
     /**
-     * Insert table to table cache for later checking. Each table can only be set once to cache.
-     * <p>Table cache will be cleared always at end of transaction automatically.</p>
-     * @param table String value of table name.
+     * Insert object to object cache for later checking. Each object can only be set once to cache.
+     * <p>Result cache will be cleared always at end of transaction automatically.</p>
+     * @param result Object to put to the cache.
      *
      * @since 1.0.2
      */
-    final void cache(String table) {
-        if (tableCache == null) {
-            tableCache = new ArrayList<>();
+    final void cache(Object result) {
+        if (resultCache == null) {
+            resultCache = new ArrayList<>();
         }
-        if (!isCached(table)) {
-            tableCache.add(table);
+        if (!isCached(result)) {
+            resultCache.add(result);
         }
     }
+
+    /**
+     * Remove object from result cache.
+     *
+     * @param object Object that need to be removed from cache.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    final void removeFromCache(Object object) {
+        if (resultCache != null && isCached(object)) {
+            resultCache.remove(object);
+        }
+    }
+
 }

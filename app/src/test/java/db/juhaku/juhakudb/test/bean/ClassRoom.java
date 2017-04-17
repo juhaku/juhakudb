@@ -13,7 +13,7 @@ import db.juhaku.juhakudb.annotation.OneToOne;
  *
  * @author juha
  */
-@Entity(name = "class_rooms")
+@Entity
 public class ClassRoom {
 
     @Id

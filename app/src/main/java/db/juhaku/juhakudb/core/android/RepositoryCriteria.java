@@ -30,7 +30,7 @@ public class RepositoryCriteria implements Criteria<String> {
                         Log.d(getClass().getName(), "path:" + path + " type:" + type);
                         Class<?> impl = clazz.getAnnotation(Repository.class).value();
                         if (impl == null) {
-                            Log.e(getClass().getName(), "No implementation provided: " + impl + ", implementation is mandatory");
+                            Log.e(getClass().getName(), "No implementation provided, implementation is mandatory");
                             return false;
                         }
                         return true;

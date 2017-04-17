@@ -2,13 +2,10 @@ package db.juhaku.juhakudb.test.bean;
 
 import java.util.List;
 
-import db.juhaku.juhakudb.annotation.Column;
 import db.juhaku.juhakudb.annotation.Entity;
 import db.juhaku.juhakudb.annotation.Id;
 import db.juhaku.juhakudb.annotation.ManyToMany;
 import db.juhaku.juhakudb.annotation.OneToMany;
-import db.juhaku.juhakudb.annotation.OneToOne;
-import db.juhaku.juhakudb.core.Cascade;
 
 /**
  * Created by juha on 22/12/15.
@@ -21,7 +18,6 @@ public class Person {
     @Id
     private Integer id;
 
-    @Column(name = "username")
     private String username;
 
     @ManyToMany

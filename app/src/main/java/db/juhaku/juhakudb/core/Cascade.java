@@ -2,10 +2,16 @@ package db.juhaku.juhakudb.core;
 
 /**
  * Created by juha on 11/05/16.
+ *
  *<p>Define cascading type for database actions such like store and delete.</p>
+ *
+ * <p>Currently Cascade definition is not required at all. All the operations are cascading.</p>
+ *
  * @author juha
+ *
  * @since 1.0.2
  */
+@Deprecated
 public enum Cascade {
     /**
      * If cascade store is used over reference then referenced entity is also stored.

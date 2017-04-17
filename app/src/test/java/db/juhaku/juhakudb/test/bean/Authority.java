@@ -18,8 +18,9 @@ public class Authority {
     @Id
     private Long id;
 
-    @Column(name = "value")
     private String value;
+
+    private String longDescriptionOfAuthority;
 
     @ManyToMany
     private List<ClassRoom> classRooms;
