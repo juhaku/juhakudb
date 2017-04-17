@@ -295,4 +295,18 @@ public abstract class TransactionTemplate<T> {
             resultCache.add(result);
         }
     }
+
+    /**
+     * Remove object from result cache.
+     *
+     * @param object Object that need to be removed from cache.
+     *
+     * @since 1.2.0-SNAPSHOT
+     */
+    final void removeFromCache(Object object) {
+        if (resultCache != null && isCached(object)) {
+            resultCache.remove(object);
+        }
+    }
+
 }

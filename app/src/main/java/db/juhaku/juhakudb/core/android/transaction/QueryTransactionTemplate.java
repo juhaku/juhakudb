@@ -103,7 +103,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                 final Class<?> type = ReflectionUtils.getFieldType(field);
 
                 // If field references to a foreign key in another table fetch items if necessary
-                if (isPrimaryKeyAssociationFetchAllowed(field) && !isCached(type.getName())) {
+                if (isPrimaryKeyAssociationFetchAllowed(field) && !isCached(new FetchHistory(field.getName(), entity.getClass()))) {
 
                     Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                         @Override
@@ -118,26 +118,32 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                                     .concat(".").concat(resolveIdColumn(rootClass)), id));
                         }
                     });
-                    cache(entity.getClass().getName());
+
+                    cache(new FetchHistory(field.getName(), entity.getClass()));
                     query(primaryKeySubQuery, type, entity, field);
 
-                } else if (isForeignKeyAssociationFetchAllowed(field) && fieldValue != null) {
+                    /*
+                     * After cascading query is made remove it from cache in case next entity wants
+                     * to make same cascading query.
+                     */
+                    removeFromCache(new FetchHistory(field.getName(), entity.getClass()));
 
-                    Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
-                        @Override
-                        public void filter(Root root, Predicates predicates) {
-                            String alias = Alias.forModel(type);
-                            Object id = ReflectionUtils.getFieldValue(fieldValue, ReflectionUtils.findIdField(fieldValue.getClass()));
+                } else {
+                    
+                    if (isForeignKeyAssociationFetchAllowed(field) && fieldValue != null) {
 
-                            predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(type)), id));
-                        }
-                    });
-                    query(associatedSubQuery, type, entity, field);
+                        Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
+                            @Override
+                            public void filter(Root root, Predicates predicates) {
+                                String alias = Alias.forModel(type);
+                                Object id = ReflectionUtils.getFieldValue(fieldValue, ReflectionUtils.findIdField(fieldValue.getClass()));
 
+                                predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(type)), id));
+                            }
+                        });
+                        query(associatedSubQuery, type, entity, field);
+                    }
                 }
-
-                // Clear cache for entity as it need to be entity specific
-                clearCache();
             }
         }
     }
@@ -185,5 +191,41 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                 || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER
                 && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
                 || (field.isAnnotationPresent(OneToMany.class) && field.getAnnotation(OneToMany.class).fetch() == Fetch.EAGER));
+    }
+
+    /**
+     * Wrapper class to wrap field name and class what is fetched already.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static class FetchHistory {
+        private String fieldName;
+        private Class<?> clazz;
+
+        FetchHistory(String fieldName, Class<?> clazz) {
+            this.fieldName = fieldName;
+            this.clazz = clazz;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchHistory that = (FetchHistory) o;
+
+            if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null)
+                return false;
+            return clazz.getName() != null ? clazz.getName().equals(that.clazz.getName()) : that.clazz.getName() == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = fieldName != null ? fieldName.hashCode() : 0;
+            result = 31 * result + (clazz != null ? clazz.hashCode() : 0);
+            return result;
+        }
     }
 }
