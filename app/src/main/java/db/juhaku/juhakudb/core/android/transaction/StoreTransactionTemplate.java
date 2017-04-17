@@ -54,7 +54,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param items {@link Collection} of items to store.
      * @param parent Object parent entity that is being used to make foreign key relation to parent table.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -94,7 +94,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      *
      * @param item T item that is being cascade stored.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -124,7 +124,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      *
      * @param item T item that is being cascade stored.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -170,7 +170,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param item T item from table item.
      * @param items {@link Collection} of to table items.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -236,7 +236,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      *
      * @return Schema found middle table or null if not found.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -261,7 +261,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param values {@link ContentValues} that is being stored to given table.
      * @return Long id of stored row in database table or -1 if storing will fail.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -274,7 +274,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param value Object value to map.
      * @return Collection containing given value or if value is collection then itself will be returned.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -296,7 +296,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
      * @param reverseModel Instance of {@link Class} of reverse join model of table where the join is made to.
      * @return String reverse join column name from join table if found.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */

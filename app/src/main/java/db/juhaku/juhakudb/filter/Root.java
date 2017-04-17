@@ -16,7 +16,7 @@ import db.juhaku.juhakudb.util.ReflectionUtils;
  *
  * @author juha
  *
- * @since 1.2.0-SNAPSHOT
+ * @since 1.2.0
  */
 public class Root<T> {
 
@@ -29,7 +29,7 @@ public class Root<T> {
      * root will be the starting point of joins to sql queries.
      * @param model {@link Class} of model class of database entity.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     Root(Class<?> model) {
         this.model = model;
@@ -45,7 +45,7 @@ public class Root<T> {
      * @return The join that was made by calling of this method. Root of join is now previously set
      * target field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Root<T> join(String target, JoinMode joinMode) {
         return join(target, null, joinMode);
@@ -60,7 +60,7 @@ public class Root<T> {
      * @return The join that was made by calling of this method. Root of join is now previously set
      * target field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Root<T> join(String target, String alias, JoinMode joinMode) {
         //trim prefix when searching field.
@@ -83,7 +83,7 @@ public class Root<T> {
      * @return The join that was made by calling of this method. Root of join is now previously set
      * target field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Root<T> fetch(String target, JoinMode joinMode) {
         return fetch(target, null, joinMode);
@@ -99,7 +99,7 @@ public class Root<T> {
      * @return The join that was made by calling of this method. Root of join is now previously set
      * target field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Root<T> fetch(String target, String alias, JoinMode joinMode) {
         //trim prefix when searching field.
@@ -116,7 +116,7 @@ public class Root<T> {
      * Get list of joins added to this root. Joins can either be regular joins or fetch joins.
      * @return instance of {@link ArrayList} containing joins added.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public List<Root<T>> getJoins() {
         if (joins == null) {
@@ -130,7 +130,7 @@ public class Root<T> {
      * Get model class of this root object.
      * @return instance of {@link Class} representing class of database model entity.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Class<?> getModel() {
         return model;
@@ -143,7 +143,7 @@ public class Root<T> {
      * @param target String value of target model property in current model.
      * @return Class<?> value of resolved model class from current model.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -161,7 +161,7 @@ public class Root<T> {
      * Join represents a relation in database between two tables.
      *
      * @author juha
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public class Join extends Root<T> {
         private String target;
@@ -179,7 +179,7 @@ public class Root<T> {
          * @param model Model {@link Class} of entity where join is created to.
          * @param fetch boolean whether joined entity is also fetched with same sql than the root entity.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         Join(String target, String alias, JoinMode joinMode, Class<?> model, boolean fetch) {
             super(model);
@@ -193,7 +193,7 @@ public class Root<T> {
          * Get target field's name where the join is formed to.
          * @return String target field name.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public String getTarget() {
             return target;
@@ -203,7 +203,7 @@ public class Root<T> {
          * Get alias if provided for join to the target table.
          * @return String alias or null if not provided.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public String getAlias() {
             return alias;
@@ -213,7 +213,7 @@ public class Root<T> {
          * Get join mode used with the join to the target table.
          * @return {@link JoinMode} used.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public JoinMode getJoinMode() {
             return joinMode;
@@ -223,7 +223,7 @@ public class Root<T> {
          * If set to true joined table will also be fetched with same sql query than the root of sql query.
          * @return true if join should be fetched; false otherwise.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public boolean isFetch() {
             return fetch;
@@ -233,7 +233,7 @@ public class Root<T> {
          * Get model class of target table.
          * @return {@link Class} of model class of target table.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public Class<?> getModel() {
             return super.model;

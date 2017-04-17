@@ -32,7 +32,7 @@ import db.juhaku.juhakudb.util.StringUtils;
  *
  * @author juha
  *
- * @since 1.2.0-SNAPSHOT
+ * @since 1.2.0
  */
 public class QueryProcessor {
 
@@ -44,7 +44,7 @@ public class QueryProcessor {
      *
      * @param schema instance of {@link Schema}.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public QueryProcessor(Schema schema) {
         this.schema = schema;
@@ -58,7 +58,7 @@ public class QueryProcessor {
      * @param filter {@link Filter} to create select, joins and where statement.
      * @return newly created query.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Query createQuery(Class<?> modelClass, Filter filter) {
         // initialize root and predicates for joins and restrictions
@@ -101,7 +101,7 @@ public class QueryProcessor {
      * @param root {@link Root} of query.
      * @param sql Instance of {@link StringBuilder} containing current sql.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -123,7 +123,7 @@ public class QueryProcessor {
      * @param root {@link Root} where to create query from.
      * @param sql {@link StringBuilder} containing current sql.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -183,7 +183,7 @@ public class QueryProcessor {
      * @param predicates {@link Predicates} WHERE statement query parameters and criterias.
      * @return String array of parameters from predicates.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -246,7 +246,7 @@ public class QueryProcessor {
      * @param args String[] to take args from.
      * @return new string array containing previous args and newly appended args.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -323,7 +323,7 @@ public class QueryProcessor {
      * @param model Instance of {@link Class} of entity model.
      * @return String table name or column name depending on what is being resolved.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     private static <T> String resolveName(T model) {
         try {
@@ -342,7 +342,7 @@ public class QueryProcessor {
      * @param model Instance of {@link Class} of model class of entity.
      * @return String primary key column name.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     private static String resolvePrimaryKey(Class<?> model) {
         try {
@@ -359,7 +359,7 @@ public class QueryProcessor {
      * @param filter {@link Filter} where the where clause is created from.
      * @return Query containing created where clause.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Query createWhere(Class<?> modelClass, Filter filter) {
         Root<?> root = new Root<>(modelClass);
@@ -382,7 +382,7 @@ public class QueryProcessor {
      * @param root Instance of {@link Root} where to create joins from.
      * @param sql Instance of {@link StringBuilder} that contains current sql.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -437,7 +437,7 @@ public class QueryProcessor {
      * @param join instance of {@link Join} between root table and joined table.
      * @param sql {@link StringBuilder} containing current sql.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -480,7 +480,7 @@ public class QueryProcessor {
      * @return String reverse join column name from join table if found. If not found join processing
      * will fail to an exception.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -504,7 +504,7 @@ public class QueryProcessor {
      * @param tableName String name of table.
      * @return Found table or null if not found.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -530,7 +530,7 @@ public class QueryProcessor {
      * @param toAlias String alias of to join column.
      * @param reverse boolean value whether reverse join is reversed.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -548,7 +548,7 @@ public class QueryProcessor {
      *
      * <p>All sql queries are aliased via this class to maintain integrity inside queries.</p>
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static class Alias {
 
@@ -564,7 +564,7 @@ public class QueryProcessor {
          * @param join Instance of {@link Join} to get alias for.
          * @return String value of alias for join.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public static String forJoin(Join join) {
 
@@ -590,7 +590,7 @@ public class QueryProcessor {
          * @param model Instance of {@link Class} of entity to get alias for.
          * @return String value of alias for entity.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         public static String forModel(Class<?> model) {
             String alias = aliasMap.get(model);
@@ -611,7 +611,7 @@ public class QueryProcessor {
          * @param tableName String name of database table.
          * @return Newly generated alias.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         static String generateAlias(String tableName) {
             StringBuilder aliasBuilder = new StringBuilder(String.valueOf(tableName.charAt(0)));
@@ -628,7 +628,7 @@ public class QueryProcessor {
          * Clear alias cache. If done, it should not be done during the query building process in order
          * to avoid broken queries.
          *
-         * @since 1.2.0-SNAPSHOT
+         * @since 1.2.0
          */
         static void clearCache() {
             if (aliasMap != null) {

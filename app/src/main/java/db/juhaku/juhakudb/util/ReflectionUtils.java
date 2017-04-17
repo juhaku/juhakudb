@@ -152,7 +152,7 @@ public class ReflectionUtils {
      * @param o Object to look for field's value from.
      * @return Value of the field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static final <T> T getFieldValue(String name, Object o) {
         return getFieldValue(o, findField(o.getClass(), name));
@@ -166,7 +166,7 @@ public class ReflectionUtils {
      * @param o Object instance of database entity to get id field's value from.
      * @return Value of id field.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static final <T> T getIdFieldValue(Object o) {
         return getFieldValue(o, findIdField(o.getClass()));
@@ -180,7 +180,7 @@ public class ReflectionUtils {
      * @param o {@link Object} whose field will be modified with given value.
      * @param value T type object that will be placed to the field of given object.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static final <T> void setFieldValue(String name, Object o, T value) {
         Field field = findField(o.getClass(), name);
@@ -198,7 +198,7 @@ public class ReflectionUtils {
      * @param o {@link Object} whose field will be modified with given value.
      * @param value T type object that will be placed to the field of given object.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static final <T> void setFieldValue(Field field, Object o, T value) {
         try {

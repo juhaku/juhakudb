@@ -52,7 +52,7 @@ public class EntityConverter {
      *
      * @throws ConversionException if any exception occurs during conversion.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public <T> List<T> convertCursorToEntityList(Cursor cursor, Root<?> root) throws ConversionException {
         List<T> entities = new ArrayList<>();
@@ -87,7 +87,7 @@ public class EntityConverter {
      * @param entities Collection of entities to look for entity.
      * @return Found entity or null if was not found.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -112,7 +112,7 @@ public class EntityConverter {
      * @param root {@link Root} of joins that are going to be altered to the entity.
      * @param entity {@link Object} that is being altered with conversion objects.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -213,7 +213,7 @@ public class EntityConverter {
      * @param model {@link Class} of database model where to convert cursor's row.
      * @return Fully converted entity from cursor's row.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -283,7 +283,7 @@ public class EntityConverter {
      * @param type T type either {@link Class} of database entity or {@link Field} of entity class.
      * @return String value of resolved name.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -302,7 +302,7 @@ public class EntityConverter {
      * @param type {@link Class} to instantiate.
      * @return Newly created instance of provided class.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */

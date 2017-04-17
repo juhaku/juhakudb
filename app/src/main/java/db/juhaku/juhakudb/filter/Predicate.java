@@ -190,7 +190,7 @@ public class Predicate {
      * @param value String value to check.
      * @return boolean true if given value is symbol; false otherwise.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     static boolean isSymbol(String value) {
         return value.equals(">") || value.equals("<") || value.equals(">=") || value.equals("<=")

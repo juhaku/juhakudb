@@ -130,7 +130,7 @@ public abstract class TransactionTemplate<T> {
      * Set query processor for template that is used to create database queries in simplified manner.
      * @param processor instance of {@link QueryProcessor}.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public final void setProcessor(QueryProcessor processor) {
         this.processor = processor;
@@ -160,7 +160,7 @@ public abstract class TransactionTemplate<T> {
      * Get the previously put query processor.
      * @return instance of {@link QueryProcessor}.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     QueryProcessor getProcessor() {
         return processor;
@@ -301,7 +301,7 @@ public abstract class TransactionTemplate<T> {
      *
      * @param object Object that need to be removed from cache.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     final void removeFromCache(Object object) {
         if (resultCache != null && isCached(object)) {

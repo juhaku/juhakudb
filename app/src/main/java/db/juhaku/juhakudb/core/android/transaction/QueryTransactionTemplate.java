@@ -196,7 +196,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
     /**
      * Wrapper class to wrap field name and class what is fetched already.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */

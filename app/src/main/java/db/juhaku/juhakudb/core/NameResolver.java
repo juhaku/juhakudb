@@ -118,7 +118,7 @@ public class NameResolver {
      * @param fieldName String field name to transform to underscored format.
      * @return String formatted to underscored format.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -150,7 +150,7 @@ public class NameResolver {
      * @param fieldName String field name to transform.
      * @return String transformed field name.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public static String underscoredToCamelCase(String fieldName) {
         /*

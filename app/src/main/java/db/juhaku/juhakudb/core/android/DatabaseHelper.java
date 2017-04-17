@@ -259,7 +259,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * Closes any closable stream or object. Errors during closing will be logged.
      * @param closeable Instance of {@link Closeable} to close.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */

@@ -254,7 +254,7 @@ public class SchemaFactory {
      * @return String resolved name.
      * @throws SchemaInitializationException if any error occurs during name resolving.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */
@@ -278,7 +278,7 @@ public class SchemaFactory {
      * @return String id column name.
      * @throws SchemaInitializationException if any error occurs during name resolving.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      *
      * @hide
      */

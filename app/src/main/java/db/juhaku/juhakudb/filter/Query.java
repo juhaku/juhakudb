@@ -38,7 +38,7 @@ public class Query {
      * Get root of sql query. Root forms tree of join operations.
      * @return Instance of {@link Root}.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public Root<?> getRoot() {
         return root;
@@ -48,7 +48,7 @@ public class Query {
      * Set root of sql query. Root forms tree of join operations.
      * @return Instance of {@link Root}.
      *
-     * @since 1.2.0-SNAPSHOT
+     * @since 1.2.0
      */
     public void setRoot(Root<?> root) {
         this.root = root;
