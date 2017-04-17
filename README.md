@@ -1,4 +1,4 @@
-# JuhakuDB current release: 1.1.6
+# JuhakuDB current release: 1.2.0
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 ## Introduction
@@ -32,14 +32,14 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>1.1.6</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```java
-    compile 'io.github.juhaku:juhaku-db:1.1.6'
+    compile 'io.github.juhaku:juhaku-db:1.2.0'
 ```
 
 ## Usage
@@ -82,39 +82,37 @@ Currently available annotation.
 |Transient| Marks class attribute as transient which will not be saved to database.|
 |Inject| Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation.|
 
-All store operations are cascading and storing will return stored item with populated database id.
-Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item.
+All operations are cascading and storing will return stored item with populated database id.
+Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item. However using EAGER is not recommended behauviour.
 
-Annotated table examples
+Annotated table examples with minimal annnotation configuration.
 ```java
-@Entity(name = "classes")
+@Entity
 public class Class {
 
     @Id
     private Long id;
 
-    @Column(name = "name")
     private String name;
 
-    @ManyToOne(fetch = Fetch.EAGER)
+    @ManyToOne
     private Person person;
 
-    @OneToOne(fetch = Fetch.EAGER)
+    @OneToOne
     private Teacher teacher;
     
     // .... getters and setters
 }
 
-@Entity(name = "books")
+@Entity
 public class Book {
 
     @Id
     private Long id;
 
-    @Column(name = "name")
     private String name;
 
-    @ManyToMany(fetch = Fetch.EAGER)
+    @ManyToMany
     private List<Person> persons;
 
     @ManyToMany
@@ -123,30 +121,52 @@ public class Book {
     // .... getters and setters   
 }
 
-@Entity(name = "persons")
+@Entity
 public class Person {
 
     @Id
     private Long id;
 
-    @Column(name = "name")
     private String name;
 
-    @Column(name = "nick_name")
     private String nickName;
 
-    @ManyToMany(fetch = Fetch.EAGER)
+    @ManyToMany
     private List<Book> books;
 
-    @OneToMany(fetch = Fetch.EAGER)
+    @OneToMany
     private List<Class> classes;
     
     // .... getters and setters   
 }
 ```
 
+Classes can be defined with or without name in @Entity annotation and with or without @Column annotation. If @Column annotation and name in @Enity annotation is not defined name for database column and table is still resolved.
+
+Classes can also define fetch in the relation annotation. However fetch is by default LAZY. Cascade option in relation annotation is deprecated and there is no use to use that as all store operations and delete operations are cascading by default. Just to make your life easier without calling different repositories for simple delete operation or store operation.
+
+Relations still need to be defined in both sides of tables.
+
+Annotated class example with more configuration. Compared to above there is name in @Entity annotation and @Column annotations added.
+```java
+@Entity(name = "authority")
+public class Authority {
+
+    @Id
+    private Long id;
+
+    @Column(name = "value")
+    private String value;
+
+    @ManyToMany(fetch = Fetch.LAZY)
+    private List<Person> person;
+    
+    // .... getters and setters
+}
+```
+
 ### Repositories
-Below is an example of creating repository interface. Repositories need to be annotated with Repository() annotation. Currently implementing class must be provided, but probably later it is possible to use default implementation as well instead of providing custom implementation for each repository.
+Below is an example of creating repository interface. Repositories need to be annotated with @Repository() annotation. Currently implementing class must be provided, but probably later it is possible to use default implementation as well instead of providing custom implementation for each repository.
 ```java
 @Repository(BookRepositoryImpl.class)
 public interface BookRepository {
@@ -235,14 +255,10 @@ Following is quoted from java doc of lookupRepositories(object) method.
 
 #### Heads up
 
-With predicates by prefixing column with "this" or not prefixing it all is equal and will both be mapped to
-default alias for the root table.
+If joins or predicates are prefixed with "this" or left without prefix it will be mapped to the root entity.
 ```java
+root.join("this.rooms", JoinMode.LEFT_JOIN)
 predicates.add(Predicate.in("this.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("name", "kim")));
-```
-So if used table is persons this could be written like:
-```java
-predicates.add(Predicate.in("p.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("p.name", "kim")));
 ```
 
 In predicate using .id or ._id as colum name is mapped as to be equal and both will refer to primary key column. In Adroid primary key column is mapped to "_id" column thus made this convention for nicer code.
@@ -276,7 +292,7 @@ public class PersonRepositoryImpl extends SimpleRepository<Long, Person> impleme
         filters.add(new Filter<Person>() {
             @Override
             public void filter(Root<Person> root, Predicates predicates) {
-                predicates.add(Predicate.eq("p.name", name));
+                predicates.add(Predicate.eq("this.name", name));
             }
         });
 
@@ -313,18 +329,23 @@ public class PersonRepositoryImpl extends SimpleRepository<Long, Person> impleme
     }
 }
 ```
+
+Joins work little different from version 1.2.0 forward. Method join will return new root to the join target. E.g. in example below the first join will return root to rooms object and the second will return teacher root from rooms.
+So be careful when creating joins.
+
 Below are couple of more advanced examples.
 ```java
-Filters filters = new Filters();
-filters.add(new Filter<Person>() {
+ilters.add(new Filter<Person>() {
     @Override
     public void filter(Root<Person> root, Predicates predicates) {
-        root.join("rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN).join("groups", "g", JoinMode.INNER_JOIN);
+        root.join("this.rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN);
+        root.join("this.groups", "g", JoinMode.INNER_JOIN);
 
-        predicates.add(Predicate.in("p.name", "john", "matthew")).add(Predicate.not(Predicate.eq("p.name", "kim")));
+        predicates.add(Predicate.in("this.name", "matti", "kimmo"))
+            .add(Predicate.not(Predicate.eq("name", "lauri")));
 
         Disjunction or = Predicate.disjunction();
-        or.add(Predicate.eq("t.name", "matt")).add(Predicate.eq("t.name", "laura"));
+        or.add(Predicate.eq("t.name", "laura")).add(Predicate.eq("t.name", "minna"));
         predicates.add(or);
 
         predicates.add(Predicate.conjunction().add(Predicate.between("t.id", 1, 3))
@@ -347,7 +368,65 @@ filters.add(new Filter<ClassRoom>() {
 });
 ```
 
-These examples should help you to write your own filters. It is also possible to chain filters and provide only one predicate criteria per filter. The decision is yours.
+Joins can also be chained to Filters object like this from version 1.2.0 forward. So there is no need to call add method. It can be a personal decision whether to add multipler filters or use just one. The end result is same.
+```java
+Filters filters = new Filters(new Filter<ClassRoom>() {
+    @Override
+    public void filter(Root<ClassRoom> root, Predicates predicates) {
+        root.join("persons", JoinMode.INNER_JOIN);
+    }
+}, new Filter<ClassRoom>() {
+    @Override
+    public void filter(Root<ClassRoom> root, Predicates predicates) {
+        root.join("this.teacher", "t", JoinMode.LEFT_JOIN);
+
+        predicates.add(Predicate.ge("id", 1));
+    }
+}, new Filter<ClassRoom>() {
+    @Override
+    public void filter(Root<ClassRoom> root, Predicates predicates) {
+        predicates.add(Predicate.eq("t.name", "tester"));
+    }
+});
+```
+
+Below is an example of new function since 1.2.0. It is fetch method in root object. It is a same as join but it will fetch the objects from the database along with the original objects. So there is no need to create additional query to fetch related objects manually nor use the EAGER fetch mode in relation annotations. 
+
+As you might have noted you can specify alias for join and as well as fetch method. This is an optional functionality 
+and thus no necessary to provide. If alias is not provided it will be generated automatically. However if you use alias
+you can refer to object in queries with the alias. So without alias you cannot refer to the table in queries and you cannot add predicates for the table.
+```java
+Filters filters = new Filters(new Filter<Person>() {
+    @Override
+    public void filter(Root<Person> root, Predicates predicates) {
+        root.fetch("groups", JoinMode.INNER_JOIN);
+        root.fetch("rooms", "r", JoinMode.LEFT_JOIN);
+    }
+}, new Filter<Person>() {
+    @Override
+    public void filter(Root<Person> root, Predicates predicates) {
+        predicates.add(Predicate.eq("this.name", "tester"));
+    }
+});
+```
+
+Yet another invented real case scenario example.
+```java
+List<Library> libraries = libraryRepository.findLibraries(new Filters(new Filter() {
+    @Override
+    public void filter(Root root, Predicates predicates) {
+        root.fetch("books", JoinMode.INNER_JOIN).fetch("persons", "bp", JoinMode.INNER_JOIN);
+        root.fetch("roles", JoinMode.LEFT_JOIN).fetch("person", JoinMode.LEFT_JOIN);
+    }
+}, new Filter() {
+    @Override
+    public void filter(Root root, Predicates predicates) {
+        predicates.add(Predicate.not(Predicate.isNull("this.name")));
+    }
+}));
+```
+
+Now begin to use the library that rocks the Android's SQLite database.
 
 ## Roadmap
 
