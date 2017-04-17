@@ -145,10 +145,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
     private static String getAssociatedRootClassFieldNameByType(Class<?> clazz, Class<?> type) {
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
-            if (field.isAnnotationPresent(ManyToMany.class) && ReflectionUtils.getFieldType(field).isAssignableFrom(type)) {
-                return field.getName();
-            }
-            if (field.isAnnotationPresent(OneToOne.class) && ReflectionUtils.getFieldType(field).isAssignableFrom(type)) {
+            if (ReflectionUtils.getFieldType(field).isAssignableFrom(type)) {
                 return field.getName();
             }
         }
@@ -180,13 +177,13 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
     private static boolean isForeignKeyAssociationFetchAllowed(Field field) {
         return (field.isAnnotationPresent(ManyToOne.class) && field.getAnnotation(ManyToOne.class).fetch() == Fetch.EAGER)
                 || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER)
-                && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
-                || (field.isAnnotationPresent(OneToOne.class) && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
+                && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy());
     }
 
     private static boolean isPrimaryKeyAssociationFetchAllowed(Field field) {
         return ((field.isAnnotationPresent(ManyToMany.class) && field.getAnnotation(ManyToMany.class).fetch() == Fetch.EAGER))
                 || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER
-                    && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
+                && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
+                || (field.isAnnotationPresent(OneToMany.class) && field.getAnnotation(OneToMany.class).fetch() == Fetch.EAGER));
     }
 }
