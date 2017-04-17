@@ -129,7 +129,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                     removeFromCache(new FetchHistory(field.getName(), entity.getClass()));
 
                 } else {
-                    
+
                     if (isForeignKeyAssociationFetchAllowed(field) && fieldValue != null) {
 
                         Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
