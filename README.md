@@ -335,7 +335,8 @@ So be careful when creating joins.
 
 Below are couple of more advanced examples.
 ```java
-ilters.add(new Filter<Person>() {
+Filters filters = new Filters();
+filters.add(new Filter<Person>() {
     @Override
     public void filter(Root<Person> root, Predicates predicates) {
         root.join("this.rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN);
