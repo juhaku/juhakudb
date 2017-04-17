@@ -176,7 +176,7 @@ public interface BookRepository {
 ```
 To implement the repository you could write something like this:
 ```java
-public class BookRepositoryImpl extends SimpleRepository<Long, Book> implements BookRepository {
+public class BookRepositoryImpl extends SimpleAndroidRepository<Long, Book> implements BookRepository {
 
     public BookRepositoryImpl(EntityManager em) {
         super(em);
@@ -270,7 +270,7 @@ predicates.add(Predicate.eq("this._id", "1"));
 Following example is implemenation of simple person repository. This should give you an example of how you could work with 
 filter criterias. 
 ```java
-public class PersonRepositoryImpl extends SimpleRepository<Long, Person> implements PersonRepository {
+public class PersonRepositoryImpl extends SimpleAndroidRepository<Long, Person> implements PersonRepository {
 
     public PersonRepositoryImpl(EntityManager entityManager) {
         super(entityManager);
