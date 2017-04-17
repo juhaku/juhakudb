@@ -1,6 +1,7 @@
 package db.juhaku.juhakudb.core.android.transaction;
 
 import android.content.ContentValues;
+import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,10 +45,188 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
 
     @Override
     void onTransaction() {
-        store(items, getRootClass(), null, null);
-        cascadeList.clear();
+        store(items, null);
+//        cascadeList.clear();
         setResult(items);
         commit();
+    }
+
+
+    private void store(Collection<T> items, Object parent) {
+        for (T item : items) {
+
+            cascadeStoreBefore(item);
+
+            ContentValues values = getConverter().entityToContentValues(item);
+
+            // If parent is specified add parent id to content values as it references to child.
+            if (parent != null) {
+                values.put(resolveReverseJoinColumnName(item.getClass(), parent.getClass()),
+                        ReflectionUtils.getIdFieldValue(parent).toString());
+            }
+
+            Long id = insertOrReplace(resolveTableName(item.getClass()), values);
+
+
+            // If storing was successful populate object with the database row id.
+            if (id > -1) {
+
+                ReflectionUtils.setFieldValue(ReflectionUtils.findIdField(item.getClass()), item, id);
+
+                cascadeStoreAfter(item);
+
+            } else {
+                // Some general logging if storing fails.
+                Log.v(getClass().getName(), "Failed to store item: " + item + " to database!");
+            }
+        }
+    }
+
+    private void cascadeStoreBefore(T item) {
+        for (Field field : item.getClass().getDeclaredFields()) {
+
+            Object value = ReflectionUtils.getFieldValue(item, field);
+
+            /*
+             * If field has foreign key relation it should be stored before the actual item is being
+             * stored.
+             */
+            if (field.isAnnotationPresent(ManyToOne.class) ||
+                    (field.isAnnotationPresent(OneToOne.class) && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()))) {
+
+                // Check that there is actually something to store.
+                if (value != null) {
+                    store((Collection<T>) toCollection(value), null);
+                }
+            }
+        }
+    }
+
+    private void cascadeStoreAfter(T item) {
+        for (Field field : item.getClass().getDeclaredFields()) {
+
+            Object value = ReflectionUtils.getFieldValue(item, field);
+
+            /*
+             * If field has primary key relation referenced item will be stored after the actual item
+             * is being stored.
+             */
+            if (field.isAnnotationPresent(ManyToMany.class) || field.isAnnotationPresent(OneToMany.class)
+                    || (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()))) {
+
+                // Check that there is actually something to store.
+                if (value != null) {
+
+                    if (field.isAnnotationPresent(ManyToMany.class)) {
+
+                        store((Collection<T>) toCollection(value), null);
+
+                        // Update middle table reference for many to many relations.
+                        storeMiddleTable(item, (Collection<T>) value);
+
+                    } else {
+
+                        store((Collection<T>) toCollection(value), item);
+                    }
+                }
+
+            }
+        }
+    }
+
+    private void storeMiddleTable(final T item, Collection<T> items) {
+        final Schema middleTable = findMiddleTable(item.getClass(), items.iterator().next().getClass());
+
+        /*
+         * Delete existing references by id.
+         */
+        Query where = getProcessor().createWhere(null, new Filter() {
+            @Override
+            public void filter(Root root, Predicates predicates) {
+                String middleTableJoinColumn = null;
+                for (Reference reference : middleTable.getReferences()) {
+                    if (reference.getReferenceTableName().equals(resolveTableName(item.getClass()))) {
+                        middleTableJoinColumn = reference.getColumnName();
+                    }
+                }
+
+                predicates.add(Predicate.eq(middleTableJoinColumn, ReflectionUtils.getIdFieldValue(item)));
+            }
+        });
+        getDb().delete(middleTable.getName(), where.getSql(), where.getArgs());
+
+
+        String fromTable = resolveTableName(item.getClass());
+
+        /*
+         * Store middle table references.
+         */
+        for (T joinItem : items) {
+
+            // Create content value for each join item as each item represents one row in database.
+            ContentValues values = new ContentValues();
+
+            for (Reference reference : middleTable.getReferences()) {
+
+                Object value;
+
+                /*
+                 * Determine which id is being used to to which reference. If reference table equals
+                 * from table get id of the from item otherwise use to id.
+                 */
+                if (reference.getReferenceTableName().equals(fromTable)) {
+                    value = ReflectionUtils.getIdFieldValue(item).toString();
+
+                } else {
+
+                    value = ReflectionUtils.getIdFieldValue(joinItem);
+                }
+
+                values.put(reference.getColumnName(), value.toString());
+            }
+
+            insertOrReplace(middleTable.getName(), values);
+        }
+    }
+
+    /**
+     * Find middle table by model class and reference model class.
+     * @param model Entity class that join is made from.
+     * @param joinModel Entity class that join is made to.
+     *
+     * @return Schema found middle table or null if not found.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private Schema findMiddleTable(Class<?> model, Class<?> joinModel) {
+        String tableName = resolveTableName(model);
+        String joinTable = resolveTableName(joinModel);
+
+        Schema middleTable;
+
+        if ((middleTable = getSchema().getElement(tableName.concat("_").concat(joinTable))) == null) {
+            middleTable = getSchema().getElement(joinTable.concat("_").concat(tableName));
+        }
+
+        return middleTable;
+    }
+
+    /**
+     * Inserts or replaces given content values in given table. If SQL was executed successfully the
+     * id of database row will be returned. If execution fails -1 will be returned.
+     *
+     * @param tableName String name of the table to store content values to.
+     * @param values {@link ContentValues} that is being stored to given table.
+     * @return Long id of stored row in database table or -1 if storing will fail.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private Long insertOrReplace(String tableName, ContentValues values) {
+        return getDb().replace(tableName, null, values);
     }
 
     private void store(Collection<T> items, Class<?> parentClass, Long id, Class<?> toType) {

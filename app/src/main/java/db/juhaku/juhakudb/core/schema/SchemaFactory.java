@@ -37,6 +37,7 @@ public class SchemaFactory {
     /**
      * Generates new instance of database schema {@link Schema} by given database name and class array
      * as tables of the database.
+     *
      * @param dbName String value of database name.
      * @param tables Class[] of classes as tables in database.
      * @return Returns new instance of database {@link Schema} tree.
@@ -55,13 +56,7 @@ public class SchemaFactory {
     }
 
     private Schema createTable(Class<?> table, Schema schema, String mappedBy) throws SchemaInitializationException {
-        String tableName;
-        try {
-            tableName = NameResolver.resolveName(table);
-        } catch (NameResolveException e) {
-            Log.e(getClass().getName(), "Failed to create schema", e);
-            throw new SchemaInitializationException("Schema initialization failed", e);
-        }
+        String tableName = resolveName(table);
 
         // check table name before it is created.
         checkReservedWords(tableName);
@@ -112,13 +107,8 @@ public class SchemaFactory {
                 throw new SchemaInitializationException("Field not found by mappedBy value: " + mappedBy);
             }
 
-            String referenceColumnName;
-            try {
-                referenceColumnName = NameResolver.resolveName(referencedField);
-            } catch (NameResolveException e) {
-                Log.e(getClass().getName(), "Failed to create schema", e);
-                throw new SchemaInitializationException("Schema initialization failed", e);
-            }
+            String referenceColumnName = resolveName(referencedField);
+
             Schema col = createNamedColumn(referenceColumnName, "INTEGER");
             dbTable.addColumn(col);
 
@@ -135,13 +125,7 @@ public class SchemaFactory {
 
     private Schema createColumn(Field column) throws SchemaInitializationException {
         Schema dbColumn = new Schema();
-        String columnName;
-        try {
-            columnName = NameResolver.resolveName(column);
-        } catch (NameResolveException e) {
-            Log.e(getClass().getName(), "Schema initialization failed", e);
-            throw new SchemaInitializationException("Schema initialization failed", e);
-        }
+        String columnName = resolveName(column);
 
         // check column name before it is created.
         checkReservedWords(columnName);
@@ -159,14 +143,10 @@ public class SchemaFactory {
      * Join table is only for many to many relations.
      */
     private void createJoinTable(Class<?> table, String tableName, Field column, Schema schema) throws SchemaInitializationException {
-        String referenceColName;
-        try {
-            referenceColName = NameResolver.resolveName(column);
-        } catch (NameResolveException e) {
-            Log.e(getClass().getName(), "Failed to create schema", e);
-            throw new SchemaInitializationException("Schema initialization failed", e);
-        }
-        String referenceTableName = referenceColName.replace(NameResolver.ID_FIELD_SUFFIX, "");
+        String referenceColName = resolveName(column);
+
+        // Resolve real name for entity class of column.
+        String referenceTableName = resolveName(ReflectionUtils.getFieldType(column));
 
         Schema joinTable = getJoinTable(schema, tableName, referenceTableName);
         if (joinTable != null) {
@@ -175,6 +155,7 @@ public class SchemaFactory {
         } else {
             joinTable = new Schema();
         }
+
         String joinTableName = new StringBuilder(tableName).append("_").append(referenceTableName).toString();
         joinTable.setName(joinTableName);
         joinTable.setOrder(keys.incrementAndGet());
@@ -184,19 +165,9 @@ public class SchemaFactory {
         joinTable.addColumn(createNamedColumn(firstJoinColName, type));
         joinTable.addColumn(createNamedColumn(referenceColName, type));
 
-        String firstJoinIdTable;
-        try {
-            firstJoinIdTable = NameResolver.resolveIdName(table);
-        } catch (NameResolveException e) {
-            throw new SchemaInitializationException("Failed to create schema", e);
-        }
-        String secondJoinIdTable;
-        try {
-            Class<?> referenceClass = ReflectionUtils.getGenericFieldType(column);
-            secondJoinIdTable = NameResolver.resolveIdName(referenceClass);
-        } catch (NameResolveException e) {
-            throw new SchemaInitializationException("Failed to create schema", e);
-        }
+        String firstJoinIdTable = resolveIdColumn(table);
+
+        String secondJoinIdTable = resolveIdColumn(ReflectionUtils.getGenericFieldType(column));
 
         joinTable.getReferences().add(new Reference(firstJoinColName, tableName, firstJoinIdTable));
         joinTable.getReferences().add(new Reference(referenceColName, referenceTableName, secondJoinIdTable));
@@ -265,7 +236,7 @@ public class SchemaFactory {
      * @throws SchemaInitializationException if name is found from reserved words the schema creation
      * cannot be proceed.
      *
-     * @since 1.1.3-SNAPSHOT
+     * @since 1.2.0-SNAPSHOT
      *
      * @hide
      */
@@ -273,6 +244,52 @@ public class SchemaFactory {
         if (ReservedWords.has(name)) {
             throw new SchemaInitializationException("Found illegal word from table name or column name. " +
                     " Given value: " + name);
+        }
+    }
+
+    /**
+     * Resolve name for table or column.
+     *
+     * @param type T type which is entity class or {@link Field} to resolve name from.
+     * @return String resolved name.
+     * @throws SchemaInitializationException if any error occurs during name resolving.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static <T> String resolveName(T type) throws SchemaInitializationException {
+        try {
+
+            return NameResolver.resolveName(type);
+
+        } catch (NameResolveException e) {
+
+            Log.e(SchemaFactory.class.getName(), "Failed to create schema", e);
+            throw new SchemaInitializationException("Schema initialization failed", e);
+        }
+    }
+
+    /**
+     * Resolve id column name for given class. Id column is annotated with {@link Id} annotation.
+     * If annotation from class is not found error will be thrown.
+     *
+     * @param model Entity class which id column name will be resolved.
+     * @return String id column name.
+     * @throws SchemaInitializationException if any error occurs during name resolving.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static String resolveIdColumn(Class<?> model) throws SchemaInitializationException {
+        try {
+
+            return NameResolver.resolveIdName(model);
+
+        } catch (NameResolveException e) {
+
+            throw new SchemaInitializationException("Failed to create schema", e);
         }
     }
 

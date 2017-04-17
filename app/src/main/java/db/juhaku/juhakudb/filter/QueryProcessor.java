@@ -576,7 +576,7 @@ public class QueryProcessor {
                 return forModel(join.getModel());
             } else {
                 String alias = join.getAlias();
-                aliasMap.put(join.getModel(), alias);
+//                aliasMap.put(join.getModel(), alias);
 
                 return alias;
             }

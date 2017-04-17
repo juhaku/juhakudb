@@ -79,8 +79,7 @@ public class NameResolver {
             if (!StringUtils.isBlank(tableName)) {
                 return tableName;
             } else {
-                throw new NameResolveException("name attribute not specified in " +
-                        Entity.class.getName() + " annotation");
+                return camelCaseToUnderscored(clazz.getSimpleName());
             }
         } else {
             //TODO create name resolving for class name without annotation.
@@ -128,7 +127,12 @@ public class NameResolver {
         for (int i = 0; i < fieldName.length(); i ++) {
             char letter = fieldName.charAt(i);
 
-            if (Character.isUpperCase(letter)) {
+            // Lower the first letter
+            if (i == 0 && Character.isUpperCase(letter)) {
+                letter = Character.toLowerCase(letter);
+            }
+
+            if (Character.isUpperCase(letter) && i > 1) {
                 underscored.append("_").append(Character.toLowerCase(letter));
 
             } else {

@@ -189,7 +189,18 @@ public class EntityConverter {
 
                 // If join has joins to even further convert them as well.
                 if (!join.getJoins().isEmpty()) {
-                    alterEntityConvertJoins(cursor, join, fieldEntity);
+                    Object parentEntity = ReflectionUtils.getFieldValue(join.getTarget(), entity);
+
+                    if (Collection.class.isAssignableFrom(targetField.getType())) {
+
+                        // Find the actual parent from the collection.
+                        Object parent = findEntityById(ReflectionUtils.getIdFieldValue(fieldEntity), (Collection<Object>) parentEntity);
+
+                        alterEntityConvertJoins(cursor, join, parent == null ? fieldEntity : parent);
+                    } else {
+
+                        alterEntityConvertJoins(cursor, join, parentEntity == null ? fieldEntity : parentEntity);
+                    }
                 }
             }
         }
@@ -253,14 +264,7 @@ public class EntityConverter {
                 // Get the value and add a new resource to result set.
                 Object value = getColumnValue(cursor, type, index.get());
 
-                /*
-                 * Use fields name on primary key field as the names wont match since Android has own
-                 * naming strategy.
-                 */
-                if (name.equals(NameResolver.ID_FIELD_SUFFIX)) {
-                    name = field.getName();
-                }
-                ReflectionUtils.setFieldValue(name, entity, value);
+                ReflectionUtils.setFieldValue(field.getName(), entity, value);
 
             }
             index.incrementAndGet();
@@ -446,22 +450,31 @@ public class EntityConverter {
         if (!object.getClass().isAnnotationPresent(Entity.class)) {
             throw new ConversionException(Entity.class.getName() + " annotation is missing, are you sure you provided entity?");
         }
+
         ContentValues values = new ContentValues();
+
         for (Field field : object.getClass().getDeclaredFields()) {
             field.setAccessible(true);
-            // ignore primary key associations
+
+            // Ignore primary key joins as they do not have column in the current object's table.
             if (hasPrimaryKeyJoin(field)) {
                 continue;
             }
+
             try {
                 String columnName;
 
+                /*
+                 * If field has foreign key relation to another table and this field has a value add the foreign key
+                 * value the the content values.
+                 */
                 if (field.isAnnotationPresent(ManyToOne.class)
                         || (field.isAnnotationPresent(OneToOne.class) && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()))) {
                     columnName = NameResolver.resolveName(field);
 
                     Object value = getIdFieldValue(object, field);
-                    // id is either long or integer
+
+                    // Id is either long or integer.
                     if (value != null) {
                         if (Long.class.isAssignableFrom(value.getClass()) || Long.TYPE.isAssignableFrom(value.getClass())) {
                             values.put(columnName, (Long) value);
@@ -470,8 +483,9 @@ public class EntityConverter {
                         }
                     }
                     continue;
-                } else {
 
+                } else {
+                    // Resolve regular column name of the current object.
                     columnName = NameResolver.resolveName(field);
                 }
 
