@@ -30,6 +30,9 @@ import db.juhaku.juhakudb.util.StringUtils;
 /**
  * Created by juha on 20/05/16.
  *
+ * <p>Store operation transaction template is used when one or multiple items are being stored
+ * to database. All operations will cascade if items contains other entities.</p>
+ *
  * @author juha
  *
  * @since 1.0.2
@@ -37,7 +40,6 @@ import db.juhaku.juhakudb.util.StringUtils;
 public class StoreTransactionTemplate<T> extends TransactionTemplate {
 
     private Collection<T> items;
-    private List<PendingTransaction> cascadeList = new ArrayList<>();
 
     public void setItems(Collection<T> items) {
         this.items = new ArrayList<>(items); // transform collection of items to a list.
@@ -46,12 +48,21 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
     @Override
     void onTransaction() {
         store(items, null);
-//        cascadeList.clear();
         setResult(items);
         commit();
     }
 
-
+    /**
+     * Store given items to database. All store operations will be cascaded to referenced tables if
+     * given items has child entities.
+     *
+     * @param items {@link Collection} of items to store.
+     * @param parent Object parent entity that is being used to make foreign key relation to parent table.
+     *
+     * @since
+     *
+     * @hide
+     */
     private void store(Collection<T> items, Object parent) {
         for (T item : items) {
 
@@ -82,6 +93,16 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Store cascade before the actual item is being stored. This stores items that the item itself
+     * should refer to when being stored.
+     *
+     * @param item T item that is being cascade stored.
+     *
+     * @since
+     *
+     * @hide
+     */
     private void cascadeStoreBefore(T item) {
         for (Field field : item.getClass().getDeclaredFields()) {
 
@@ -102,6 +123,16 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Store cascade after the item was stored to database. This stores items that are referenced
+     * by the item itself.
+     *
+     * @param item T item that is being cascade stored.
+     *
+     * @since
+     *
+     * @hide
+     */
     private void cascadeStoreAfter(T item) {
         for (Field field : item.getClass().getDeclaredFields()) {
 
@@ -134,6 +165,20 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Store middle table joins for given item. This is special processing that is being
+     * executed after both join parties are stored to database. First existing references is being
+     * deleted and then newly coming references is being stored to database for the item.
+     *
+     * <p>References is being created for given item from given collection of items.</p>
+     *
+     * @param item T item from table item.
+     * @param items {@link Collection} of to table items.
+     *
+     * @since
+     *
+     * @hide
+     */
     private void storeMiddleTable(final T item, Collection<T> items) {
         final Schema middleTable = findMiddleTable(item.getClass(), items.iterator().next().getClass());
 
@@ -229,124 +274,6 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         return getDb().replace(tableName, null, values);
     }
 
-    private void store(Collection<T> items, Class<?> parentClass, Long id, Class<?> toType) {
-        for (T item : items) {
-
-            cascadeBefore(item);
-
-            Long storedId = -1L;
-
-            if (id == null) {
-                storedId = getDb().replace(resolveTableName(item.getClass()), null, getConverter().entityToContentValues(item));
-
-            } else {
-                PendingTransaction rootEntry = null;
-                for (PendingTransaction transaction : cascadeList) {
-                    if (transaction.getStoredId().longValue() == id.longValue() && transaction.getTo().equals(parentClass)) {
-                        rootEntry = transaction;
-                    }
-                }
-
-                if (rootEntry != null) {
-                    /*
-                     * Convert item to content values. Item will not have reference id so we
-                     * need to add it afterwards.
-                     */
-                    ContentValues contentValues = getConverter().entityToContentValues(item);
-
-                    /*
-                     * Add reference id to associated table.
-                     *
-                     * TODO NOTE! Multiple joins might break the functionality.
-                     */
-                    contentValues.put(resolveReverseJoinColumnName(toType, parentClass), rootEntry.getStoredId());
-
-                    storedId = getDb().replace(resolveTableName(item.getClass()), null, contentValues);
-                }
-            }
-
-            // After successful store add pending transaction to trace back successful transactions.
-            if (storedId != -1) {
-                PendingTransaction transaction = new PendingTransaction(storedId, parentClass, item.getClass());
-                cascadeList.add(transaction);
-                setIdToItem(item, storedId);
-            }
-
-            cascadeAfter(item, storedId);
-        }
-    }
-
-    private void cascadeBefore(T item) {
-        Class<?> clazz = item.getClass();
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-
-            //TODO probably remove cascade check as it will be forced to store
-            if (field.isAnnotationPresent(ManyToMany.class)) {
-                ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
-                if (manyToMany.cascade() == Cascade.STORE || manyToMany.cascade() == Cascade.ALL) {
-                    storeCascadeBefore(item, field);
-                }
-            }
-            if (field.isAnnotationPresent(ManyToOne.class)) {
-                ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-                if (manyToOne.cascade() == Cascade.STORE || manyToOne.cascade() == Cascade.ALL) {
-                    storeCascadeBefore(item, field);
-                }
-            }
-            if (field.isAnnotationPresent(OneToOne.class)) {
-                OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-                if (StringUtils.isBlank(oneToOne.mappedBy()) && (oneToOne.cascade() == Cascade.STORE
-                        || oneToOne.cascade() == Cascade.ALL)) {
-                    storeCascadeBefore(item, field);
-                }
-            }
-        }
-    }
-
-    private void storeCascadeBefore(T item, Field field) {
-        T value = ReflectionUtils.getFieldValue(item, field);
-
-        if (value != null) {
-            store(toCollection(value), item.getClass(), null, null);
-        }
-    }
-
-    private void cascadeAfter(T item, Long id) {
-        Class<?> clazz = item.getClass();
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            Class<?> type = ReflectionUtils.getFieldType(field);
-
-            if (field.isAnnotationPresent(ManyToMany.class)) {
-                ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
-                if (manyToMany.cascade() == Cascade.STORE || manyToMany.cascade() == Cascade.ALL) {
-
-                    List<PendingTransaction> transactions = new ArrayList<>();
-                    PendingTransaction rootTransaction = null;
-                    for (PendingTransaction transaction : cascadeList) {
-                        if (transaction.getTo().equals(type) && transaction.getFrom().isAssignableFrom(item.getClass())) {
-                            transactions.add(transaction);
-                        } else if (transaction.getStoredId().longValue() == id.longValue() && transaction.getFrom().isAssignableFrom(item.getClass())) {
-                            rootTransaction = transaction;
-                        }
-                    }
-                    if (rootTransaction != null && transactions.size() > 0) {
-                        storeCascadeManyToMany(transactions, rootTransaction);
-                    }
-                }
-            }
-            if (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
-                    || field.isAnnotationPresent(OneToMany.class)) {
-                T value = ReflectionUtils.getFieldValue(item, field);
-
-                if (value != null) {
-                    store(toCollection(value), item.getClass(), id, type);
-                }
-            }
-        }
-    }
-
     /**
      * Maps given value to collection if value itself is not assignable from collection.
      * @param value Object value to map.
@@ -364,6 +291,20 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Resolves reverse join column name from given model class's table. Reverse join column name
+     * is returned if reverse join table name is same as provided reverse join model.
+     *
+     * <p>Column is resolved by looking it for from {@link Schema} in order to maintain integrity.</p>
+     *
+     * @param model Instance of {@link Class} of model class of table where the join is made from.
+     * @param reverseModel Instance of {@link Class} of reverse join model of table where the join is made to.
+     * @return String reverse join column name from join table if found.
+     *
+     * @since 1.2.0-SNAPSHOT
+     *
+     * @hide
+     */
     private String resolveReverseJoinColumnName(Class<?> model, Class<?> reverseModel) {
         Schema table = getSchema().getElement(resolveTableName(model));
 
@@ -378,56 +319,5 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
         }
 
         return null;
-    }
-
-    private void storeCascadeManyToMany(final List<PendingTransaction> transactions, final PendingTransaction transaction) {
-        String table;
-        String rootTableName;
-        String associateTableName;
-        rootTableName = resolveTableName(transaction.getFrom());
-        associateTableName = resolveTableName(transactions.get(0).getTo());
-        table = findManyToManyTable(rootTableName, associateTableName);
-
-        final String fromTable = rootTableName;
-        Query query = getProcessor().createWhere(null, new Filter() {
-            @Override
-            public void filter(Root root, Predicates predicates) {
-                predicates.add(Predicate.eq(fromTable.concat(NameResolver.ID_FIELD_SUFFIX), transaction.getStoredId()));
-            }
-        });
-        getDb().delete(table, query.getSql(), query.getArgs());
-
-        for (PendingTransaction pendingTransaction : transactions) {
-            getDb().insert(table, null, createManyToManyContentValues(pendingTransaction, transaction, rootTableName, associateTableName));
-        }
-        cascadeList.clear();
-    }
-
-    private String findManyToManyTable(String rootTableName, String associateTableName) {
-        Schema table;
-        if ((table = getSchema().getElement(rootTableName.concat("_").concat(associateTableName))) == null) {
-            return getSchema().getElement(associateTableName.concat("_").concat(rootTableName)).getName();
-        } else {
-            return table.getName();
-        }
-    }
-
-    private ContentValues createManyToManyContentValues(PendingTransaction pendingTransaction,
-                                                        PendingTransaction rootTransaction,
-                                                        String rootTableName, String associateTableName) {
-        ContentValues values = new ContentValues();
-        values.put(rootTableName.concat(NameResolver.ID_FIELD_SUFFIX), rootTransaction.getStoredId());
-        values.put(associateTableName.concat(NameResolver.ID_FIELD_SUFFIX), pendingTransaction.getStoredId());
-
-        return values;
-    }
-
-    private void setIdToItem(T item, Long id) {
-        try {
-            Field field = ReflectionUtils.findIdField(item.getClass());
-            field.set(item, id);
-        } catch (IllegalAccessException e) {
-            throw new MappingException("Could not set id: " + id + " to item: " + item.getClass(), e);
-        }
     }
 }
