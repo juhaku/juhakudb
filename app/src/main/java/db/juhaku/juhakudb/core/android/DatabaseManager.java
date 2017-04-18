@@ -71,7 +71,7 @@ public class DatabaseManager {
         }
 
         em = new EntityManager(databaseHelper);
-        factory = new RepositoryFactory(em);
+        factory = new RepositoryFactory(em, configuration.getBaseRepositoryClass());
 
         if (configuration.getRepositoryLocations() == null) {
 

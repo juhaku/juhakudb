@@ -2,7 +2,6 @@ package db.juhaku.juhakudb.repository;
 
 import android.util.Log;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -25,6 +24,7 @@ import db.juhaku.juhakudb.util.ReflectionUtils;
 public class RepositoryFactory {
 
     private EntityManager em;
+    private Class<? extends SimpleAndroidRepository> baseRepositoryClass;
 
     /**
      * Create new instance of repository factory with entity manager. Repository factory is for
@@ -32,11 +32,14 @@ public class RepositoryFactory {
      * {@code @Inject} annotation or by retrieving it repository from database manager.
      *
      * @param entityManager Instance of {@link EntityManager}.
+     * @param baseRepositoryClass Class of custom base repository.
      *
      * @since 1.2.1-SNAPSHOT
      */
-    public RepositoryFactory(EntityManager entityManager) {
+    public RepositoryFactory(EntityManager entityManager,
+                             Class<? extends SimpleAndroidRepository> baseRepositoryClass) {
         this.em = entityManager;
+        this.baseRepositoryClass = baseRepositoryClass;
     }
 
     /**
@@ -56,7 +59,15 @@ public class RepositoryFactory {
             if (impl.isAssignableFrom(NoRepository.class)) {
                 Class<?> entity = ReflectionUtils.getInterfaceGenericTypes(interf)[1];
 
-                return proxyImpl(interf, new SimpleAndroidRepository(em, entity) {});
+                if (baseRepositoryClass == null) {
+
+                    return proxyImpl(interf, new SimpleAndroidRepository(em, entity) {});
+                } else {
+
+                    return proxyImpl(interf, (SimpleAndroidRepository)
+                            customBaseImpl(baseRepositoryClass, em, entity));
+                }
+
 
             } else {
 
@@ -80,20 +91,54 @@ public class RepositoryFactory {
      * @hide
      */
     private static <T> T customImpl(Class<T> impl, EntityManager em) {
-        for (Constructor cons : impl.getDeclaredConstructors()) {
-            Class[] params = cons.getParameterTypes();
-            if (params.length == 1 && params[0].isAssignableFrom(EntityManager.class)) {
-                try {
-                    return (T) cons.newInstance(em);
 
-                } catch (Exception e) {
-                    Log.w(RepositoryFactory.class.getName(), "could not initialize constructor with params: "
-                            + em, e);
-                }
-            }
+        T repository = ReflectionUtils.instantiateConstructor(impl, em);
+
+        if (repository == null) {
+            Log.w(RepositoryFactory.class.getName(), "could not initialize constructor with params: "
+                    + em);
         }
 
-        return null;
+        return repository;
+
+//        for (Constructor cons : impl.getDeclaredConstructors()) {
+//            Class[] params = cons.getParameterTypes();
+//            if (params.length == 1 && params[0].isAssignableFrom(EntityManager.class)) {
+//                try {
+//                    return (T) cons.newInstance(em);
+//
+//                } catch (Exception e) {
+//
+//                }
+//            }
+//        }
+
+//        return null;
+    }
+
+    /**
+     * Create custom base repository by provided base impl class. If used this will be default
+     * repository base for all the repositories that are not using custom repository implementation.
+     *
+     * @param baseImpl Base class that extends {@link SimpleAndroidRepository} to create repository for.
+     * @param em Instance of {@link EntityManager}.
+     * @param entity Class of the entity that is being managed by the repository.
+     * @return  Custom base repository implementation.
+     *
+     * @since 1.2.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static <T> T customBaseImpl(Class<?> baseImpl, EntityManager em, Class<?> entity) {
+        T repository = ReflectionUtils.instantiateConstructor(baseImpl, em, entity);
+
+        if (repository == null) {
+            Log.w(RepositoryFactory.class.getName(), "Could not instantiate repository: " + baseImpl
+                    + " with: " + em + " and " + entity.getName());
+
+        }
+
+        return repository;
     }
 
     /**

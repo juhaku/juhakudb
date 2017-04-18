@@ -2,7 +2,9 @@ package db.juhaku.juhakudb.util;
 
 import android.util.Log;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -252,5 +254,83 @@ public class ReflectionUtils {
         } catch (IllegalAccessException e) {
             Log.e(ReflectionUtils.class.getName(), "Failed to set value: " + value + " to object: " + o, e);
         }
+    }
+
+    /**
+     * Instantiate class via given constructor with given arguments.
+     *
+     * @param constructor {@link Constructor} to instantiate.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Instantiated constructor or null if error occurs during instantiation.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T instantiateConstructor(Constructor constructor, Object... args) {
+        try {
+            return (T) constructor.newInstance(args);
+        } catch (InstantiationException | IllegalStateException | InvocationTargetException | IllegalAccessException e) {
+            Log.e(ReflectionUtils.class.getName(), "Failed to initialize constructor: " + constructor + " with args: " + args, e);
+        }
+
+        return null;
+    }
+
+    /**
+     * Instantiate given class with given objects by looking for most suitable constructor. If
+     * constructor cannot be found null will be returned.
+     *
+     * @param clazz {@link Class} to instantiate by constructor that suits for given arguments.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Instantiated class or null if error occurs during instantiation.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T instantiateConstructor(Class<?> clazz, Object... args) {
+        Constructor constructor = findConstructorByParams(clazz, args);
+
+        if (constructor != null) {
+            return instantiateConstructor(constructor, args);
+        }
+
+        return null;
+    }
+
+    /**
+     * Find constructor from given class that has given args as parameter.
+     *
+     * @param clazz {@link Class} to to look for constructors from.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Found {@link Constructor} or null if no constructor with args was found.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T findConstructorByParams(Class<?> clazz, Object... args) {
+        for (Constructor constructor : clazz.getDeclaredConstructors()) {
+
+            // Get constructor args.
+            Class[] params = constructor.getParameterTypes();
+
+            boolean hasParams = true;
+            // Check that length of parameters match in constructor.
+            if (params.length == args.length) {
+                for (int i = 0; i < params.length ; i ++) {
+
+                    if (params[i].equals(args[i].getClass())) {
+                        continue;
+                    }
+
+                    // If execution got here parameters did not match.
+                    hasParams = false;
+                    break;
+                }
+            }
+
+            // If has params is still true we have correct constructor
+            if (hasParams) {
+                return (T) constructor;
+            }
+        }
+
+        return null;
     }
 }

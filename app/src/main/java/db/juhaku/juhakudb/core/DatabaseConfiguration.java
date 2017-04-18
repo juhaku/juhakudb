@@ -1,6 +1,7 @@
 package db.juhaku.juhakudb.core;
 
 import db.juhaku.juhakudb.core.schema.SchemaCreationMode;
+import db.juhaku.juhakudb.repository.android.SimpleAndroidRepository;
 
 /**
  * Created by juha on 04/12/15.
@@ -19,6 +20,7 @@ public class DatabaseConfiguration {
     private SchemaCreationMode mode;
     private String[] repositoryLocations;
     private boolean enableAutoInject;
+    private Class<? extends SimpleAndroidRepository> baseRepositoryClass;
 
     /**
      * @return String value of database name
@@ -172,6 +174,27 @@ public class DatabaseConfiguration {
     }
 
     /**
+     * Get base class for repositories. If provided this class is used as base for all the repositories.
+     *
+     * @return Base class for repositories.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public Class<? extends SimpleAndroidRepository> getBaseRepositoryClass() {
+        return baseRepositoryClass;
+    }
+
+    /**
+     * Set base repository class that is used as base of all the repositories. This is useful if
+     * custom behaviour is required to all repositories and default implementation is not enough functional.
+     *
+     * @param baseRepositoryClass Base class for repositories.
+     */
+    public void setBaseRepositoryClass(Class<? extends SimpleAndroidRepository> baseRepositoryClass) {
+        this.baseRepositoryClass = baseRepositoryClass;
+    }
+
+    /**
      * @return new instance of {@link db.juhaku.juhakudb.core.DatabaseConfiguration.Builder} to
      * build configuration.
      */
@@ -275,6 +298,17 @@ public class DatabaseConfiguration {
          */
         public Builder setEnableAutoInject(boolean enableAutoInject) {
             databaseConfiguration.setEnableAutoInject(enableAutoInject);
+            return this;
+        }
+
+        /**
+         * {@link DatabaseConfiguration#setBaseRepositoryClass(Class)}
+         *
+         * @since 1.2.1-SNAPSHOT
+         */
+        public Builder setBaseRepositoryClass(Class<? extends SimpleAndroidRepository> baseRepositoryClass) {
+            databaseConfiguration.setBaseRepositoryClass(baseRepositoryClass);
+
             return this;
         }
     }
