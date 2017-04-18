@@ -33,13 +33,14 @@ Currently available from central repository.
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
     <version>1.2.0</version>
+    <type>aar</type>
 </dependency>
 ```
 
 ### Gradle
 
 ```java
-    compile 'io.github.juhaku:juhaku-db:1.2.0'
+    compile 'io.github.juhaku:juhaku-db:1.2.0@aar'
 ```
 
 ## Usage
