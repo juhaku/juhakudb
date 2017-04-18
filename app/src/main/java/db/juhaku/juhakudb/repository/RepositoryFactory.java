@@ -26,6 +26,15 @@ public class RepositoryFactory {
 
     private EntityManager em;
 
+    /**
+     * Create new instance of repository factory with entity manager. Repository factory is for
+     * creating new repositories for SQLite database that can be used freely in application with
+     * {@code @Inject} annotation or by retrieving it repository from database manager.
+     *
+     * @param entityManager Instance of {@link EntityManager}.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
     public RepositoryFactory(EntityManager entityManager) {
         this.em = entityManager;
     }
