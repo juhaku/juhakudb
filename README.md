@@ -1,4 +1,4 @@
-# JuhakuDB current release: 1.2.0
+# JuhakuDB current release: 1.3.0
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 ## Introduction
@@ -32,7 +32,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <type>aar</type>
 </dependency>
 ```
@@ -40,7 +40,7 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile 'io.github.juhaku:juhaku-db:1.2.0@aar'
+    compile 'io.github.juhaku:juhaku-db:1.3.0@aar'
 ```
 
 ## Usage
@@ -57,11 +57,13 @@ DatabaseManager dbManager = new DatabaseManager(context, new DatabaseConfigurati
     @Override
     public void configure(DatabaseConfiguration configuration) {
         configuration.getBuilder().setBasePackages("db.juhaku.dbdemo.model", "db.juhaku.dbdemo.bean")
-                .setVersion(1) // updating this version will cause database to update.
+                .setVersion(1) // Updating this version will cause database to update.
                 .setName("dbtest.db")
                 .setMode(SchemaCreationMode.UPDATE)
                 .setAllowRollback(false)
-                .setRollbackHistorySize(5); // back-ups allowed to take from database.
+                .setRollbackHistorySize(5); // Number of back-ups allowed to take from database schema.
+                .setEnableAutoInject(true); // This will enable annotation based repository injection.
+                .setBaseRepositoryClass(CustomCoreRepository.class); // Custom base class for repositories.
     }
 });
 ```
@@ -102,7 +104,7 @@ public class Class {
     @OneToOne
     private Teacher teacher;
     
-    // .... getters and setters
+    // ... getters and setters
 }
 
 @Entity
@@ -119,7 +121,7 @@ public class Book {
     @ManyToMany
     private List<Library> libraries;
     
-    // .... getters and setters   
+    // ... getters and setters   
 }
 
 @Entity
@@ -138,7 +140,7 @@ public class Person {
     @OneToMany
     private List<Class> classes;
     
-    // .... getters and setters   
+    // ... getters and setters   
 }
 ```
 
@@ -162,12 +164,65 @@ public class Authority {
     @ManyToMany(fetch = Fetch.LAZY)
     private List<Person> person;
     
-    // .... getters and setters
+    // ... getters and setters
 }
 ```
 
 ### Repositories
-Below is an example of creating repository interface. Repositories need to be annotated with @Repository() annotation. Currently implementing class must be provided, but probably later it is possible to use default implementation as well instead of providing custom implementation for each repository.
+
+There are 3 ways to work with repositories since version 1.3.0. All repositories must be annotated with @Repository annotation. If value is not provided the default implementation is being used. If value is provided inside the @Repository annotation then that is being used as implementation for the repository interface.
+
+As shown below currently the by writing following snippet is enough to create instance of a repository. Absolutely no implementation of repositories is required as long as de default functionality is enough.
+```java
+@Repository
+public interface PersonRepository extends SimpleRepository<Long, Person> {}
+```
+
+#### Custom base repository
+
+However if default functionality is not enough you are able to create custom base repository as well. This is particulary useful if custom behiour is required for all the repositories. Following steps will guide you through how to create a custom base repository that is being used as base for all repositories except those with own implemenation.
+
+Create an interface called custom cre repo. It could be anything you wish but the important part is to extend simple repository. That gives you the default functionalities available as well. There is additional method called exists. This method will be available to all repositories that are using the default repository.
+```java
+public interface CustomCoreRepo<K, T> extends SimpleRepository<K, T> {
+    boolean exists(K id);
+}
+```
+
+Now create implementation for the custom core repository. We extend the default repository called simple android repository. And we implement the new functionality from the new custom core repo. Find one is function in the default simple android repository and K stands for key wich is Id class of the entity and T stands for the entity class itself.
+```java
+public class CustomCoreRepository<K, T> extends SimpleAndroidRepository<K, T> implements CustomCoreRepo<K, T> {
+
+    public CustomCoreRepository(EntityManager entityManager, Class<T> persistentClass) {
+        super(entityManager, persistentClass);
+    }
+
+    @Override
+    public boolean exists(K id) {
+        Log.d(getClass().getName(), "checking does item exists");
+        return findOne(id) != null;
+    }
+}
+```
+
+To this point we have created custom core repository. In order to use it we just need to do 2 things.
+
+First we create a repository that is using the custom core repo we created as following. As told previously this is enough to create a repository instance. But the difference is that we are extending custom core repo instead of simple repository.
+```java
+@Repository
+public interface PermissionRepository extends CustomCoreRepo<Long, Permission> {}
+```
+
+Then we tell database manager to use the cusom core repository instead of the simple android repository as the base of repositories by adding this line to database configuration adapter. Also shown above in database manager section.
+```java
+.setBaseRepositoryClass(CustomCoreRepository.class); // Custom base class for repositories.
+```
+
+#### Old school repository
+
+The third option is little old school so to say. This can be useful if totally custom repository is required. 
+
+First we create a repository interface with @Repository annotation. The main difference is that we provide implementing class as attribute inside @Repository annotation and we do not extend any repository class.
 ```java
 @Repository(BookRepositoryImpl.class)
 public interface BookRepository {
@@ -175,7 +230,8 @@ public interface BookRepository {
     List<Book> findBooks(Filters filters);
 }
 ```
-To implement the repository you could write something like this:
+
+Then we provide the implementation for the repository interface like following. We implement the bok repository and extend the default simple android repository.
 ```java
 public class BookRepositoryImpl extends SimpleAndroidRepository<Long, Book> implements BookRepository {
 
@@ -195,31 +251,28 @@ public class BookRepositoryImpl extends SimpleAndroidRepository<Long, Book> impl
 }
 ```
 
-Following snippet will allow you to retrieve instance of automatically initialized repository from database manager.
+#### Get instance of repository in application
+
+If you have access to database manager you can always get an instance by simple calling getRepository method with the repository interface to get instance of repository inside your application.
 ```java
 repository = dbManager.getRepository(BookRepository.class);
 ```
-Alternatively you can use annotation based repository injection in your classes.
+
+More robust solution is to use @Inject annotation. To enable this feature we need to add following configuration to database configuration adapter. This will enable this feature.
 ```java
-dbManager = new DatabaseManager(this, new DatabaseConfigurationAdapter() {
-    @Override
-    public void configure(DatabaseConfiguration configuration) {
-        configuration.getBuilder()
-                .setName("testdb.db")
-                .setEnableAutoInject(true); // this will enable annotation based repository injection 
+.setEnableAutoInject(true); // this will enable annotation based repository injection 
+```
 
-                // .... add more configurations
-    }
-});
+Then we need to call explisitly following method in the class that the repository injection should be initiated. This method can exists in super class of the class stack as well. It still will go through the class stack and inject all repositories that is marked with @Inject annotation.
 
-// .... later in code
+This behaviour is necessary as Android does not have default functionality to provide stack of running classes or to follow opening fragments or other classes. Only opening activites can be retrieved. So we cannot execute this process at the background. But good thing is that you can hide this at the top of your activity stack or fragment stack.
+```java
 getDbManager().lookupRepositories(this); // this will initiate repository lookup injection.
 
-// .... later in code
+// ... then later in code class stack we can add @Inject annotation to any repository.
 @Inject
 private PersonRepository personRepository;
 ```
-Above mentioned snipped is an example of process using Inject annotation with automatic repository lookup injection.
 
 ##### The quick quide of annotation based repository injection comes as follows. 
 
@@ -227,34 +280,8 @@ Above mentioned snipped is an example of process using Inject annotation with au
 2. Call lookupRepositories(this) in Activity or Fragment or inside ohter object that repositories is wished to be injected and is accessible to DatabaseManager. This method call should appear in super level of your component hierarcy.
 3. Use Inject annotation in any child or parent component where lookupRepositories(this) is already called.
 
-Following is quoted from java doc of lookupRepositories(object) method.
-
-> Call this method to inject automatically repositories to given object. Automatic annotation
-> based repository injection will be used if it is enabled by the DatabaseConfiguration.
-> 
-> See RepositoryLookupInjector#lookupRepositories(Object) for additional details of
-> annotation based repository injection.
-> 
-> Calling this method can be done from any object that has access to database manager but
-> for sake of design it is only encouraged to do so from super Activities and super Fragments.
-> For most cases calling this method is not necessary in other application classes.
-> 
-> Since Android does not provide access to instantiated objects neither do we. You are free
-> to write your own running objects mapping system and call this method from there if needed.
-> 
-> This method is provided to give you leverage to execute repository lookup on creation
-> of objects in "Android way" and that's how we think it should be. In example this could be
-> something like following code executed in super activity.
-> ```java
-> public void onCreate(Bundle bundle) {
->    super.onCreate(bundle);
->    getDatabaseManager().lookupRepositories(this);
-> }
-> ```
 
 ### Filter criteria API
-
-#### Heads up
 
 If joins or predicates are prefixed with "this" or left without prefix it will be mapped to the root entity.
 ```java
@@ -262,73 +289,30 @@ root.join("this.rooms", JoinMode.LEFT_JOIN)
 predicates.add(Predicate.in("this.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("name", "kim")));
 ```
 
-In predicate using .id or ._id as colum name is mapped as to be equal and both will refer to primary key column. In Adroid primary key column is mapped to "_id" column thus made this convention for nicer code.
+In predicate using .id or ._id as colum name is mapped as to be equal and both will refer to primary key column. In Adroid primary key column is mapped to "_id" column thus we made this convention for cleaner code.
 ```java
 predicates.add(Predicate.eq("this.id", "1"));
 predicates.add(Predicate.eq("this._id", "1"));
 ```
 
-Following example is implemenation of simple person repository. This should give you an example of how you could work with 
-filter criterias. 
+You can also create custom queries by wrinting normal sql and then use result trasformer to trasform custom result. 
 ```java
-public class PersonRepositoryImpl extends SimpleAndroidRepository<Long, Person> implements PersonRepository {
-
-    public PersonRepositoryImpl(EntityManager entityManager) {
-        super(entityManager);
-    }
-
+Query query = new Query("select persons_id, books_id from books_persons", null);
+return find(query, new ResultTransformer<List<String>>() {
     @Override
-    public Person storePerson(Person person) {
-        return store(person);
-    }
-
-    @Override
-    public List<Person> storePersons(List<Person> persons) {
-        return storeAll(persons);
-    }
-
-    @Override
-    public List<Person> findPersons(final String name) {
-        Filters filters = new Filters();
-        filters.add(new Filter<Person>() {
-            @Override
-            public void filter(Root<Person> root, Predicates predicates) {
-                predicates.add(Predicate.eq("this.name", name));
+    public List<String> transformResult(List<ResultSet> resultSets) {
+        List<String> strings = new ArrayList<>();
+        for (ResultSet res : resultSets) {
+            String val = "";
+            for (Result result : res.getResults()) {
+                val = val.concat(result.getColumnName()).concat("=").concat(result.getColumnValue().toString());
             }
-        });
+            strings.add(val);
+        }
 
-        return find(filters);
+        return strings;
     }
-
-    @Override
-    public List<Person> findAllPersons() {
-        return find(new Filter<Person>() {
-            @Override
-            public void filter(Root<Person> root, Predicates predicates) {
-            }
-        });
-    }
-
-    @Override
-    public List<String> findPersonBooks() {
-        Query query = new Query("select persons_id, books_id from books_persons", null);
-        return find(query, new ResultTransformer<List<String>>() {
-            @Override
-            public List<String> transformResult(List<ResultSet> resultSets) {
-                List<String> strings = new ArrayList<>();
-                for (ResultSet res : resultSets) {
-                    String val = "";
-                    for (Result result : res.getResults()) {
-                        val = val.concat(result.getColumnName()).concat("=").concat(result.getColumnValue().toString());
-                    }
-                    strings.add(val);
-                }
-
-                return strings;
-            }
-        });
-    }
-}
+});
 ```
 
 Joins work little different from version 1.2.0 forward. Method join will return new root to the join target. E.g. in example below the first join will return root to rooms object and the second will return teacher root from rooms.
