@@ -19,7 +19,7 @@ import db.juhaku.juhakudb.util.ReflectionUtils;
  *
  * @author Juha Kukkonen
  *
- * @since 1.2.1-SNAPSHOT
+ * @since 1.3.0
  */
 public class RepositoryFactory {
 
@@ -34,7 +34,7 @@ public class RepositoryFactory {
      * @param entityManager Instance of {@link EntityManager}.
      * @param baseRepositoryClass Class of custom base repository.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public RepositoryFactory(EntityManager entityManager,
                              Class<? extends SimpleAndroidRepository> baseRepositoryClass) {
@@ -48,7 +48,7 @@ public class RepositoryFactory {
      * @param interf Class of interface which repository will be created.
      * @return Instance of created repository for the given interface.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public <T> T getRepository(Class<T> interf) {
 
@@ -92,7 +92,7 @@ public class RepositoryFactory {
      * @param em Instance of{@link EntityManager}.
      * @return Custom repository implementation.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      *
      * @hide
      */
@@ -117,7 +117,7 @@ public class RepositoryFactory {
      * @param entity Class of the entity that is being managed by the repository.
      * @return  Custom base repository implementation.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      *
      * @hide
      */
@@ -142,7 +142,7 @@ public class RepositoryFactory {
      * @param simpleAndroidRepository Instance of {@link SimpleAndroidRepository} to provide proxy for.
      * @return Proxied repository for given interface class.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      *
      * @hide
      */
@@ -172,7 +172,7 @@ public class RepositoryFactory {
              * @param method Method to look for.
              * @return Found method or null.
              *
-             * @since 1.2.1-SNAPSHOT
+             * @since 1.3.0
              *
              * @hide
              */

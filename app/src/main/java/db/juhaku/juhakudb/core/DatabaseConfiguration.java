@@ -178,7 +178,7 @@ public class DatabaseConfiguration {
      *
      * @return Base class for repositories.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public Class<? extends SimpleAndroidRepository> getBaseRepositoryClass() {
         return baseRepositoryClass;
@@ -304,7 +304,7 @@ public class DatabaseConfiguration {
         /**
          * {@link DatabaseConfiguration#setBaseRepositoryClass(Class)}
          *
-         * @since 1.2.1-SNAPSHOT
+         * @since 1.3.0
          */
         public Builder setBaseRepositoryClass(Class<? extends SimpleAndroidRepository> baseRepositoryClass) {
             databaseConfiguration.setBaseRepositoryClass(baseRepositoryClass);

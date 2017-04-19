@@ -31,7 +31,7 @@ import db.juhaku.juhakudb.filter.Query;
  * @see db.juhaku.juhakudb.annotation.Inject
  * @see db.juhaku.juhakudb.core.android.DatabaseManager
  *
- * @since 1.2.1-SNAPSHOT
+ * @since 1.3.0
  */
 public interface SimpleRepository<K, T> {
 
@@ -44,7 +44,7 @@ public interface SimpleRepository<K, T> {
      * @param object Object that must be database entity.
      * @return Stored instance of given object.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     T store(T object);
 
@@ -58,7 +58,7 @@ public interface SimpleRepository<K, T> {
      * @param objects
      * @return List of stored instances of given entities.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     List<T> storeAll(Collection<T> objects);
 
@@ -69,7 +69,7 @@ public interface SimpleRepository<K, T> {
      * @param id Id of the entity to remove.
      * @return Int value of number of affected rows in total.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     int remove(K id);
 
@@ -80,7 +80,7 @@ public interface SimpleRepository<K, T> {
      * @param ids Collection of ids of the entities to remove.
      * @return Int value of number of affected rows in total.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     int removeAll(Collection<K> ids);
 
@@ -93,7 +93,7 @@ public interface SimpleRepository<K, T> {
      * @param id Id of the entity to look for.
      * @return Instance of found entity with the given id or null if not found.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     T findOne(final K id);
 
@@ -105,7 +105,7 @@ public interface SimpleRepository<K, T> {
      * @param filter Instance of {@link Filter} to create query for current entity as the root entity.
      * @return Instance of found entity or null if not found.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     T findOne(Filter<T> filter);
 
@@ -115,7 +115,7 @@ public interface SimpleRepository<K, T> {
      *
      * @return List of all the the entities form database.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     List<T> findAll();
 
@@ -126,7 +126,7 @@ public interface SimpleRepository<K, T> {
      * @param filter Instance of {@link Filter} to create query for current entity as the root entity.
      * @return List of found entities or null if not found.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     List<T> find(Filter<T> filter);
 
@@ -142,7 +142,7 @@ public interface SimpleRepository<K, T> {
      * @param resultTransformer Instance of {@link ResultTransformer} to transform result of the query.
      * @return The result that is transformed by the result transformer.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     <E> E find(Query query, ResultTransformer<E> resultTransformer);
 

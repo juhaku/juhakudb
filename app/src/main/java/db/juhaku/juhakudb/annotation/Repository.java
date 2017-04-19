@@ -32,7 +32,7 @@ public @interface Repository {
      * option. This basically marks the annotation so that no custom repository implementation is
      * being used and default one should be used instead.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     class NoRepository<K, T> extends SimpleAndroidRepository<K, T> {
         public NoRepository(EntityManager entityManager) {

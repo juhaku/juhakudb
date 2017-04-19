@@ -130,7 +130,7 @@ public class ReflectionUtils {
      *
      * @return {@link Class} array containing all the generic types from super interfaces.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public static final <T> Class[] getInterfaceGenericTypes(Class<T> interf) {
         Type[] resolvedTypes = interf.getGenericInterfaces();
@@ -263,7 +263,7 @@ public class ReflectionUtils {
      * @param args Object array or arguments to pass to the constructor.
      * @return Instantiated constructor or null if error occurs during instantiation.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public static final <T> T instantiateConstructor(Constructor constructor, Object... args) {
         try {
@@ -283,7 +283,7 @@ public class ReflectionUtils {
      * @param args Object array or arguments to pass to the constructor.
      * @return Instantiated class or null if error occurs during instantiation.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public static final <T> T instantiateConstructor(Class<?> clazz, Object... args) {
         Constructor constructor = findConstructorByParams(clazz, args);
@@ -302,7 +302,7 @@ public class ReflectionUtils {
      * @param args Object array or arguments to pass to the constructor.
      * @return Found {@link Constructor} or null if no constructor with args was found.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public static final <T> T findConstructorByParams(Class<?> clazz, Object... args) {
         for (Constructor constructor : clazz.getDeclaredConstructors()) {

@@ -44,7 +44,7 @@ public abstract class SimpleAndroidRepository<K, T>  implements SimpleRepository
      *
      * @param entityManager Instance of {@link EntityManager}.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public SimpleAndroidRepository(EntityManager entityManager) {
         this.persistentClass = ReflectionUtils.getClassGenericTypes(this.getClass())[1];
@@ -56,7 +56,7 @@ public abstract class SimpleAndroidRepository<K, T>  implements SimpleRepository
      *
      * @param entityManager Instance of {@link EntityManager}.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     public SimpleAndroidRepository(EntityManager entityManager, Class<T> persistentClass) {
         this.entityManager = entityManager;
@@ -131,7 +131,7 @@ public abstract class SimpleAndroidRepository<K, T>  implements SimpleRepository
      *
      * @return String value if id column for persistent class of the repository.
      *
-     * @since 1.2.1-SNAPSHOT
+     * @since 1.3.0
      */
     String resolveIdColumnName() {
         try {
