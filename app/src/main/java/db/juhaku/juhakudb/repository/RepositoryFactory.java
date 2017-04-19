@@ -56,6 +56,10 @@ public class RepositoryFactory {
 
             Class<?> impl = interf.getAnnotation(Repository.class).value();
 
+            /*
+             * If impl refers to no repository then use default implementation for interface.
+             * If custom base class is provided create implementation from it.
+             */
             if (impl.isAssignableFrom(NoRepository.class)) {
                 Class<?> entity = ReflectionUtils.getInterfaceGenericTypes(interf)[1];
 
@@ -71,6 +75,7 @@ public class RepositoryFactory {
 
             } else {
 
+                // If real implementation is provided return the provided impl for interface.
                 return (T) customImpl(interf.getAnnotation(Repository.class).value(), em);
             }
 
@@ -82,6 +87,7 @@ public class RepositoryFactory {
     /**
      * Create custom repository implementation for interface by given implementing class. Class must
      * have constructor with one parameter for {@link EntityManager}.
+     *
      * @param impl Class of implementing class of repository.
      * @param em Instance of{@link EntityManager}.
      * @return Custom repository implementation.
@@ -95,25 +101,11 @@ public class RepositoryFactory {
         T repository = ReflectionUtils.instantiateConstructor(impl, em);
 
         if (repository == null) {
-            Log.w(RepositoryFactory.class.getName(), "could not initialize constructor with params: "
-                    + em);
+            Log.w(RepositoryFactory.class.getName(), "could not initialize custom impl: "
+                    + impl + " with params: " + em);
         }
 
         return repository;
-
-//        for (Constructor cons : impl.getDeclaredConstructors()) {
-//            Class[] params = cons.getParameterTypes();
-//            if (params.length == 1 && params[0].isAssignableFrom(EntityManager.class)) {
-//                try {
-//                    return (T) cons.newInstance(em);
-//
-//                } catch (Exception e) {
-//
-//                }
-//            }
-//        }
-
-//        return null;
     }
 
     /**
@@ -168,7 +160,7 @@ public class RepositoryFactory {
                 }
 
                 // Add some trace logging if enabled.
-                Log.v(getClass().getName(), "Executing method: " + method + "with args: " + args + " in: " + interf);
+                Log.v(getClass().getName(), "Executing method: " + method.getName() + " with args: " + args + " in: " + interf);
 
                 return repositoryMethod.invoke(simpleAndroidRepository, args);
             }
