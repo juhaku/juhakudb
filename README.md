@@ -178,6 +178,33 @@ As shown below currently the by writing following snippet is enough to create in
 public interface PersonRepository extends SimpleRepository<Long, Person> {}
 ```
 
+#### Default implementation
+
+Default implementation has implementation for following methods. Javadocs omitted from example.
+```java
+public interface SimpleRepository<K, T> {
+
+    T store(T object);
+
+    List<T> storeAll(Collection<T> objects);
+
+    int remove(K id);
+
+    int removeAll(Collection<K> ids);
+
+    T findOne(final K id);
+
+    T findOne(Filter<T> filter);
+
+    List<T> findAll();
+
+    List<T> find(Filter<T> filter);
+
+    <E> E find(Query query, ResultTransformer<E> resultTransformer);
+
+}
+```
+
 #### Custom base repository
 
 However if default functionality is not enough you are able to create custom base repository as well. This is particulary useful if custom behiour is required for all the repositories. Following steps will guide you through how to create a custom base repository that is being used as base for all repositories except those with own implemenation.
