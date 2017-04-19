@@ -7,7 +7,7 @@ Spring DATA and Hibernate like API for database management. Key features are ann
 as filter based criteria API supporting nomal SQL as well in case of necessarity. 
 
 This libaray supporst automatic database creation, schema updates as well as rollbacks. With easy to use and fast to 
-configure API it gives you levarage for managing databases in Adroid devices. 
+configure API it gives you levarage for managing databases in Android devices. 
 
 With JuhakuDb managing SQLite database is fast and simply and it is quick to adapt on using the library. Libarary also provides annotated repositories with basic CRUD functionalities.
 
@@ -20,7 +20,7 @@ Annotated classes will be mapped accordingly and database tables will be automat
 annotations.
 
 ### Filter based criteria API
-Filter based criteria API is fairly similar to Spring DATA's representation of criteria API but in comparizon this is a lot simplier and easier to use. It provides easy way to create joint queries from multiple tables with easy to use filter chain syntax. This syntax allows you to create complex queries wihtout writing single line of sql.
+Filter based criteria API is fairly similar to Spring DATA's representation of criteria API but in comparizon this is a lot simplier and easier to use. It provides easy way to create join queries from multiple tables with easy to use filter chain syntax. This syntax allows you to create complex queries wihtout writing single line of sql.
 
 ## Installation
 
