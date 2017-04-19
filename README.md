@@ -61,8 +61,8 @@ DatabaseManager dbManager = new DatabaseManager(context, new DatabaseConfigurati
                 .setName("dbtest.db")
                 .setMode(SchemaCreationMode.UPDATE)
                 .setAllowRollback(false)
-                .setRollbackHistorySize(5); // Number of back-ups allowed to take from database schema.
-                .setEnableAutoInject(true); // This will enable annotation based repository injection.
+                .setRollbackHistorySize(5) // Number of back-ups allowed to take from database schema.
+                .setEnableAutoInject(true) // This will enable annotation based repository injection.
                 .setBaseRepositoryClass(CustomCoreRepository.class); // Custom base class for repositories.
     }
 });
