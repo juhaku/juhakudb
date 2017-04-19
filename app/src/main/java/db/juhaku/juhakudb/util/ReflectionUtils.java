@@ -2,11 +2,14 @@ package db.juhaku.juhakudb.util;
 
 import android.util.Log;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 import db.juhaku.juhakudb.annotation.Id;
 import db.juhaku.juhakudb.annotation.Repository;
@@ -22,7 +25,8 @@ import db.juhaku.juhakudb.annotation.Repository;
 public class ReflectionUtils {
 
     /**
-     * Method looks for specific {@link Field} from given clazz.
+     * Method looks for specific {@link Field} from given clazz all the way up to the {@link Object} class.
+     *
      * @param clazz Class<?> whose field is looked for.
      * @param name String name of the field to look for.
      * @return found {@link Field} otherwise null.
@@ -30,11 +34,14 @@ public class ReflectionUtils {
      * @since 1.0.2
      */
     public static Field findField(Class<?> clazz, String name) {
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            if (field.getName().equals(name)) {
-                return field;
+        while (!clazz.isAssignableFrom(Object.class)) {
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+                if (field.getName().equals(name)) {
+                    return field;
+                }
             }
+            clazz = clazz.getSuperclass();
         }
 
         return null;
@@ -42,6 +49,7 @@ public class ReflectionUtils {
 
     /**
      * Method searches field with annotation {@link Id} through declared fields of given class.
+     *
      * @param clazz instance of entity class to look for id field.
      * @return {@link Field} if found; otherwise null.
      *
@@ -64,6 +72,7 @@ public class ReflectionUtils {
 
     /**
      * Returns field type of generic fields of given class. e.g. for List&lt;Type&gt; the Type is returned.
+     *
      * @param type instance of {@link Field}.
      * @return Class representing generic type of given field. If field does not have generic type
      * null will be returned.
@@ -116,8 +125,39 @@ public class ReflectionUtils {
     }
 
     /**
+     * Gets array of all generic types from all super interfaces for the given interface class.
+     * @param interf {@link Class} of which super interface's generic types will be returned.
+     *
+     * @return {@link Class} array containing all the generic types from super interfaces.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> Class[] getInterfaceGenericTypes(Class<T> interf) {
+        Type[] resolvedTypes = interf.getGenericInterfaces();
+        int length = 0;
+        for (Type type : resolvedTypes) {
+            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+
+            length = length + types.length;
+        }
+
+        Class[] retVal = new Class[length];
+
+        int copied = 0;
+        for (Type type : resolvedTypes) {
+            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+
+            System.arraycopy(types, 0, retVal, copied, types.length);
+            copied = types.length - 1;
+        }
+
+        return retVal;
+    }
+
+    /**
      * Get generic type classes with by providing instance of {@link TypedClass}. This can be used to
      * query generic type without class being subclass of generic super class. See more details {@link TypedClass}
+     *
      * @param typedClass Typed class that provides sub classing for type that need to be returned.
      * @return Class array representing types of typed class.
      *
@@ -129,6 +169,7 @@ public class ReflectionUtils {
 
     /**
      * Get value of field from given object.
+     *
      * @param type Object to query field value from.
      * @param field Field to query value from.
      * @return Value of given field in given object or null if exception occurs.
@@ -148,14 +189,21 @@ public class ReflectionUtils {
 
     /**
      * Get field's value by searching field by given name.
+     *
      * @param name String name of the field whose value should be returned.
      * @param o Object to look for field's value from.
-     * @return Value of the field.
+     * @return Value of the field or null if field is not found.
      *
      * @since 1.2.0
      */
     public static final <T> T getFieldValue(String name, Object o) {
-        return getFieldValue(o, findField(o.getClass(), name));
+        Field field = findField(o.getClass(), name);
+
+        if (field != null) {
+            return getFieldValue(o, findField(o.getClass(), name));
+        }
+
+        return null;
     }
 
     /**
@@ -206,5 +254,83 @@ public class ReflectionUtils {
         } catch (IllegalAccessException e) {
             Log.e(ReflectionUtils.class.getName(), "Failed to set value: " + value + " to object: " + o, e);
         }
+    }
+
+    /**
+     * Instantiate class via given constructor with given arguments.
+     *
+     * @param constructor {@link Constructor} to instantiate.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Instantiated constructor or null if error occurs during instantiation.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T instantiateConstructor(Constructor constructor, Object... args) {
+        try {
+            return (T) constructor.newInstance(args);
+        } catch (InstantiationException | IllegalStateException | InvocationTargetException | IllegalAccessException e) {
+            Log.e(ReflectionUtils.class.getName(), "Failed to initialize constructor: " + constructor + " with args: " + args, e);
+        }
+
+        return null;
+    }
+
+    /**
+     * Instantiate given class with given objects by looking for most suitable constructor. If
+     * constructor cannot be found null will be returned.
+     *
+     * @param clazz {@link Class} to instantiate by constructor that suits for given arguments.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Instantiated class or null if error occurs during instantiation.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T instantiateConstructor(Class<?> clazz, Object... args) {
+        Constructor constructor = findConstructorByParams(clazz, args);
+
+        if (constructor != null) {
+            return instantiateConstructor(constructor, args);
+        }
+
+        return null;
+    }
+
+    /**
+     * Find constructor from given class that has given args as parameter.
+     *
+     * @param clazz {@link Class} to to look for constructors from.
+     * @param args Object array or arguments to pass to the constructor.
+     * @return Found {@link Constructor} or null if no constructor with args was found.
+     *
+     * @since 1.2.1-SNAPSHOT
+     */
+    public static final <T> T findConstructorByParams(Class<?> clazz, Object... args) {
+        for (Constructor constructor : clazz.getDeclaredConstructors()) {
+
+            // Get constructor args.
+            Class[] params = constructor.getParameterTypes();
+
+            boolean hasParams = true;
+            // Check that length of parameters match in constructor.
+            if (params.length == args.length) {
+                for (int i = 0; i < params.length ; i ++) {
+
+                    if (params[i].equals(args[i].getClass())) {
+                        continue;
+                    }
+
+                    // If execution got here parameters did not match.
+                    hasParams = false;
+                    break;
+                }
+            }
+
+            // If has params is still true we have correct constructor
+            if (hasParams) {
+                return (T) constructor;
+            }
+        }
+
+        return null;
     }
 }

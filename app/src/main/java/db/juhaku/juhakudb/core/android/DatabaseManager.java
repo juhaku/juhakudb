@@ -15,6 +15,8 @@ import db.juhaku.juhakudb.core.Criteria;
 import db.juhaku.juhakudb.core.DatabaseConfiguration;
 import db.juhaku.juhakudb.core.DatabaseConfigurationAdapter;
 import db.juhaku.juhakudb.exception.SchemaInitializationException;
+import db.juhaku.juhakudb.repository.RepositoryFactory;
+import db.juhaku.juhakudb.util.ReflectionUtils;
 
 /**
  * Created by juha on 16/12/15.
@@ -45,6 +47,7 @@ public class DatabaseManager {
     private Object[] repositories = new Object[0];
     private EntityManager em;
     private RepositoryLookupInjector injector;
+    private RepositoryFactory factory;
 
     /**
      * Initialize new DatabaseManager with current context and database configuration adapter.
@@ -57,18 +60,26 @@ public class DatabaseManager {
     public DatabaseManager(Context context, DatabaseConfigurationAdapter adapter) {
         this.configuration = new DatabaseConfiguration();
         adapter.configure(configuration);
+
         Class<?>[] entityClasses = resolveClasses(context, new EntityCriteria(configuration.getBasePackages()));
+
         try {
             databaseHelper = new DatabaseHelper(context, entityClasses, configuration);
+
         } catch (SchemaInitializationException e) {
             Log.e(getClass().getName(), "Failed to create database", e);
         }
+
         em = new EntityManager(databaseHelper);
+        factory = new RepositoryFactory(em, configuration.getBaseRepositoryClass());
 
         if (configuration.getRepositoryLocations() == null) {
+
             initializeRepositories(resolveClasses(context,
                     new RepositoryCriteria(context.getApplicationInfo().packageName)));
+
         } else {
+
             String[] locations = new String[configuration.getRepositoryLocations().length + 1];
             System.arraycopy(configuration.getRepositoryLocations(), 0, locations, 0,
                     configuration.getRepositoryLocations().length);
@@ -136,23 +147,12 @@ public class DatabaseManager {
      */
     private <T> void initializeRepositories(Class[] interfaces) {
         for (Class<?> repository : interfaces) {
-            Class<?> impl = repository.getAnnotation(Repository.class).value();
-            for (Constructor cons : impl.getDeclaredConstructors()) {
-                Class[] params = cons.getParameterTypes();
-                if (params.length == 1 && params[0].isAssignableFrom(EntityManager.class)) {
-                    try {
-                        T repo = (T) cons.newInstance(em);
-                        int len = repositories.length;
-                        Object[] newRepos = new Object[len + 1];
-                        System.arraycopy(repositories, 0, newRepos, 0, len);
-                        repositories = newRepos;
-                        repositories[len] = repo;
-                    } catch (Exception e) {
-                        Log.w(getClass().getName(), "could not initialize constructor with params: "
-                                + em, e);
-                    }
-                }
-            }
+            T repo = (T) factory.getRepository(repository);
+            int len = repositories.length;
+            Object[] newRepos = new Object[len + 1];
+            System.arraycopy(repositories, 0, newRepos, 0, len);
+            repositories = newRepos;
+            repositories[len] = repo;
         }
     }
 
