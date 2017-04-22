@@ -13,8 +13,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
-import db.juhaku.juhakudb.annotation.Transient;
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.SchemaInitializationException;
