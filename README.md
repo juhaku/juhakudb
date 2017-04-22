@@ -1,5 +1,7 @@
-# JuhakuDB current release: 1.3.1
+# JuhakuDB current release: 2.0.0
 Spring DATA like Android ORM Library for SQLite dabaseses
+
+Previous release: 1.3.1 docs can be found: [1.3.1 Release](https://github.com/juhaku/juhakudb/tree/9b53baf38954977bc6881d936a1eb4cca7a2e9ca). 1.x will not get any new feature releases, but only patches and bug fixes.
 
 ## Introduction
 JuhakuDb is created to provide advanced database management with simplicity in mind as well. This libary implements 
@@ -12,9 +14,7 @@ configure API it gives you levarage for managing databases in Android devices.
 With JuhakuDb managing SQLite database is fast and simply and it is quick to adapt on using the library. Libarary also provides annotated repositories with basic CRUD functionalities.
 
 ### ORM handling
-Annotation based ORM handling reminds a lot Hibernate. If Hibernate is something you are already familiar with 
-this should not be a too much to take then. There are similar annotations like ManyToOne, ManyToMany, OneToOne, OneToMany,
-Entiy, Id, Column etc. and they work in similar way to Hibernite.
+Annotation based ORM handling works with same javax persistence annotations as Hibernate would work. If Hibernate is something you are already familiar with this should not be a too much to take. Currently supported javax persistence annotations are ManyToOne, ManyToMany, OneToOne, OneToMany, Entiy, Id, Column, Transient.
 
 Annotated classes will be mapped accordingly and database tables will be automatically created with relations by the 
 annotations.
@@ -32,7 +32,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>1.3.1</version>
+    <version>2.0.0</version>
     <type>aar</type>
 </dependency>
 ```
@@ -40,8 +40,12 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile 'io.github.juhaku:juhaku-db:1.3.1@aar'
+    compile ('io.github.juhaku:juhaku-db:2.0.0@aar') {
+        transitive = true
+    }
 ```
+
+It is crusial to set transitive to true so dependant javax persistence annotations will be loaded as well. If not added you need to manually add the annotation dependency.
 
 ## Usage
 * Database manager
@@ -70,23 +74,29 @@ DatabaseManager dbManager = new DatabaseManager(context, new DatabaseConfigurati
 Context here is a Android Context. Other attributes are quite self explanatory. They are documented so reading java docs will give you more knowledge on them as well.
 
 ### Annotations
-Currently available annotation.
+Currently available javax persistence annotation.
 
-|Annotation| Description|
-|------------------------------| --- |
-|Column| Define column name for class attribute, can only be added to non-relation attribute.|
-|Entity| Define table name for class.|
-|Id| Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
-|ManyToMany| Defines many to many relation.|
-|ManyToOne| Defines many to one relation.|
-|OneToMany| Defines one to many relation.|
-|OneToOne| Defines one to one relation.|
-|Repository| Marks interface as repository.|
-|Transient| Marks class attribute as transient which will not be saved to database.|
-|Inject| Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation.|
+|Annotation| Supported attributes| Description|
+|------------------------------|---| --- |
+|Column|name | Define column name for class attribute, can only be added to non-relation attribute.|
+|Entity|-- | Define table name for class.|
+|Id|-- | Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
+|ManyToMany|fetch | Defines many to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
+|ManyToOne| fetch | Defines many to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
+|OneToMany| fetch | Defines one to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
+|OneToOne| fetch | Defines one to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
+|Transient| -- | Marks class attribute as transient which will not be saved to database.|
 
 All operations are cascading and storing will return stored item with populated database id.
 Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item. However using EAGER is not recommended behauviour.
+
+Currently available own annotations.
+
+|Annotation| Supported attributes| Description|
+|------------------------------|---| --- |
+|Repository| value | Marks interface as repository. Value can be implementing class of repository.|
+|Inject| -- | Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation.|
+
 
 Annotated table examples with minimal annnotation configuration.
 ```java
@@ -152,7 +162,7 @@ Relations still need to be defined in both sides of tables.
 
 Annotated class example with more configuration. Compared to above there is name in @Entity annotation and @Column annotations added.
 ```java
-@Entity(name = "authority")
+@Entity
 public class Authority {
 
     @Id
@@ -161,7 +171,7 @@ public class Authority {
     @Column(name = "value")
     private String value;
 
-    @ManyToMany(fetch = Fetch.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     private List<Person> person;
     
     // ... getters and setters
@@ -445,7 +455,7 @@ Now begin to use the library that rocks the Android's SQLite database.
 
 ### 2.x release
 
-Own ORM annotations will be replaced with javax.persistence annotations in favor of standardized usages.
+Own ORM annotations will be replaced with javax persistence annotations in favor of standardized usages.
 
 ### 3.x release
 
