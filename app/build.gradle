@@ -20,7 +20,7 @@ android {
     buildToolsVersion "25.0.0"
 
     defaultConfig {
-        minSdkVersion 24
+        minSdkVersion 16
         targetSdkVersion 25
     }
     signingConfigs {
@@ -205,14 +205,36 @@ revert.description = 'Rollback commit on release failure'
 task('uploadLocal', type: Upload.class) {
     repositories.mavenInstaller {
         configuration = configurations.archives
-        pom.project {
-            name rootProject.name
-            groupId 'juhaku-android'
-            artifactId 'juhaku-db'
-            packaging 'aar'
-            version = project.version
-            description 'Database ORM library for Android projects'
-            url repositoryURL
+        pom {
+            project {
+                name rootProject.name
+                groupId 'juhaku-android'
+                artifactId 'juhaku-db'
+                packaging 'aar'
+                version = project.version
+                description 'Database ORM library for Android projects'
+                url repositoryURL
+
+                scm {
+                    connection repositoryURL
+                    developerConnection repositoryURL
+                    url repositoryURL
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'juhaku'
+                        name 'Juha Kukkonen'
+                    }
+                }
+            }
         }
     }
 }
