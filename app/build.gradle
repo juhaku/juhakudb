@@ -50,7 +50,7 @@ android {
 
 dependencies {
 //    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'javax.persistence:persistence-api:1.0.2'
@@ -234,6 +234,16 @@ task('uploadLocal', type: Upload.class) {
                         name 'Juha Kukkonen'
                     }
                 }
+            }
+        }.withXml {
+            def dependenciesNode = asNode().appendNode('dependencies')
+
+            configurations.compile.allDependencies.each { dependency ->
+
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', dependency.group)
+                dependencyNode.appendNode('artifactId', dependency.name)
+                dependencyNode.appendNode('version', dependency.version)
             }
         }
     }
