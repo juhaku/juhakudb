@@ -81,14 +81,14 @@ Currently available javax persistence annotation.
 |Column|name | Define column name for class attribute, can only be added to non-relation attribute.|
 |Entity|-- | Define table name for class.|
 |Id|-- | Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
-|ManyToMany|fetch | Defines many to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
-|ManyToOne| fetch | Defines many to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
-|OneToMany| fetch | Defines one to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
-|OneToOne| fetch | Defines one to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER.|
+|ManyToMany|fetch | Defines many to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.LAZY.|
+|ManyToOne| fetch | Defines many to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.EAGER.|
+|OneToMany| fetch | Defines one to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.LAZY.|
+|OneToOne| fetch | Defines one to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.EAGER.|
 |Transient| -- | Marks class attribute as transient which will not be saved to database.|
 
 All operations are cascading and storing will return stored item with populated database id.
-Fetch can be either EAGER or LAZY. This is defined by Fetch enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item. However using EAGER is not recommended behauviour.
+Fetch can be either EAGER or LAZY. This is defined by FetchType enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item. However using EAGER is not recommended behauviour.
 
 Currently available own annotations.
 
