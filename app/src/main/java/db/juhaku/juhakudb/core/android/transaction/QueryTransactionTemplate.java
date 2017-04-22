@@ -65,7 +65,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param parentEntity Cascading query parent entity.
      * @param parentField Cascading query field.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
@@ -116,7 +116,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param result List of query result objects to cascade query for.
      * @param rootClass Root class of the queried entity.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
@@ -185,7 +185,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param type Instance of class which type of field is looked for.
      * @return String name of the field from root class.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
@@ -208,7 +208,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param type Instance of collection {@link Class}.
      * @return Collection of elements with type of given collection class.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
@@ -238,7 +238,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param field Instance of {@link Field}.
      * @return returns true if eager fetch is allowed; false otherwise.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
@@ -253,7 +253,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param field Instance of {@link Field}.
      * @return returns true if eager fetch is allowed; false otherwise.
      *
-     * @since 2.0.0-SNAPSHOT
+     * @since 2.0.0
      *
      * @hide
      */
