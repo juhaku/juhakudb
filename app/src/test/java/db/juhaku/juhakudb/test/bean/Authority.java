@@ -2,17 +2,17 @@ package db.juhaku.juhakudb.test.bean;
 
 import java.util.List;
 
-import db.juhaku.juhakudb.annotation.Column;
-import db.juhaku.juhakudb.annotation.Entity;
-import db.juhaku.juhakudb.annotation.Id;
-import db.juhaku.juhakudb.annotation.ManyToMany;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
 /**
  * Created by juha on 26/05/16.
  *
  * @author juha
  */
-@Entity(name = "authorities")
+@Entity
 public class Authority {
 
     @Id
@@ -22,6 +22,6 @@ public class Authority {
 
     private String longDescriptionOfAuthority;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     private List<ClassRoom> classRooms;
 }

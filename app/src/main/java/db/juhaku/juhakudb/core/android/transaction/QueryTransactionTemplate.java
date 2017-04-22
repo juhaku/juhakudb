@@ -11,11 +11,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.ManyToOne;
-import db.juhaku.juhakudb.annotation.OneToMany;
-import db.juhaku.juhakudb.annotation.OneToOne;
-import db.juhaku.juhakudb.core.Fetch;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
 import db.juhaku.juhakudb.core.android.ResultSet;
 import db.juhaku.juhakudb.core.android.ResultTransformer;
 import db.juhaku.juhakudb.exception.MappingException;
@@ -56,6 +57,18 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         commit();
     }
 
+    /**
+     * Perform given query.
+     *
+     * @param query Instance of {@link Query} to be performed.
+     * @param rootClass Root class of the queried entity.
+     * @param parentEntity Cascading query parent entity.
+     * @param parentField Cascading query field.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
     private void query(Query query, Class<?> rootClass, Object parentEntity, Field parentField) {
         Cursor retVal = getDb().rawQuery(query.getSql(), query.getArgs());
 
@@ -73,6 +86,10 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
             // Cascade the query for fetches & provide root always.
             cascadeQuery(result, rootClass);
 
+            /*
+             * If query is performed for the root object set the final result. Otherwise add result
+             * to the parent entity.
+             */
             if (parentEntity != null) {
                 if (parentField.isAnnotationPresent(ManyToMany.class) || parentField.isAnnotationPresent(OneToMany.class)) {
 
@@ -92,6 +109,17 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Cascade query for given query result of objects. Cascading will be done if fields of the
+     * returned entities has EAGER loading allowed.
+     *
+     * @param result List of query result objects to cascade query for.
+     * @param rootClass Root class of the queried entity.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
     private <E> void cascadeQuery(List<E> result, final Class<?> rootClass) {
         for (final E entity : result) {
 
@@ -103,7 +131,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                 final Class<?> type = ReflectionUtils.getFieldType(field);
 
                 // If field references to a foreign key in another table fetch items if necessary
-                if (isPrimaryKeyAssociationFetchAllowed(field) && !isCached(new FetchHistory(field.getName(), entity.getClass()))) {
+                if (isPrimaryKeyReverseJoinEagerFetchAllowed(field) && !isCached(new FetchHistory(field.getName(), entity.getClass()))) {
 
                     Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                         @Override
@@ -111,6 +139,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                             String alias = Alias.forModel(rootClass);
                             Object id = ReflectionUtils.getIdFieldValue(entity);
 
+                            // TODO may break the functionality if multiple joins occurs to same table with same type.
                             root.join(getAssociatedRootClassFieldNameByType(type, rootClass),
                                     alias, JoinMode.INNER_JOIN);
 
@@ -130,7 +159,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
 
                 } else {
 
-                    if (isForeignKeyAssociationFetchAllowed(field) && fieldValue != null) {
+                    if (isForeignKeyJoinEagerFetchAllowed(field) && fieldValue != null) {
 
                         Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
                             @Override
@@ -148,6 +177,18 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         }
     }
 
+    /**
+     * Get reverse join class field name by root class and type of field to look for. Method will
+     * return first field which type is given type.
+     *
+     * @param clazz Instance of class to look for field from.
+     * @param type Instance of class which type of field is looked for.
+     * @return String name of the field from root class.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
     private static String getAssociatedRootClassFieldNameByType(Class<?> clazz, Class<?> type) {
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
@@ -159,6 +200,18 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         return null;
     }
 
+    /**
+     * Copies given list of elements to collection of given class type. Class type must be assignable
+     * from {@link Collection} class.
+     *
+     * @param result List of elements to copy.
+     * @param type Instance of collection {@link Class}.
+     * @return Collection of elements with type of given collection class.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
     private <E> Collection<E> resultsToCollection(List<E> result, Class<?> type) {
         if (Set.class.isAssignableFrom(type)) {
             if (HashSet.class.isAssignableFrom(type)) {
@@ -180,17 +233,35 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
         return null;
     }
 
-    private static boolean isForeignKeyAssociationFetchAllowed(Field field) {
-        return (field.isAnnotationPresent(ManyToOne.class) && field.getAnnotation(ManyToOne.class).fetch() == Fetch.EAGER)
-                || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER)
+    /**
+     * Checks whether foreign key join has {@link FetchType} set to EAGER.
+     * @param field Instance of {@link Field}.
+     * @return returns true if eager fetch is allowed; false otherwise.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static boolean isForeignKeyJoinEagerFetchAllowed(Field field) {
+        return (field.isAnnotationPresent(ManyToOne.class) && field.getAnnotation(ManyToOne.class).fetch() == FetchType.EAGER)
+                || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == FetchType.EAGER)
                 && StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy());
     }
 
-    private static boolean isPrimaryKeyAssociationFetchAllowed(Field field) {
-        return ((field.isAnnotationPresent(ManyToMany.class) && field.getAnnotation(ManyToMany.class).fetch() == Fetch.EAGER))
-                || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == Fetch.EAGER
+    /**
+     * Checks whether primary key join has {@link FetchType} set to EAGER.
+     * @param field Instance of {@link Field}.
+     * @return returns true if eager fetch is allowed; false otherwise.
+     *
+     * @since 2.0.0-SNAPSHOT
+     *
+     * @hide
+     */
+    private static boolean isPrimaryKeyReverseJoinEagerFetchAllowed(Field field) {
+        return ((field.isAnnotationPresent(ManyToMany.class) && field.getAnnotation(ManyToMany.class).fetch() == FetchType.EAGER))
+                || (field.isAnnotationPresent(OneToOne.class) && field.getAnnotation(OneToOne.class).fetch() == FetchType.EAGER
                 && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy())
-                || (field.isAnnotationPresent(OneToMany.class) && field.getAnnotation(OneToMany.class).fetch() == Fetch.EAGER));
+                || (field.isAnnotationPresent(OneToMany.class) && field.getAnnotation(OneToMany.class).fetch() == FetchType.EAGER));
     }
 
     /**

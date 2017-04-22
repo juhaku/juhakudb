@@ -16,11 +16,12 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import db.juhaku.juhakudb.annotation.Entity;
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.ManyToOne;
-import db.juhaku.juhakudb.annotation.OneToMany;
-import db.juhaku.juhakudb.annotation.OneToOne;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.ConversionException;
 import db.juhaku.juhakudb.exception.NameResolveException;
@@ -327,28 +328,6 @@ public class EntityConverter {
         return retVal;
     }
 
-    @Deprecated
-    public ResultSet cursorToResultSet(Cursor cursor, Class<?> rootClass) throws ConversionException {
-        ResultSet result = new ResultSet();
-        for (Field field : rootClass.getDeclaredFields()) {
-            field.setAccessible(true);
-            // ignore primary key associations
-            if (hasPrimaryKeyJoin(field)) {
-                continue;
-            }
-            try {
-                Class<?> type = ReflectionUtils.getFieldType(field);
-                String columnName = NameResolver.resolveName(field);
-                Object value = getColumnValue(cursor, type, 0);
-                result.add(type, columnName, value, field.getName());
-            } catch (Exception e) {
-                throw new ConversionException("Could not convert class: " + rootClass.getName() + " to result set", e);
-            }
-        }
-
-        return result;
-    }
-
     public ResultSet cursorToCustomResultSet(Cursor cursor) throws ConversionException {
         ResultSet resultSet = new ResultSet();
         int cols = cursor.getColumnCount();
@@ -546,7 +525,7 @@ public class EntityConverter {
      * with mapped by value empty.
      *
      * <p>If field is annotated with one of these annotations the join to other table is made from
-     * primary key of field's owning class. This means that field with annotation {@link db.juhaku.juhakudb.annotation.Id}
+     * primary key of field's owning class. This means that field with annotation {@link javax.persistence.Id}
      * is being used to make the join.</p>
      *
      * @param field {@link Field} of class to check primary key join for.

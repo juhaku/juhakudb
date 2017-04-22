@@ -7,9 +7,10 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.ManyToOne;
-import db.juhaku.juhakudb.annotation.OneToOne;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;

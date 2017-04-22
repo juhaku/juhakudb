@@ -1,8 +1,9 @@
 package db.juhaku.juhakudb.test.bean;
 
-import db.juhaku.juhakudb.annotation.Entity;
-import db.juhaku.juhakudb.annotation.Id;
-import db.juhaku.juhakudb.annotation.OneToOne;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 /**
  * Created by juha on 06/04/16.
@@ -17,6 +18,6 @@ public class Teacher {
 
     private String name;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private ClassRoom classRoom;
 }

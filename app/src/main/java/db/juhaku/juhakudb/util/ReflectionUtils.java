@@ -9,10 +9,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 
-import db.juhaku.juhakudb.annotation.Id;
-import db.juhaku.juhakudb.annotation.Repository;
+import javax.persistence.Id;
 
 /**
  * Created by juha on 06/04/16.
@@ -208,7 +206,7 @@ public class ReflectionUtils {
 
     /**
      * Helper method to retrieve id field's value from given object. Given object must be a database
-     * entity with annotation {@link db.juhaku.juhakudb.annotation.Entity} and it must have id field
+     * entity with annotation {@link javax.persistence.Entity} and it must have id field
      * annotated with {@link Id}. If requirements are missing null will be returned.
      *
      * @param o Object instance of database entity to get id field's value from.

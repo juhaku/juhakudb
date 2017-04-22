@@ -7,12 +7,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import db.juhaku.juhakudb.annotation.Entity;
-import db.juhaku.juhakudb.annotation.Id;
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.ManyToOne;
-import db.juhaku.juhakudb.annotation.OneToMany;
-import db.juhaku.juhakudb.annotation.OneToOne;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
 import db.juhaku.juhakudb.annotation.Transient;
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.NameResolveException;

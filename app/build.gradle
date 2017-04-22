@@ -20,7 +20,7 @@ android {
     buildToolsVersion "25.0.0"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 24
         targetSdkVersion 25
     }
     signingConfigs {
@@ -46,10 +46,6 @@ android {
     lintOptions {
         abortOnError false
     }
-    compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
-    }
 }
 
 dependencies {
@@ -57,7 +53,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
-    compile 'javax.annotation:javax.annotation-api:1.3'
+    compile 'javax.persistence:persistence-api:1.0.2'
 }
 
 release {
@@ -189,6 +185,7 @@ uploadCentral.description = 'Upload archives to maven central'
 task updatePomVersion << {
     release.tagTemplate = "${rootProject.name}-$version"
     uploadArchives.repositories.mavenDeployer.pom.version = version
+    uploadCentral.repositories.mavenDeployer.pom.version = version
 }
 
 task formatReleaseVersion << {

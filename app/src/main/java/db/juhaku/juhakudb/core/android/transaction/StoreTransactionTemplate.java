@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.ManyToOne;
-import db.juhaku.juhakudb.annotation.OneToMany;
-import db.juhaku.juhakudb.annotation.OneToOne;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.filter.Filter;

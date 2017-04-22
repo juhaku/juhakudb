@@ -202,39 +202,6 @@ public abstract class TransactionTemplate<T> {
     abstract void onTransaction();
 
     /**
-     * Helper class that contains necessary information about pending transactions that should be
-     * executed before or after the main transaction process is executed.
-     * <p>Used to execute additional queries to database to keep the data integrated.</p>
-     *
-     * @since 1.0.2
-     *
-     * @hide
-     */
-    class PendingTransaction {
-        private Long storedId;
-        private Class<?> from;
-        private Class<?> to;
-
-        public PendingTransaction(Long storedId, Class<?> from, Class<?> to) {
-            this.storedId = storedId;
-            this.from = from;
-            this.to = to;
-        }
-
-        Long getStoredId() {
-            return storedId;
-        }
-
-        Class<?> getFrom() {
-            return from;
-        }
-
-        Class<?> getTo() {
-            return to;
-        }
-    }
-
-    /**
      * Resolve id column name of given class. Class must be used as an entity for database. If
      * name cannot be resolved mapping exception will be thrown.
      * @param clazz Class to resolve id column name for.

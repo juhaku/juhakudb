@@ -2,17 +2,18 @@ package db.juhaku.juhakudb.test.bean;
 
 import java.util.List;
 
-import db.juhaku.juhakudb.annotation.Entity;
-import db.juhaku.juhakudb.annotation.Id;
-import db.juhaku.juhakudb.annotation.ManyToMany;
-import db.juhaku.juhakudb.annotation.OneToMany;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 
 /**
  * Created by juha on 22/12/15.
  *
  * @author juha
  */
-@Entity(name = "persons")
+@Entity
 public class Person {
 
     @Id
@@ -20,10 +21,10 @@ public class Person {
 
     private String username;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     private List<ClassRoom> rooms;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY)
     private List<Group> groups;
 
     public Integer getId() {
