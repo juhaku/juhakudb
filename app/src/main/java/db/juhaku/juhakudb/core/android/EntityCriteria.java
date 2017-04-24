@@ -28,7 +28,7 @@ public class EntityCriteria implements Criteria<String> {
 
                 // If class is not an enum and it has Entity annotation it should be entity.
                 Class<?> clazz;
-                if ((clazz = initializeClass(path)) != null) {
+                if ((clazz = initializeClass(type)) != null) {
                     if (!Enum.class.isAssignableFrom(clazz) && clazz.isAnnotationPresent(Entity.class)) {
 
                         return true;
@@ -45,8 +45,8 @@ public class EntityCriteria implements Criteria<String> {
         try {
             return Class.forName(name);
         } catch (Exception e) {
-            Log.e(DatabaseManager.class.getName(), "Class could not be initialized by name: " +
-                    name + ", table wont be created to database", e);
+            Log.e(EntityCriteria.class.getName(), "Could not initialize class by name: " +
+                    name + ", null returned!", e);
         }
 
         return null;
