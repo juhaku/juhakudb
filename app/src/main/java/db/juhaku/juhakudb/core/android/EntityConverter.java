@@ -21,6 +21,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.ConversionException;
@@ -223,6 +224,8 @@ public class EntityConverter {
         Object entity = instantiateByDefaultConstructor(model);
 
         String[] names = cursor.getColumnNames();
+        int entityIndex = index.get();
+        int fieldCount = countDeclaredFields(model);
 
         for (Field field : model.getDeclaredFields()) {
             boolean accessible = field.isAccessible();
@@ -239,9 +242,11 @@ public class EntityConverter {
             String name = resolveName(field);
 
             // Double check that column name in index matches to the required column name
-            if (!name.equals(names[index.get()])) {
-                throw new ConversionException("Field's name and indexed table column name does not match: " + name + " <> " + names[index.get()]);
-            }
+            int fieldIndex = getColumnIndex(entityIndex, fieldCount, names, name);
+
+//            if (!name.equals(names[index.get()])) {
+//                throw new ConversionException("Field's name and indexed table column name does not match: " + name + " <> " + names[index.get()]);
+//            }
 
             Class<?> type = ReflectionUtils.getFieldType(field);
             if (type.isAnnotationPresent(Entity.class)) {
@@ -250,7 +255,7 @@ public class EntityConverter {
                  * For entities get id fields type in order to obtain correct id value.
                  */
                 Field idField = ReflectionUtils.findIdField(type);
-                Object value = getColumnValue(cursor, ReflectionUtils.getFieldType(idField), index.get());
+                Object value = getColumnValue(cursor, ReflectionUtils.getFieldType(idField), fieldIndex);
 
                 // Add entity with value to the mapping entity if value is found from database query.
                 if (value != null) {
@@ -263,7 +268,7 @@ public class EntityConverter {
 
             } else {
                 // Get the value and add a new resource to result set.
-                Object value = getColumnValue(cursor, type, index.get());
+                Object value = getColumnValue(cursor, type, fieldIndex);
 
                 ReflectionUtils.setFieldValue(field.getName(), entity, value);
 
@@ -274,6 +279,38 @@ public class EntityConverter {
         }
 
         return (T) entity;
+    }
+
+    /**
+     * Find the index of the column for the name. This is mandatory as Java cannot assure the order
+     * of the declared fields in objects. Especially dalvik cannot provide them in order.
+     *
+     * <p>Name is searched from array of names with scope of index to index + fieldCount.</p>
+     *
+     * @param index Int value of current index of columns for entity.
+     * @param fieldCount Int value of declared fields in entity.
+     * @param names String array of names in total.
+     * @param name String value of name that should be from array.
+     * @return Int index of the column in array.
+     * @throws ConversionException If field is not found from array of names within scope.
+     *
+     * @since 2.0.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static int getColumnIndex(int index, int fieldCount, String[] names, String name) throws ConversionException {
+        if ((index + fieldCount) <= names.length) {
+
+            for (int i = index; i < index + fieldCount; i++) {
+
+                if (names[i].equals(name)) {
+                    return i;
+                }
+            }
+        }
+
+        throw new ConversionException("Name: " + name + " could not be found from names: " + StringUtils.arrayToString(names)
+                + " with scope from: " + index + " to: " + (index + fieldCount));
     }
 
     /**
@@ -307,14 +344,15 @@ public class EntityConverter {
      *
      * @hide
      */
-    private static  <T> T instantiateByDefaultConstructor(Class<?> type) {
-        try {
-            // on models try using default constructor
-            return (T) type.newInstance();
-        } catch (Exception e) {
+    public static  <T> T instantiateByDefaultConstructor(Class<?> type) {
+        T model = ReflectionUtils.instantiateByDefaultConstructor(type);
+
+        if (model == null) {
             throw new ConversionException("Failed to initialize type: " + type.getName()
-                    + ", missing default constructor", e);
+                    + ", missing default constructor");
         }
+
+        return model;
     }
 
     public List<ResultSet> convertCursorToCustomResultSetList(Cursor cursor) throws ConversionException {
@@ -350,13 +388,16 @@ public class EntityConverter {
         int type = cursor.getType(index);
 
         if (type == Cursor.FIELD_TYPE_FLOAT) {
+
             Float val = cursor.getFloat(index);
             if (clazz == null) {
                 return (T) val;
             } else {
                 return (T) constructType(clazz, val.toString());
             }
+
         } else if (type == Cursor.FIELD_TYPE_INTEGER) {
+
             Integer val = cursor.getInt(index);
             if (clazz == null) {
                 return (T) val;
@@ -365,22 +406,45 @@ public class EntityConverter {
             } else {
                 return (T) constructType(clazz, val.toString());
             }
+
         } else if (type == Cursor.FIELD_TYPE_BLOB) {
+
             return (T) cursor.getBlob(index);
+
         } else {
+
             String val = cursor.getString(index);
+
             if (clazz != null && Date.class.isAssignableFrom(clazz)) {
                 try {
-                    return (T) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(val);
+
+                    if (val != null) {
+                        return (T) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(val);
+                    } else {
+                        return null;
+                    }
+
                 } catch (ParseException e) {
                     Log.w(getClass().getName(), "incompatible date: " + val + " returning null");
                     return null;
                 }
+
             } else if (clazz != null && Enum.class.isAssignableFrom(clazz)) {
+
                 Class<? extends Enum> enVal = (Class<? extends Enum>) clazz;
-                return (T) Enum.valueOf(enVal, val);
+                if (val != null) {
+
+                    return (T) Enum.valueOf(enVal, val);
+
+                } else {
+
+                    return null;
+                }
+
             } else {
+
                 return (T) val;
+
             }
         }
     }
@@ -470,21 +534,40 @@ public class EntityConverter {
 
                 if (Integer.class.isAssignableFrom(field.getType()) || Integer.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Integer) field.get(object));
+
                 } else if (Short.class.isAssignableFrom(field.getType()) || Short.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Short) field.get(object));
+
                 } else if (Boolean.class.isAssignableFrom(field.getType()) || Boolean.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Boolean) field.get(object));
+
                 } else if (Long.class.isAssignableFrom(field.getType()) || Long.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Long) field.get(object));
+
                 } else if (Float.class.isAssignableFrom(field.getType()) || Float.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Float) field.get(object));
+
+                } else if (Double.class.isAssignableFrom(field.getType()) || Double.TYPE.isAssignableFrom(field.getType())) {
+                    values.put(columnName, (Double) field.get(object));
+
                 } else if (Byte.class.isAssignableFrom(field.getType()) || Byte.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Byte) field.get(object));
+
                 } else if (byte[].class.isAssignableFrom(field.getType())) {
                     values.put(columnName, (byte[]) field.get(object));
+
                 } else if (String.class.isAssignableFrom(field.getType())) {
                     values.put(columnName, (String) field.get(object));
+
+                } else if (Date.class.isAssignableFrom(field.getType())) {
+                    Object value = field.get(object);
+                    values.put(columnName, value != null ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(value) : null);
+
+                } else if (Enum.class.isAssignableFrom(field.getType())) {
+                    Object value = field.get(object);
+                    values.put(columnName, value != null ? value.toString() : null);
                 }
+
             } catch (RuntimeException e) {
                 /*
                  * Catch runtime exceptions so that they are not left behind the scene and re-throw them.
@@ -538,5 +621,33 @@ public class EntityConverter {
     private static boolean hasPrimaryKeyJoin(Field field) {
         return field.isAnnotationPresent(ManyToMany.class) || field.isAnnotationPresent(OneToMany.class)
                 || (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
+    }
+
+    /**
+     * Get's count of declared fields in in given class.
+     *
+     * @param type Instance of {@link Class} type of object which declared fields will be counted.
+     *
+     * @return count of declared fields or 0 if class does not have declared fields.
+     *
+     * @since 2.0.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static final int countDeclaredFields(Class<?> type) {
+        int count = 0;
+        for (Field field : type.getDeclaredFields()) {
+            field.setAccessible(true);
+
+            if (field.isAnnotationPresent(Transient.class) || hasPrimaryKeyJoin(field)) {
+                continue;
+            }
+
+            count++;
+
+            field.setAccessible(false); // return the normal state
+        }
+
+        return count;
     }
 }
