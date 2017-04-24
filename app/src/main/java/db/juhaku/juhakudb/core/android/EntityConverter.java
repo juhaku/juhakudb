@@ -294,7 +294,7 @@ public class EntityConverter {
      * @return Int index of the column in array.
      * @throws ConversionException If field is not found from array of names within scope.
      *
-     * @since 2.0.1-SNAPSHOT
+     * @since 2.0.1
      *
      * @hide
      */
@@ -630,7 +630,7 @@ public class EntityConverter {
      *
      * @return count of declared fields or 0 if class does not have declared fields.
      *
-     * @since 2.0.1-SNAPSHOT
+     * @since 2.0.1
      *
      * @hide
      */

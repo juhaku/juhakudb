@@ -24,7 +24,7 @@ public class StringUtils {
      * @param array String array of values to convert to loggable String.
      * @return Stringified array.
      *
-     * @since 2.0.1-SNAPSHOT
+     * @since 2.0.1
      */
     public static final String arrayToString(String... array) {
         StringBuilder builder = new StringBuilder();

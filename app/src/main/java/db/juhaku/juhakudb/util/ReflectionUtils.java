@@ -341,7 +341,7 @@ public class ReflectionUtils {
      * @param type {@link Class} to instantiate.
      * @return Newly created instance of provided class or null if default constructor is not found.
      *
-     * @since 2.0.1-SNAPSHOT
+     * @since 2.0.1
      */
     public static final <T> T instantiateByDefaultConstructor(Class<?> type) {
         try {
