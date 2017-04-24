@@ -21,6 +21,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.ConversionException;
@@ -224,7 +225,7 @@ public class EntityConverter {
 
         String[] names = cursor.getColumnNames();
         int entityIndex = index.get();
-        int fieldCount = ReflectionUtils.countDeclaredFields(model, true);
+        int fieldCount = countDeclaredFields(model);
 
         for (Field field : model.getDeclaredFields()) {
             boolean accessible = field.isAccessible();
@@ -387,13 +388,16 @@ public class EntityConverter {
         int type = cursor.getType(index);
 
         if (type == Cursor.FIELD_TYPE_FLOAT) {
+
             Float val = cursor.getFloat(index);
             if (clazz == null) {
                 return (T) val;
             } else {
                 return (T) constructType(clazz, val.toString());
             }
+
         } else if (type == Cursor.FIELD_TYPE_INTEGER) {
+
             Integer val = cursor.getInt(index);
             if (clazz == null) {
                 return (T) val;
@@ -402,22 +406,45 @@ public class EntityConverter {
             } else {
                 return (T) constructType(clazz, val.toString());
             }
+
         } else if (type == Cursor.FIELD_TYPE_BLOB) {
+
             return (T) cursor.getBlob(index);
+
         } else {
+
             String val = cursor.getString(index);
+
             if (clazz != null && Date.class.isAssignableFrom(clazz)) {
                 try {
-                    return (T) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(val);
+
+                    if (val != null) {
+                        return (T) new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(val);
+                    } else {
+                        return null;
+                    }
+
                 } catch (ParseException e) {
                     Log.w(getClass().getName(), "incompatible date: " + val + " returning null");
                     return null;
                 }
+
             } else if (clazz != null && Enum.class.isAssignableFrom(clazz)) {
+
                 Class<? extends Enum> enVal = (Class<? extends Enum>) clazz;
-                return (T) Enum.valueOf(enVal, val);
+                if (val != null) {
+
+                    return (T) Enum.valueOf(enVal, val);
+
+                } else {
+
+                    return null;
+                }
+
             } else {
+
                 return (T) val;
+
             }
         }
     }
@@ -594,5 +621,33 @@ public class EntityConverter {
     private static boolean hasPrimaryKeyJoin(Field field) {
         return field.isAnnotationPresent(ManyToMany.class) || field.isAnnotationPresent(OneToMany.class)
                 || (field.isAnnotationPresent(OneToOne.class) && !StringUtils.isBlank(field.getAnnotation(OneToOne.class).mappedBy()));
+    }
+
+    /**
+     * Get's count of declared fields in in given class.
+     *
+     * @param type Instance of {@link Class} type of object which declared fields will be counted.
+     *
+     * @return count of declared fields or 0 if class does not have declared fields.
+     *
+     * @since 2.0.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static final int countDeclaredFields(Class<?> type) {
+        int count = 0;
+        for (Field field : type.getDeclaredFields()) {
+            field.setAccessible(true);
+
+            if (field.isAnnotationPresent(Transient.class) || hasPrimaryKeyJoin(field)) {
+                continue;
+            }
+
+            count++;
+
+            field.setAccessible(false); // return the normal state
+        }
+
+        return count;
     }
 }

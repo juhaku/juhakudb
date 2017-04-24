@@ -354,31 +354,4 @@ public class ReflectionUtils {
         }
     }
 
-    /**
-     * Get's count of declared fields in in given class.
-     *
-     * @param type Instance of {@link Class} type of object which declared fields will be counted.
-     * @param ignoreTransient Boolean value to indicate whether to ignore fields that are not stored
-     *                        in database.
-     * @return count of declared fields or 0 if class does not have declared fields.
-     *
-     * @since 2.0.1-SNAPSHOT
-     */
-    public static final int countDeclaredFields(Class<?> type, boolean ignoreTransient) {
-        int count = 0;
-        for (Field field : type.getDeclaredFields()) {
-            field.setAccessible(true);
-
-            if (field.isAnnotationPresent(Transient.class) && ignoreTransient) {
-                continue;
-            }
-
-            count++;
-
-            field.setAccessible(false); // return the normal state
-        }
-
-        return count;
-    }
-
 }
