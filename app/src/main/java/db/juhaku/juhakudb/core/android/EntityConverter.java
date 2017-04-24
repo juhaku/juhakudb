@@ -307,14 +307,15 @@ public class EntityConverter {
      *
      * @hide
      */
-    private static  <T> T instantiateByDefaultConstructor(Class<?> type) {
-        try {
-            // on models try using default constructor
-            return (T) type.newInstance();
-        } catch (Exception e) {
+    public static  <T> T instantiateByDefaultConstructor(Class<?> type) {
+        T model = ReflectionUtils.instantiateByDefaultConstructor(type);
+
+        if (model == null) {
             throw new ConversionException("Failed to initialize type: " + type.getName()
-                    + ", missing default constructor", e);
+                    + ", missing default constructor");
         }
+
+        return model;
     }
 
     public List<ResultSet> convertCursorToCustomResultSetList(Cursor cursor) throws ConversionException {

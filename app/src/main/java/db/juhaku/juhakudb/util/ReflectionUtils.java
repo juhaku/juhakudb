@@ -12,6 +12,8 @@ import java.util.Map;
 
 import javax.persistence.Id;
 
+import db.juhaku.juhakudb.exception.ConversionException;
+
 /**
  * Created by juha on 06/04/16.
  * <p>This class provides utilities for making reflection easier.</p>
@@ -331,4 +333,24 @@ public class ReflectionUtils {
 
         return null;
     }
+
+    /**
+     * Initialize new instance of class. Class must have default constructor available.
+     *
+     * @param type {@link Class} to instantiate.
+     * @return Newly created instance of provided class or null if default constructor is not found.
+     *
+     * @since 2.0.1-SNAPSHOT
+     */
+    public static  <T> T instantiateByDefaultConstructor(Class<?> type) {
+        try {
+            // on models try using default constructor
+            return (T) type.newInstance();
+        } catch (Exception e) {
+            Log.e(ReflectionUtils.class.getName(), "Failed to initialize model by default constructor", e);
+
+            return null;
+        }
+    }
+
 }

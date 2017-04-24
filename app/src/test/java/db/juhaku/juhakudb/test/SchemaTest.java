@@ -18,6 +18,7 @@ import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.test.bean.Authority;
 import db.juhaku.juhakudb.test.bean.ClassRoom;
 import db.juhaku.juhakudb.test.bean.Group;
+import db.juhaku.juhakudb.test.bean.Permission;
 import db.juhaku.juhakudb.test.bean.Person;
 import db.juhaku.juhakudb.test.bean.Teacher;
 
@@ -37,7 +38,7 @@ public class SchemaTest {
         configuration.setBasePackages("db.juhaku.juhakudb.test.bean");
         configuration.setVersion(1);
         Schema schema = Schema.newInstance(configuration, new Class<?>[]{
-                Teacher.class, Person.class, ClassRoom.class, Group.class, Authority.class});
+                Teacher.class, Person.class, ClassRoom.class, Group.class, Authority.class, Permission.class});
         assertNotNull("schema not null", schema);
 //        assertEquals("schema wrong table amount", 3, schema.getElements().size());
         for (Schema element : Schema.toSet(schema)) {

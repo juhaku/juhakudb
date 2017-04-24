@@ -75,14 +75,10 @@ public class NameResolver {
 
     private static String resolveTableName(Class<?> clazz) throws NameResolveException {
         if (clazz.isAnnotationPresent(Entity.class)) {
-            String tableName = clazz.getAnnotation(Entity.class).name();
-            if (!StringUtils.isBlank(tableName)) {
-                return tableName;
-            } else {
-                return camelCaseToUnderscored(clazz.getSimpleName());
-            }
+
+            return camelCaseToUnderscored(clazz.getSimpleName());
+
         } else {
-            //TODO create name resolving for class name without annotation.
             throw new NameResolveException("Annotation (" + Entity.class.getName() + ") is not " +
                     "provided, cannot resolve name");
         }
@@ -132,7 +128,7 @@ public class NameResolver {
                 letter = Character.toLowerCase(letter);
             }
 
-            if (Character.isUpperCase(letter) && i > 1) {
+            if (Character.isUpperCase(letter) && i > 0) {
                 underscored.append("_").append(Character.toLowerCase(letter));
 
             } else {
