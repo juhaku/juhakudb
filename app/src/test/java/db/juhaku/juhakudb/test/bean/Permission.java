@@ -22,7 +22,7 @@ public class Permission {
     private Integer integer;
     private Boolean aBoolean;
     private byte[] data;
-//    private Level level;
+    private Level level;
 
 
     public Long getId() {
@@ -89,16 +89,11 @@ public class Permission {
         this.data = data;
     }
 
-//    public Level getLevel() {
-//        return level;
-//    }
-//
-//    public void setLevel(Level level) {
-//        this.level = level;
-//    }
-//
-//    public enum Level {
-//
-//        MASTER, GRAND_MASTER
-//    }
+    public Level getLevel() {
+        return level;
+    }
+
+    public void setLevel(Level level) {
+        this.level = level;
+    }
 }

@@ -17,4 +17,24 @@ public class StringUtils {
     public static final boolean isBlank(String arg0) {
         return !(arg0 != null && arg0.trim().length() > 0);
     }
+
+    /**
+     * Converts array of strings to String for easy logging.
+     *
+     * @param array String array of values to convert to loggable String.
+     * @return Stringified array.
+     *
+     * @since 2.0.1-SNAPSHOT
+     */
+    public static final String arrayToString(String... array) {
+        StringBuilder builder = new StringBuilder();
+        for (String str : array) {
+            builder.append(str);
+            if (str != array[array.length - 1]) {
+                builder.append(",");
+            }
+        }
+
+        return builder.toString();
+    }
 }

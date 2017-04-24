@@ -223,6 +223,8 @@ public class EntityConverter {
         Object entity = instantiateByDefaultConstructor(model);
 
         String[] names = cursor.getColumnNames();
+        int entityIndex = index.get();
+        int fieldCount = ReflectionUtils.countDeclaredFields(model, true);
 
         for (Field field : model.getDeclaredFields()) {
             boolean accessible = field.isAccessible();
@@ -239,9 +241,11 @@ public class EntityConverter {
             String name = resolveName(field);
 
             // Double check that column name in index matches to the required column name
-            if (!name.equals(names[index.get()])) {
-                throw new ConversionException("Field's name and indexed table column name does not match: " + name + " <> " + names[index.get()]);
-            }
+            int fieldIndex = getColumnIndex(entityIndex, fieldCount, names, name);
+
+//            if (!name.equals(names[index.get()])) {
+//                throw new ConversionException("Field's name and indexed table column name does not match: " + name + " <> " + names[index.get()]);
+//            }
 
             Class<?> type = ReflectionUtils.getFieldType(field);
             if (type.isAnnotationPresent(Entity.class)) {
@@ -250,7 +254,7 @@ public class EntityConverter {
                  * For entities get id fields type in order to obtain correct id value.
                  */
                 Field idField = ReflectionUtils.findIdField(type);
-                Object value = getColumnValue(cursor, ReflectionUtils.getFieldType(idField), index.get());
+                Object value = getColumnValue(cursor, ReflectionUtils.getFieldType(idField), fieldIndex);
 
                 // Add entity with value to the mapping entity if value is found from database query.
                 if (value != null) {
@@ -263,7 +267,7 @@ public class EntityConverter {
 
             } else {
                 // Get the value and add a new resource to result set.
-                Object value = getColumnValue(cursor, type, index.get());
+                Object value = getColumnValue(cursor, type, fieldIndex);
 
                 ReflectionUtils.setFieldValue(field.getName(), entity, value);
 
@@ -274,6 +278,38 @@ public class EntityConverter {
         }
 
         return (T) entity;
+    }
+
+    /**
+     * Find the index of the column for the name. This is mandatory as Java cannot assure the order
+     * of the declared fields in objects. Especially dalvik cannot provide them in order.
+     *
+     * <p>Name is searched from array of names with scope of index to index + fieldCount.</p>
+     *
+     * @param index Int value of current index of columns for entity.
+     * @param fieldCount Int value of declared fields in entity.
+     * @param names String array of names in total.
+     * @param name String value of name that should be from array.
+     * @return Int index of the column in array.
+     * @throws ConversionException If field is not found from array of names within scope.
+     *
+     * @since 2.0.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static int getColumnIndex(int index, int fieldCount, String[] names, String name) throws ConversionException {
+        if ((index + fieldCount) <= names.length) {
+
+            for (int i = index; i < index + fieldCount; i++) {
+
+                if (names[i].equals(name)) {
+                    return i;
+                }
+            }
+        }
+
+        throw new ConversionException("Name: " + name + " could not be found from names: " + StringUtils.arrayToString(names)
+                + " with scope from: " + index + " to: " + (index + fieldCount));
     }
 
     /**
@@ -471,21 +507,40 @@ public class EntityConverter {
 
                 if (Integer.class.isAssignableFrom(field.getType()) || Integer.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Integer) field.get(object));
+
                 } else if (Short.class.isAssignableFrom(field.getType()) || Short.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Short) field.get(object));
+
                 } else if (Boolean.class.isAssignableFrom(field.getType()) || Boolean.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Boolean) field.get(object));
+
                 } else if (Long.class.isAssignableFrom(field.getType()) || Long.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Long) field.get(object));
+
                 } else if (Float.class.isAssignableFrom(field.getType()) || Float.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Float) field.get(object));
+
+                } else if (Double.class.isAssignableFrom(field.getType()) || Double.TYPE.isAssignableFrom(field.getType())) {
+                    values.put(columnName, (Double) field.get(object));
+
                 } else if (Byte.class.isAssignableFrom(field.getType()) || Byte.TYPE.isAssignableFrom(field.getType())) {
                     values.put(columnName, (Byte) field.get(object));
+
                 } else if (byte[].class.isAssignableFrom(field.getType())) {
                     values.put(columnName, (byte[]) field.get(object));
+
                 } else if (String.class.isAssignableFrom(field.getType())) {
                     values.put(columnName, (String) field.get(object));
+
+                } else if (Date.class.isAssignableFrom(field.getType())) {
+                    Object value = field.get(object);
+                    values.put(columnName, value != null ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(value) : null);
+
+                } else if (Enum.class.isAssignableFrom(field.getType())) {
+                    Object value = field.get(object);
+                    values.put(columnName, value != null ? value.toString() : null);
                 }
+
             } catch (RuntimeException e) {
                 /*
                  * Catch runtime exceptions so that they are not left behind the scene and re-throw them.
