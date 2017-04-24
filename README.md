@@ -1,4 +1,4 @@
-# JuhakuDB current release: 2.0.0
+# JuhakuDB current release: 2.0.1
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 Previous release: 1.3.1 docs can be found: [1.3.1 Release](https://github.com/juhaku/juhakudb/tree/9b53baf38954977bc6881d936a1eb4cca7a2e9ca). 1.x will not get any new feature releases, but only patches and bug fixes.
@@ -32,7 +32,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <type>aar</type>
 </dependency>
 ```
@@ -40,7 +40,7 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile ('io.github.juhaku:juhaku-db:2.0.0@aar') {
+    compile ('io.github.juhaku:juhaku-db:2.0.1@aar') {
         transitive = true
     }
 ```
