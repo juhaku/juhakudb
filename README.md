@@ -438,7 +438,7 @@ Yet another invented real case scenario example.
 List<Library> libraries = libraryRepository.findLibraries(new Filters(new Filter() {
     @Override
     public void filter(Root root, Predicates predicates) {
-        root.fetch("books", JoinMode.INNER_JOIN).fetch("persons", "bp", JoinMode.INNER_JOIN);
+        root.fetch("books", JoinMode.INNER_JOIN).fetch("persons", "bp", JoinMode.LEFT_JOIN);
         root.fetch("roles", JoinMode.LEFT_JOIN).fetch("person", JoinMode.LEFT_JOIN);
     }
 }, new Filter() {
