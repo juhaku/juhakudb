@@ -1,7 +1,7 @@
 # JuhakuDB current release: 2.0.1
 Spring DATA like Android ORM Library for SQLite dabaseses
 
-Previous release: 1.3.1 docs can be found: [1.3.1 Release](https://github.com/juhaku/juhakudb/tree/9b53baf38954977bc6881d936a1eb4cca7a2e9ca). 1.x will not get any new feature releases, but only patches and bug fixes.
+Previous release: 1.3.2 docs can be found: [1.3.2 Release](https://github.com/juhaku/juhakudb/tree/b1.3.x). 1.x will not get any new feature releases, but only patches and bug fixes.
 
 ## Introduction
 JuhakuDb is created to provide advanced database management with simplicity in mind as well. This libary implements 
@@ -14,7 +14,7 @@ configure API it gives you levarage for managing databases in Android devices.
 With JuhakuDb managing SQLite database is fast and simply and it is quick to adapt on using the library. Libarary also provides annotated repositories with basic CRUD functionalities.
 
 ### ORM handling
-Annotation based ORM handling works with same javax persistence annotations as Hibernate would work. If Hibernate is something you are already familiar with this should not be a too much to take. Currently supported javax persistence annotations are ManyToOne, ManyToMany, OneToOne, OneToMany, Entiy, Id, Column, Transient.
+Annotation based ORM handling works with same javax persistence annotations as Hibernate would work. If Hibernate is something you are already familiar with this should not be a too much to take. Currently supported javax persistence annotations are ManyToOne, ManyToMany, OneToOne, OneToMany, Entiy, Id, Column and Transient.
 
 Annotated classes will be mapped accordingly and database tables will be automatically created with relations by the 
 annotations.
@@ -71,21 +71,21 @@ DatabaseManager dbManager = new DatabaseManager(context, new DatabaseConfigurati
     }
 });
 ```
-Context here is a Android Context. Other attributes are quite self explanatory. They are documented so reading java docs will give you more knowledge on them as well.
+Context here is a Android Context. Other attributes are quite self explanatory. They are documented so reading javadocs will give you more knowledge on them as well.
 
 ### Annotations
 Currently available javax persistence annotation.
 
 |Annotation| Supported attributes| Description|
 |------------------------------|---| --- |
-|Column|name | Define column name for class attribute, can only be added to non-relation attribute.|
+|Column|name | Define column name for class attribute, can only be added to non-relation field.|
 |Entity|-- | Marks class as entity of database.|
-|Id|-- | Define primary key field for database table, id is auto generated per table (way of the anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
+|Id|-- | Define primary key field for database table, id is auto generated per table (way of the Anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
 |ManyToMany|fetch | Defines many to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.LAZY.|
 |ManyToOne| fetch | Defines many to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.EAGER.|
 |OneToMany| fetch | Defines one to many relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.LAZY.|
 |OneToOne| fetch | Defines one to one relation. Fetch attribute can have value FetchType.LAZY or FetchType.EAGER. Default: FetchType.EAGER.|
-|Transient| -- | Marks class attribute as transient which will not be saved to database.|
+|Transient| -- | Marks class field as transient which will not be saved to database.|
 
 All operations are cascading and storing will return stored item with populated database id.
 Fetch can be either EAGER or LAZY. This is defined by FetchType enum that can be provided as attribute for relation annotations. Lazy will not load relation from database and it need to be manually loaded. EAGER will automatically fetch referenced relation from database along with original item. However using EAGER is not recommended behauviour.
@@ -95,7 +95,7 @@ Currently available own annotations.
 |Annotation| Supported attributes| Description|
 |------------------------------|---| --- |
 |Repository| value | Marks interface as repository. Value can be implementing class of repository.|
-|Inject| -- | Marks class attribute as injectable for automatic repository injection. Type of the attribute must be a repository annotated with Repository annotation.|
+|Inject| -- | Marks class field as injectable for automatic repository injection. Type of the field must be a repository annotated with Repository annotation.|
 
 
 Annotated table examples with minimal annnotation configuration.
@@ -154,13 +154,13 @@ public class Person {
 }
 ```
 
-Classes can be defined with or without name in @Entity annotation and with or without @Column annotation. If @Column annotation and name in @Enity annotation is not defined name for database column and table is still resolved.
+Database table names are resolved from the class name if class has @Entity annotation. Column names are defined by the @Column annotation's name attribute. If name attribute is not defined name will be resolved from field's name.
 
-Classes can also define fetch in the relation annotation. However fetch is by default LAZY. Cascade option in relation annotation is deprecated and there is no use to use that as all store operations and delete operations are cascading by default. Just to make your life easier without calling different repositories for simple delete operation or store operation.
+Classes can also define fetch in the relation annotation. All store operations and delete operations are cascading by default. Just to make your life easier without calling different repositories for simple delete operation or store operation.
 
 Relations still need to be defined in both sides of tables.
 
-Annotated class example with more configuration. Compared to above there is name in @Entity annotation and @Column annotations added.
+Annotated class example with more configuration. 
 ```java
 @Entity
 public class Authority {
@@ -180,9 +180,9 @@ public class Authority {
 
 ### Repositories
 
-There are 3 ways to work with repositories since version 1.3.0. All repositories must be annotated with @Repository annotation. If value is not provided the default implementation is being used. If value is provided inside the @Repository annotation then that is being used as implementation for the repository interface.
+There are 3 ways to work with repositories since version 1.3.0. All repositories must be annotated with @Repository annotation. If value is not provided the default implementation is being used. If value is provided inside the @Repository annotation then that is being used as implementing class for the repository interface.
 
-As shown below currently the by writing following snippet is enough to create instance of a repository. Absolutely no implementation of repositories is required as long as de default functionality is enough.
+As shown below currently by writing following snippet is enough to create instance of a repository. Absolutely no implementation is required as long as de default functionality is enough.
 ```java
 @Repository
 public interface PersonRepository extends SimpleRepository<Long, Person> {}
@@ -190,7 +190,7 @@ public interface PersonRepository extends SimpleRepository<Long, Person> {}
 
 #### Default implementation
 
-Default implementation has implementation for following methods. Javadocs omitted from example.
+By default there is a implementation for following methods. Javadocs omitted from example.
 ```java
 public interface SimpleRepository<K, T> {
 
@@ -219,14 +219,14 @@ public interface SimpleRepository<K, T> {
 
 However if default functionality is not enough you are able to create custom base repository as well. This is particulary useful if custom behiour is required for all the repositories. Following steps will guide you through how to create a custom base repository that is being used as base for all repositories except those with own implemenation.
 
-Create an interface called custom cre repo. It could be anything you wish but the important part is to extend simple repository. That gives you the default functionalities available as well. There is additional method called exists. This method will be available to all repositories that are using the default repository.
+Create an interface called custom core repo. It could be anything you wish but the important part is to extend simple repository. That gives you the default functionalities available in simple repository. There is additional method called exists. This method will be available to all repositories that are using the default repository.
 ```java
 public interface CustomCoreRepo<K, T> extends SimpleRepository<K, T> {
     boolean exists(K id);
 }
 ```
 
-Now create implementation for the custom core repository. We extend the default repository called simple android repository. And we implement the new functionality from the new custom core repo. Find one is function in the default simple android repository and K stands for key wich is Id class of the entity and T stands for the entity class itself.
+Now create implementation for the custom core repository. We extend the default repository called simple android repository. We implement the new functionality from the new custom core repo. Find one is function in the default simple android repository and K stands for key wich is Id class of the entity and T stands for the entity class itself.
 ```java
 public class CustomCoreRepository<K, T> extends SimpleAndroidRepository<K, T> implements CustomCoreRepo<K, T> {
 
@@ -244,7 +244,7 @@ public class CustomCoreRepository<K, T> extends SimpleAndroidRepository<K, T> im
 
 To this point we have created custom core repository. In order to use it we just need to do 2 things.
 
-First we create a repository that is using the custom core repo we created as following. As told previously this is enough to create a repository instance. But the difference is that we are extending custom core repo instead of simple repository.
+First we create a repository that is using the custom core repo we created. As told previously this is enough to create a repository instance. But the difference is that we are extending custom core repo instead of simple repository.
 ```java
 @Repository
 public interface PermissionRepository extends CustomCoreRepo<Long, Permission> {}
@@ -257,7 +257,7 @@ Then we tell database manager to use the cusom core repository instead of the si
 
 #### Old school repository
 
-The third option is little old school so to say. This can be useful if totally custom repository is required. 
+The third option is little bit old school. This can be useful if totally custom repository is required. 
 
 First we create a repository interface with @Repository annotation. The main difference is that we provide implementing class as attribute inside @Repository annotation and we do not extend any repository class.
 ```java
@@ -268,7 +268,7 @@ public interface BookRepository {
 }
 ```
 
-Then we provide the implementation for the repository interface like following. We implement the bok repository and extend the default simple android repository.
+Then we provide the implementation for the repository interface as follows. We implement the book repository and extend the default simple android repository.
 ```java
 public class BookRepositoryImpl extends SimpleAndroidRepository<Long, Book> implements BookRepository {
 
@@ -290,12 +290,12 @@ public class BookRepositoryImpl extends SimpleAndroidRepository<Long, Book> impl
 
 #### Get instance of repository in application
 
-If you have access to database manager you can always get an instance by simple calling getRepository method with the repository interface to get instance of repository inside your application.
+If you have access to database manager you can always get an instance of repository by simple calling getRepository method with the repository interface from database manager to your class.
 ```java
 repository = dbManager.getRepository(BookRepository.class);
 ```
 
-More robust solution is to use @Inject annotation. To enable this feature we need to add following configuration to database configuration adapter. This will enable this feature.
+More robust solution is to use @Inject annotation. To enable this feature we need to add following configuration to database configuration adapter. Following will enable the feature.
 ```java
 .setEnableAutoInject(true); // this will enable annotation based repository injection 
 ```
@@ -320,7 +320,7 @@ private PersonRepository personRepository;
 
 ### Filter criteria API
 
-If joins or predicates are prefixed with "this" or left without prefix it will be mapped to the root entity.
+If joins or predicates are prefixed with "this" or left without prefix it will be mapped to the root entity of repository.
 ```java
 root.join("this.rooms", JoinMode.LEFT_JOIN)
 predicates.add(Predicate.in("this.name", "john", "kimmo")).add(Predicate.not(Predicate.eq("name", "kim")));
@@ -374,7 +374,7 @@ filters.add(new Filter<Person>() {
         predicates.add(Predicate.conjunction().add(Predicate.between("t.id", 1, 3))
                 .add(Predicate.not(Predicate.isNull("t.name"))));
 
-        predicates.sort(Order.ASC, "p.name");
+        predicates.sort(Order.ASC, "name");
         predicates.setPageSize(20).setPage(1);
     }
 });
@@ -386,12 +386,12 @@ filters.add(new Filter<ClassRoom>() {
     @Override
     public void filter(Root<ClassRoom> root, Predicates predicates) {
         root.join("persons", "p", JoinMode.INNER_JOIN);
-        predicates.setPage(2).setPageSize(10).sort(Order.DESC, "c.name", "c._id").sort(Order.ASC, "p._id");
+        predicates.setPage(2).setPageSize(10).sort(Order.DESC, "name", "_id").sort(Order.ASC, "p._id");
     }
 });
 ```
 
-Joins can also be chained to Filters object like this from version 1.2.0 forward. So there is no need to call add method. It can be a personal decision whether to add multipler filters or use just one. The end result is same.
+Joins can also be chained to Filters object like this from version 1.2.0 forward. So there is no need to call add method. It can be a personal decision whether to add multiple filters or use just one. The end result is same.
 ```java
 Filters filters = new Filters(new Filter<ClassRoom>() {
     @Override
@@ -452,10 +452,6 @@ List<Library> libraries = libraryRepository.findLibraries(new Filters(new Filter
 Now begin to use the library that rocks the Android's SQLite database.
 
 ## Roadmap
-
-### 2.x release
-
-Own ORM annotations will be replaced with javax persistence annotations in favor of standardized usages.
 
 ### 3.x release
 
