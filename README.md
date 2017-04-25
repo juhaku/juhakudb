@@ -32,7 +32,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
     <type>aar</type>
 </dependency>
 ```
@@ -40,7 +40,7 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile 'io.github.juhaku:juhaku-db:1.3.1@aar'
+    compile 'io.github.juhaku:juhaku-db:1.3.2@aar'
 ```
 
 ## Usage
