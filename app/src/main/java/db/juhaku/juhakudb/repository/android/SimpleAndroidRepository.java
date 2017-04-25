@@ -16,7 +16,6 @@ import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.repository.SimpleRepository;
 import db.juhaku.juhakudb.util.ReflectionUtils;
-import db.juhaku.juhakudb.util.TypedClass;
 
 /**
  * Created by juha on 15/03/17.

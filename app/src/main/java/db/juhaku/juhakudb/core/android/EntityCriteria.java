@@ -1,5 +1,8 @@
 package db.juhaku.juhakudb.core.android;
 
+import android.util.Log;
+
+import db.juhaku.juhakudb.annotation.Entity;
 import db.juhaku.juhakudb.core.Criteria;
 
 /**
@@ -21,10 +24,30 @@ public class EntityCriteria implements Criteria<String> {
     public boolean meetCriteria(String type) {
         for (String path : packages) {
             if (type.startsWith(path)) {
-                return true;
+
+                // If class is not an enum and it has Entity annotation it should be entity.
+                Class<?> clazz;
+                if ((clazz = initializeClass(type)) != null) {
+                    if (!Enum.class.isAssignableFrom(clazz) && clazz.isAnnotationPresent(Entity.class)) {
+
+                        return true;
+                    }
+                }
+
             }
         }
 
         return false;
+    }
+
+    private static Class<?> initializeClass(String name) {
+        try {
+            return Class.forName(name);
+        } catch (Exception e) {
+            Log.e(EntityCriteria.class.getName(), "Could not initialize class by name: " +
+                    name + ", null returned!", e);
+        }
+
+        return null;
     }
 }
