@@ -194,6 +194,7 @@ task formatReleaseVersion << {
 
 task formatBuildVersion << {
     formatSinceJavaDocVersion(0)
+    addLicence()
 }
 
 task revert(type: Exec) {
@@ -309,6 +310,30 @@ void formatSinceJavaDocVersion(int state) {
             newContent = content.replaceAll("@since((?! )|(?! \\d+\\.\\d+\\.\\d+(-SNAPSHOT)?))", "@since $project.version")
 //            newContent = content.replaceAll("\\{version\\}", project.version)
         }
+        if (content != newContent) {
+            file.write(newContent)
+        }
+    }
+}
+
+void addLicence() {
+    String licence = new File("LICENSE").text
+
+    String source = android.sourceSets.main.java.srcDirs.collect { it }.toList().get(0)
+    FileTree tree = fileTree(new File(source)) {
+        include {
+            '**/*.java'
+        }
+    }
+
+    tree.each { File file ->
+        String content = file.text
+        String newContent
+
+        if (!content.startsWith(licence)) {
+            newContent = "/**\n".concat(licence).concat("*/\n").concat(content)
+        }
+
         if (content != newContent) {
             file.write(newContent)
         }
