@@ -78,7 +78,6 @@ Currently available javax persistence annotation.
 
 |Annotation| Supported attributes| Description| 
 |------------------------------|---| --- |
-|Table| name | Define table name for class. Not required as name can be resolved from class itself.|
 |Column|name | Define column name for class attribute, can only be added to non-relation field.|
 |Entity|-- | Marks class as entity of database.|
 |Id|-- | Define primary key field for database table, id is auto generated per table (way of the Anroid). Only numeric value can be id currently. Id annotated column will map to "_id" column in database. This is default to Android.|
@@ -155,7 +154,7 @@ public class Person {
 }
 ```
 
-Database table names are resolved from the class name if class has @Entity annotation. Table name can also be resolved from @Table annotation if @Table annotation has name attribute provided. Column names are defined by the @Column annotation's name attribute. If name attribute is not defined name will be resolved from field's name.
+Database table names are resolved from the class name if class has @Entity annotation. Column names are defined by the @Column annotation's name attribute. If name attribute is not defined name will be resolved from field's name.
 
 Classes can also define fetch in the relation annotation. All store operations and delete operations are cascading by default. Just to make your life easier without calling different repositories for simple delete operation or store operation.
 
@@ -164,7 +163,6 @@ Relations still need to be defined in both sides of tables.
 Annotated class example with more configuration. 
 ```java
 @Entity
-@Table(name = "authorities")
 public class Authority {
 
     @Id
