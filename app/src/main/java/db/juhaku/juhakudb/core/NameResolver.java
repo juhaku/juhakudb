@@ -32,6 +32,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.util.StringUtils;
@@ -98,6 +99,11 @@ public class NameResolver {
 
     private static String resolveTableName(Class<?> clazz) throws NameResolveException {
         if (clazz.isAnnotationPresent(Entity.class)) {
+
+            // If table annotation is provided with name then use name from table annotation.
+            if (clazz.isAnnotationPresent(Table.class) && !StringUtils.isBlank(clazz.getAnnotation(Table.class).name())) {
+                return clazz.getAnnotation(Table.class).name();
+            }
 
             return camelCaseToUnderscored(clazz.getSimpleName());
 
