@@ -322,6 +322,36 @@ public class PredicateBuilder {
         return this;
     }
 
+    public PredicateBuilder min(String field) {
+        getPredicates().add(Predicate.min(field));
+
+        return this;
+    }
+
+    public PredicateBuilder max(String field) {
+        getPredicates().add(Predicate.max(field));
+
+        return this;
+    }
+
+    public PredicateBuilder avg(String field) {
+        getPredicates().add(Predicate.avg(field));
+
+        return this;
+    }
+
+    public PredicateBuilder sum(String field) {
+        getPredicates().add(Predicate.sum(field));
+
+        return this;
+    }
+
+    public PredicateBuilder count(String field) {
+        getPredicates().add(Predicate.count(field));
+
+        return this;
+    }
+
     public JunctionBuilder conjunction() {
         Conjunction conjunction = Predicate.conjunction();
         getPredicates().add(conjunction);

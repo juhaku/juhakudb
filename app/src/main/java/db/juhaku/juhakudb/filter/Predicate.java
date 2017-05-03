@@ -209,6 +209,26 @@ public class Predicate {
 //        return predicate;
 //    }
 
+    static Predicate min(String field) {
+        return aggregatePredicate(field, "MIN");
+    }
+
+    static Predicate max(String field) {
+        return aggregatePredicate(field, "MAX");
+    }
+
+    static Predicate avg(String field) {
+        return aggregatePredicate(field, "AVG");
+    }
+
+    static Predicate sum(String field) {
+        return aggregatePredicate(field, "SUM");
+    }
+
+    static Predicate count(String field) {
+        return aggregatePredicate(field, "COUNT");
+    }
+
     static Predicate and() {
         return generalJunction("AND");
     }
@@ -219,7 +239,7 @@ public class Predicate {
 
     private static Predicate generalJunction(String junction) {
         Predicate generalJunction = new Predicate();
-        generalJunction.general = new StringBuilder().append(" ").append(generalJunction).append(" ").toString();
+        generalJunction.general = new StringBuilder().append(" ").append(junction).append(" ").toString();
 
         return generalJunction;
     }
@@ -235,6 +255,13 @@ public class Predicate {
         return predicate;
     }
 
+    private static Predicate aggregatePredicate(String field, String aggregator) {
+        Predicate predicate = new Predicate();
+        predicate.general = new StringBuilder(aggregator).append(" (").append(field).append(")").toString();
+
+        return predicate;
+    }
+
     /**
      * Check whether given value is symbol used by sql queries.
      *
@@ -246,7 +273,7 @@ public class Predicate {
     static boolean isSymbol(String value) {
         return value.equals(">") || value.equals("<") || value.equals(">=") || value.equals("<=")
                 || value.equals(PARAM_PLACE_HOLDER) || value.equals(PARAM_NOT_EQUAL.trim())
-                || value.equals(PARAM_EQUALS.trim());
+                || value.equals(PARAM_EQUALS.trim()) || value.equals("*");
     }
 
     static Disjunction disjunction() {
