@@ -26,6 +26,9 @@ package db.juhaku.juhakudb.filter;
 /**
  * Created by juha on 03/05/16.
  *
+ * <p>Defines sorting order for SQL queries when {@link Predicates#sort(Order, String...)} is
+ * being called.</p>
+ *
  * @author juha
  */
 public enum Order {

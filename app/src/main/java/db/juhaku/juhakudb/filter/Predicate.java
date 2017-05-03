@@ -42,6 +42,7 @@ public class Predicate {
     private String is;
     private String between;
     private String like;
+    private String general;
 
     private Object[] args;
 
@@ -51,7 +52,7 @@ public class Predicate {
 
 
     private Predicate() {
-        // not intializable by outside world.
+        // Not instantiatable.
     }
 
     private void addArgs(Object... args) {
@@ -75,23 +76,35 @@ public class Predicate {
         return stringArgs;
     }
 
+    /**
+     * Get generated clause for this predicate. E.g. id = ?.
+     *
+     * @return String value of clause.
+     */
     String getClause() {
         if (!StringUtils.isBlank(in)) {
             return in;
+
         } else if (!StringUtils.isBlank(eq)) {
             return eq;
+
         } else if (!StringUtils.isBlank(is)) {
             return is;
+
         } else if (!StringUtils.isBlank(between)) {
             return between;
+
         } else if (!StringUtils.isBlank(like)) {
             return like;
+
+        } else if (!StringUtils.isBlank(general)) {
+            return general;
         }
 
         return null;
     }
 
-    public static Predicate in(String field, Object... args) {
+    static Predicate in(String field, Object... args) {
         Predicate predicate = new Predicate();
         StringBuilder inBuilder = new StringBuilder(field);
         inBuilder.append(" IN (");
@@ -108,15 +121,15 @@ public class Predicate {
         return predicate;
     }
 
-    public static Predicate in(String field, Collection<Object> args) {
+    static Predicate in(String field, Collection<Object> args) {
         return in(field, args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size())));
     }
 
-    public static Predicate eq(String field, Object arg) {
+    static Predicate eq(String field, Object arg) {
         return operatorPredicate(field, arg, PARAM_EQUALS);
     }
 
-    public static Predicate not(Predicate predicate) {
+    static Predicate not(Predicate predicate) {
         if (!StringUtils.isBlank(predicate.in)) {
             predicate.in = predicate.in.replace("IN", "NOT IN");
 
@@ -142,14 +155,14 @@ public class Predicate {
         }
     }
 
-    public static Predicate isNull(String field) {
+    static Predicate isNull(String field) {
         Predicate predicate = new Predicate();
         predicate.is = field.concat(" IS NULL");
 
         return predicate;
     }
 
-    public static Predicate between(String field, Object arg0, Object arg1) {
+    static Predicate between(String field, Object arg0, Object arg1) {
         Predicate predicate = new Predicate();
 
         StringBuilder between = new StringBuilder(field);
@@ -161,23 +174,23 @@ public class Predicate {
         return predicate;
     }
 
-    public static Predicate gt(String field, Object arg) {
+    static Predicate gt(String field, Object arg) {
         return operatorPredicate(field, arg, " > ");
     }
 
-    public static Predicate ge(String field, Object arg) {
+    static Predicate ge(String field, Object arg) {
         return operatorPredicate(field, arg, " >= ");
     }
 
-    public static Predicate lt(String field, Object arg) {
+    static Predicate lt(String field, Object arg) {
         return operatorPredicate(field, arg, " < ");
     }
 
-    public static Predicate le(String field, Object arg) {
+    static Predicate le(String field, Object arg) {
         return operatorPredicate(field, arg, " <= ");
     }
 
-    public static Predicate like(String field, Object arg) {
+    static Predicate like(String field, Object arg) {
         Predicate predicate = new Predicate();
 
         StringBuilder like = new StringBuilder(field);
@@ -195,6 +208,21 @@ public class Predicate {
 //
 //        return predicate;
 //    }
+
+    static Predicate and() {
+        return generalJunction("AND");
+    }
+
+    static Predicate or() {
+        return generalJunction("OR");
+    }
+
+    private static Predicate generalJunction(String junction) {
+        Predicate generalJunction = new Predicate();
+        generalJunction.general = new StringBuilder().append(" ").append(generalJunction).append(" ").toString();
+
+        return generalJunction;
+    }
 
     private static Predicate operatorPredicate(String field, Object arg, String operator) {
         Predicate predicate = new Predicate();
@@ -221,24 +249,24 @@ public class Predicate {
                 || value.equals(PARAM_EQUALS.trim());
     }
 
-    public static Disjunction disjunction() {
+    static Disjunction disjunction() {
 
         return new Disjunction();
     }
 
-    public static Conjunction conjunction() {
+    static Conjunction conjunction() {
 
         return new Conjunction();
     }
 
-    public interface Junction {
+    interface Junction {
 
         Junction add(Predicate predicate);
 
         List<Predicate> getPredicates();
     }
 
-    public static class Disjunction extends Predicate implements Junction {
+    static class Disjunction extends Predicate implements Junction {
 
         private List<Predicate> predicates;
 
@@ -259,7 +287,7 @@ public class Predicate {
         }
     }
 
-    public static class Conjunction extends Predicate implements Junction {
+    static class Conjunction extends Predicate implements Junction {
 
         private List<Predicate> predicates;
 

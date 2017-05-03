@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author juha
  */
+@Deprecated
 public class Predicates {
 
     private List<Predicate> predicates;
