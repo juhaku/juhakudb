@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import db.juhaku.juhakudb.util.StringUtils;
 
@@ -42,7 +43,7 @@ public class Predicate {
     private String is;
     private String between;
     private String like;
-    private String general;
+    private String clause;
 
     private Object[] args;
 
@@ -97,8 +98,8 @@ public class Predicate {
         } else if (!StringUtils.isBlank(like)) {
             return like;
 
-        } else if (!StringUtils.isBlank(general)) {
-            return general;
+        } else if (!StringUtils.isBlank(clause)) {
+            return clause;
         }
 
         return null;
@@ -122,7 +123,7 @@ public class Predicate {
     }
 
     static Predicate in(String field, Collection<Object> args) {
-        return in(field, args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size())));
+        return in(field, toArray(args));
     }
 
     static Predicate eq(String field, Object arg) {
@@ -202,13 +203,6 @@ public class Predicate {
         return predicate;
     }
 
-//    public Predicate ilike(String field, Object arg) {
-//        Predicate predicate = getLastPredicate(like(field, arg));
-//        predicate.like = predicate.like.replace("LIKE", "ILIKE");
-//
-//        return predicate;
-//    }
-
     static Predicate min(String field) {
         return aggregatePredicate(field, "MIN");
     }
@@ -229,6 +223,22 @@ public class Predicate {
         return aggregatePredicate(field, "COUNT");
     }
 
+    static Predicate sqlPredicate(String sql) {
+        return sqlPredicate(sql, (Object[]) null);
+    }
+
+    static Predicate sqlPredicate(String sql, Object... args) {
+        Predicate predicate = new Predicate();
+        predicate.clause = sql;
+        predicate.addArgs(args);
+
+        return predicate;
+    }
+
+    static Predicate sqlPredicate(String sql, Collection<Object> args) {
+        return sqlPredicate(sql, toArray(args));
+    }
+
     static Predicate and() {
         return generalJunction("AND");
     }
@@ -237,9 +247,13 @@ public class Predicate {
         return generalJunction("OR");
     }
 
+    static Junction junction() {
+        return new Junction();
+    }
+
     private static Predicate generalJunction(String junction) {
         Predicate generalJunction = new Predicate();
-        generalJunction.general = new StringBuilder().append(" ").append(junction).append(" ").toString();
+        generalJunction.clause = new StringBuilder().append(" ").append(junction).append(" ").toString();
 
         return generalJunction;
     }
@@ -257,9 +271,24 @@ public class Predicate {
 
     private static Predicate aggregatePredicate(String field, String aggregator) {
         Predicate predicate = new Predicate();
-        predicate.general = new StringBuilder(aggregator).append(" (").append(field).append(")").toString();
+        predicate.clause = new StringBuilder(aggregator).append(" (").append(field).append(")").toString();
 
         return predicate;
+    }
+
+    /**
+     * Converts collection to Object array.
+     *
+     * @param args Collection of object to convert.
+     *
+     * @return Array of same objects that were given in collection.
+     *
+     * @since
+     *
+     * @hide
+     */
+    private static Object[] toArray(Collection<Object> args) {
+        return args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size()));
     }
 
     /**
@@ -276,62 +305,23 @@ public class Predicate {
                 || value.equals(PARAM_EQUALS.trim()) || value.equals("*");
     }
 
-    static Disjunction disjunction() {
-
-        return new Disjunction();
-    }
-
-    static Conjunction conjunction() {
-
-        return new Conjunction();
-    }
-
-    interface Junction {
-
-        Junction add(Predicate predicate);
-
-        List<Predicate> getPredicates();
-    }
-
-    static class Disjunction extends Predicate implements Junction {
+    static class Junction extends Predicate {
 
         private List<Predicate> predicates;
 
-        Disjunction() {
+        Junction() {
             this.predicates = new ArrayList<>();
         }
 
-        @Override
-        public Disjunction add(Predicate predicate) {
+        public Junction add(Predicate predicate) {
             this.predicates.add(predicate);
 
             return this;
         }
 
-        @Override
         public List<Predicate> getPredicates() {
             return predicates;
         }
     }
 
-    static class Conjunction extends Predicate implements Junction {
-
-        private List<Predicate> predicates;
-
-        Conjunction() {
-            this.predicates = new ArrayList<>();
-        }
-
-        @Override
-        public Conjunction add(Predicate predicate) {
-            this.predicates.add(predicate);
-
-            return this;
-        }
-
-        @Override
-        public List<Predicate> getPredicates() {
-            return predicates;
-        }
-    }
 }

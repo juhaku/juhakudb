@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import db.juhaku.juhakudb.filter.Predicate.Conjunction;
-import db.juhaku.juhakudb.filter.Predicate.Disjunction;
 import db.juhaku.juhakudb.filter.Predicate.Junction;
 
 
@@ -145,15 +143,15 @@ public class PredicateBuilder {
      * Creates IN statement for WHERE clause. This is equal to {@link #in(String, Collection)} but
      * it is provided as easy access for arrays.
      *
-     * @param column String value of column to create in for.
+     * @param field String value of field to create in for.
      * @param args Array of args that are being substituted with question marks (?).
      *
      * @return Predicate builder for current WHERE clause.
      *
      * @since
      */
-    public PredicateBuilder in(String column, Object... args) {
-        getPredicates().add(Predicate.in(column, args));
+    public PredicateBuilder in(String field, Object... args) {
+        getPredicates().add(Predicate.in(field, args));
 
         return this;
     }
@@ -174,6 +172,14 @@ public class PredicateBuilder {
         return this;
     }
 
+    public PredicateBuilder in(Expression expression, Object... args) {
+        return in(expression.getValue(), args);
+    }
+
+    public PredicateBuilder in(Expression expression, Collection<Object> args) {
+        return in(expression.getValue(), args);
+    }
+
     /**
      * Create equals statement for WHERE clause. E.g. name = ?.
      *
@@ -188,6 +194,10 @@ public class PredicateBuilder {
         getPredicates().add(Predicate.eq(field, arg));
 
         return this;
+    }
+
+    public PredicateBuilder eq(Expression fieldExpression, Expression argExpression) {
+        return eq(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
@@ -309,6 +319,8 @@ public class PredicateBuilder {
      * Creates like statement for provided field. E.g. field LIKE ?. Like statement can contain
      * wild carts in the beginning and/or at the end of provided argument value.
      *
+     * <p>By default like statement is case insensitive.</p>
+     *
      * @param field String name of the field to create like statement for.
      * @param arg Object argument to be substituted with ?.
      *
@@ -322,48 +334,128 @@ public class PredicateBuilder {
         return this;
     }
 
+    /**
+     * Create min statement for provided field. E.g. MIN(age).
+     *
+     * @param field String field name to create statement for.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
     public PredicateBuilder min(String field) {
         getPredicates().add(Predicate.min(field));
 
         return this;
     }
 
+    /**
+     * Create max statement for provided field. E.g. MAX(age).
+     *
+     * @param field String field name to create statement for.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
     public PredicateBuilder max(String field) {
         getPredicates().add(Predicate.max(field));
 
         return this;
     }
 
+    /**
+     * Create avg statement for provided field. E.g. AVG(age).
+     *
+     * @param field String field name to create statement for.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
     public PredicateBuilder avg(String field) {
         getPredicates().add(Predicate.avg(field));
 
         return this;
     }
 
+    /**
+     * Create sum statement for provided field. E.g. SUM(age).
+     *
+     * @param field String field name to create statement for.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
     public PredicateBuilder sum(String field) {
         getPredicates().add(Predicate.sum(field));
 
         return this;
     }
 
+    /**
+     * Create count statement for provided field. E.g. COUNT(age).
+     *
+     * @param field String field name to create statement for.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
     public PredicateBuilder count(String field) {
         getPredicates().add(Predicate.count(field));
 
         return this;
     }
 
-    public JunctionBuilder conjunction() {
-        Conjunction conjunction = Predicate.conjunction();
-        getPredicates().add(conjunction);
+    /**
+     * Create count statement for all fields which will result following statement COUNT(*).
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since
+     */
+    public PredicateBuilder count() {
+        getPredicates().add(Predicate.count("*"));
 
-        return new JunctionBuilder(conjunction);
+        return this;
     }
 
-    public JunctionBuilder disjunction() {
-        Disjunction disjunction = Predicate.disjunction();
-        getPredicates().add(disjunction);
+    public PredicateBuilder sqlPredicate(String sql) {
+        getPredicates().add(Predicate.sqlPredicate(sql));
 
-        return new JunctionBuilder(disjunction);
+        return this;
+    }
+
+    public PredicateBuilder sqlPredicate(String sql, Object... args) {
+        getPredicates().add(Predicate.sqlPredicate(sql, args));
+
+        return this;
+    }
+
+    public PredicateBuilder sqlPredicate(String sql, Collection<Object> args) {
+        getPredicates().add(Predicate.sqlPredicate(sql, args));
+
+        return this;
+    }
+
+    /**
+     * Creates new junction for current WHERE clause. Junction stands for grouped
+     * statement which is isolated with parentheses. E.g. (a AND b AND c...). This statement
+     * can contain only AND operators or only OR operators as well as both mixed. Junction cannot
+     * contain another junction instead all junctions is to be added to root predicate builder for
+     * root WHERE clause.
+     *
+     * @return New junction builder for current WHERE clause to create isolated criteria for query.
+     *
+     * @since
+     */
+    public JunctionBuilder junction() {
+        Junction junction = Predicate.junction();
+        getPredicates().add(junction);
+
+        return new JunctionBuilder(junction);
     }
 
     /**
@@ -476,6 +568,17 @@ public class PredicateBuilder {
         }
     }
 
+    /**
+     * Junction builder provides isolated operator clause for WHERE clause. These can be e.g.
+     * (A and B and C...), (A or B or C...),  (A and B or C...).
+     *
+     * <p>This is handy for grouping some parts of criteria with parentheses.</p>
+     *
+     * <p>Junction cannot contain another junction instead it is to be added to root predicate
+     * builder.</p>
+     *
+     * @since
+     */
     public static class JunctionBuilder extends PredicateBuilder {
 
         private Junction junction;
@@ -490,13 +593,8 @@ public class PredicateBuilder {
         }
 
         @Override
-        public JunctionBuilder conjunction() {
-            throw new UnsupportedOperationException("Unsupported operation to add conjunction in junction");
-        }
-
-        @Override
-        public JunctionBuilder disjunction() {
-            throw new UnsupportedOperationException("Unsupported operation to add disjunction in junction");
+        public JunctionBuilder junction() {
+            throw new UnsupportedOperationException("Unsupported operation to add junction in junction");
         }
     }
 }

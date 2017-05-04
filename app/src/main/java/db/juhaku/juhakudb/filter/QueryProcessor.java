@@ -42,7 +42,7 @@ import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.QueryBuildException;
 import db.juhaku.juhakudb.filter.Predicate.Conjunction;
 import db.juhaku.juhakudb.filter.Predicate.Disjunction;
-import db.juhaku.juhakudb.filter.Predicate.Junction;
+import db.juhaku.juhakudb.filter.Predicate.Junction2;
 import db.juhaku.juhakudb.filter.Root.Join;
 import db.juhaku.juhakudb.util.ReflectionUtils;
 import db.juhaku.juhakudb.util.ReservedWords;
@@ -226,9 +226,9 @@ public class QueryProcessor {
             Predicate predicate = junctionIterator.next();
 
             // Create grouping for junctions
-            if (predicate instanceof Junction) {
+            if (predicate instanceof Junction2) {
                 sql.append("(");
-                Iterator<Predicate> predicateIterator = ((Junction) predicate).getPredicates().iterator();
+                Iterator<Predicate> predicateIterator = ((Junction2) predicate).getPredicates().iterator();
 
                 while (predicateIterator.hasNext()) {
                     Predicate junction = predicateIterator.next();
