@@ -266,7 +266,7 @@ public class Predicate {
      *
      * E.g. (a AND b AND c, ...) or (a OR b OR c, ...).
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     static class Junction extends Predicate {
 
@@ -283,7 +283,7 @@ public class Predicate {
          *
          * @return {@link BooleanOperator} what is either AND or OR.
          *
-         * @since
+         * @since 2.0.2-SNAPSHOT
          */
         BooleanOperator getOperator() {
             return operator;
@@ -295,7 +295,7 @@ public class Predicate {
          *
          * @return List of predicates of this junction.
          *
-         * @since
+         * @since 2.0.2-SNAPSHOT
          */
         List<Predicate> getPredicates() {
             return predicates;
@@ -305,7 +305,7 @@ public class Predicate {
     /**
      * Predicate boolean operator is used in SQL queries to combine search criteria.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     enum BooleanOperator {
 
