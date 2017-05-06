@@ -318,6 +318,7 @@ void formatSinceJavaDocVersion(int state) {
 
 void addLicence() {
     String licence = new File("LICENSE").text
+    licence = "/**\n$licence*/\n"
 
     String source = android.sourceSets.main.java.srcDirs.collect { it }.toList().get(0)
     FileTree tree = fileTree(new File(source)) {
@@ -331,10 +332,10 @@ void addLicence() {
         String newContent
 
         if (!content.startsWith(licence)) {
-            newContent = "/**\n".concat(licence).concat("*/\n").concat(content)
+            newContent = "$licence$content"
         }
 
-        if (content != newContent) {
+        if (newContent != null && content != newContent) {
             file.write(newContent)
         }
     }

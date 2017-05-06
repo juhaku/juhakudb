@@ -35,6 +35,7 @@ import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.Predicate;
+import db.juhaku.juhakudb.filter.PredicateBuilder;
 import db.juhaku.juhakudb.filter.Predicates;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.Root;
@@ -110,8 +111,8 @@ public abstract class SimpleAndroidRepository<K, T>  implements SimpleRepository
     public T findOne(final K id) {
         return findOne(new Filter<T>() {
             @Override
-            public void filter(Root<T> root, Predicates predicates) {
-                predicates.add(Predicate.eq(resolveIdColumnName(), id));
+            public void filter(Root<T> root, PredicateBuilder builder) {
+                builder.eq(resolveIdColumnName(), id);
             }
         });
     }
@@ -132,7 +133,7 @@ public abstract class SimpleAndroidRepository<K, T>  implements SimpleRepository
     public List<T> findAll() {
         return find(new Filter<T>() {
             @Override
-            public void filter(Root<T> root, Predicates predicates) {
+            public void filter(Root<T> root, PredicateBuilder builder) {
             }
         });
     }

@@ -23,11 +23,8 @@ SOFTWARE.
 */
 package db.juhaku.juhakudb.filter;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 import db.juhaku.juhakudb.util.StringUtils;
 
@@ -122,10 +119,6 @@ public class Predicate {
         return predicate;
     }
 
-    static Predicate in(String field, Collection<Object> args) {
-        return in(field, toArray(args));
-    }
-
     static Predicate eq(String field, Object arg) {
         return operatorPredicate(field, arg, PARAM_EQUALS);
     }
@@ -203,28 +196,11 @@ public class Predicate {
         return predicate;
     }
 
-    static Predicate min(String field) {
-        return aggregatePredicate(field, "MIN");
-    }
+    static Predicate forExpression(Expression expression) {
+        Predicate predicate = new Predicate();
+        predicate.clause = expression.getValue();
 
-    static Predicate max(String field) {
-        return aggregatePredicate(field, "MAX");
-    }
-
-    static Predicate avg(String field) {
-        return aggregatePredicate(field, "AVG");
-    }
-
-    static Predicate sum(String field) {
-        return aggregatePredicate(field, "SUM");
-    }
-
-    static Predicate count(String field) {
-        return aggregatePredicate(field, "COUNT");
-    }
-
-    static Predicate sqlPredicate(String sql) {
-        return sqlPredicate(sql, (Object[]) null);
+        return predicate;
     }
 
     static Predicate sqlPredicate(String sql, Object... args) {
@@ -235,28 +211,28 @@ public class Predicate {
         return predicate;
     }
 
-    static Predicate sqlPredicate(String sql, Collection<Object> args) {
-        return sqlPredicate(sql, toArray(args));
+//    static Predicate and() {
+//        return generalJunction("AND");
+//    }
+//
+//    static Predicate or() {
+//        return generalJunction("OR");
+//    }
+
+    static Junction disjunction() {
+        return new Junction(BooleanOperator.OR);
     }
 
-    static Predicate and() {
-        return generalJunction("AND");
+    static Junction conjunction() {
+        return new Junction(BooleanOperator.AND);
     }
 
-    static Predicate or() {
-        return generalJunction("OR");
-    }
-
-    static Junction junction() {
-        return new Junction();
-    }
-
-    private static Predicate generalJunction(String junction) {
-        Predicate generalJunction = new Predicate();
-        generalJunction.clause = new StringBuilder().append(" ").append(junction).append(" ").toString();
-
-        return generalJunction;
-    }
+//    private static Predicate generalJunction(String junction) {
+//        Predicate generalJunction = new Predicate();
+//        generalJunction.clause = new StringBuilder().append(" ").append(junction).append(" ").toString();
+//
+//        return generalJunction;
+//    }
 
     private static Predicate operatorPredicate(String field, Object arg, String operator) {
         Predicate predicate = new Predicate();
@@ -267,28 +243,6 @@ public class Predicate {
         predicate.addArgs(arg);
 
         return predicate;
-    }
-
-    private static Predicate aggregatePredicate(String field, String aggregator) {
-        Predicate predicate = new Predicate();
-        predicate.clause = new StringBuilder(aggregator).append(" (").append(field).append(")").toString();
-
-        return predicate;
-    }
-
-    /**
-     * Converts collection to Object array.
-     *
-     * @param args Collection of object to convert.
-     *
-     * @return Array of same objects that were given in collection.
-     *
-     * @since
-     *
-     * @hide
-     */
-    private static Object[] toArray(Collection<Object> args) {
-        return args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size()));
     }
 
     /**
@@ -305,22 +259,66 @@ public class Predicate {
                 || value.equals(PARAM_EQUALS.trim()) || value.equals("*");
     }
 
+    /**
+     * Junction is parentheses grouped clause with one or more arguments. Junction can either
+     * be disjunction or conjunction. This is handled via {@link BooleanOperator} what defines
+     * type of junction.<br><br>
+     *
+     * E.g. (a AND b AND c, ...) or (a OR b OR c, ...).
+     *
+     * @since
+     */
     static class Junction extends Predicate {
 
         private List<Predicate> predicates;
+        private BooleanOperator operator;
 
-        Junction() {
+        Junction(BooleanOperator operator) {
+            this.operator = operator;
             this.predicates = new ArrayList<>();
         }
 
-        public Junction add(Predicate predicate) {
-            this.predicates.add(predicate);
-
-            return this;
+        /**
+         * Get current junction operator used to combine clauses.
+         *
+         * @return {@link BooleanOperator} what is either AND or OR.
+         *
+         * @since
+         */
+        BooleanOperator getOperator() {
+            return operator;
         }
 
-        public List<Predicate> getPredicates() {
+        /**
+         * Get clauses added to this junction. These clauses will be combined to sql separated with
+         * operator provided to this junction. See {@link #getOperator()}.
+         *
+         * @return List of predicates of this junction.
+         *
+         * @since
+         */
+        List<Predicate> getPredicates() {
             return predicates;
+        }
+    }
+
+    /**
+     * Predicate boolean operator is used in SQL queries to combine search criteria.
+     *
+     * @since
+     */
+    enum BooleanOperator {
+
+        AND(" AND "), OR(" OR ");
+
+        private String value;
+
+        BooleanOperator(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
         }
     }
 

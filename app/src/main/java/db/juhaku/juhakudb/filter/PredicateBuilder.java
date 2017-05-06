@@ -1,5 +1,29 @@
+/**
+MIT License
+
+Copyright (c) 2017 juhaku
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 package db.juhaku.juhakudb.filter;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,7 +38,7 @@ import db.juhaku.juhakudb.filter.Predicate.Junction;
  *
  * @author Juha Kukkonen
  *
- * @since
+ * @since 2.0.2-SNAPSHOT
  */
 public class PredicateBuilder {
 
@@ -22,11 +46,12 @@ public class PredicateBuilder {
     private List<Sort> orders;
     private Integer pageSize;
     private Integer page;
+    private boolean not;
 
     /**
      * Instantiate new instance of predicate builder for creating advanced WHERE clauses.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder() {
         this.predicates = new ArrayList<>();
@@ -38,7 +63,7 @@ public class PredicateBuilder {
      *
      * @return List of {@link Predicate}.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     List<Predicate> getPredicates() {
         return predicates;
@@ -49,7 +74,7 @@ public class PredicateBuilder {
      *
      * @return String value of order by.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     String getSort() {
         return makeSort();
@@ -60,44 +85,44 @@ public class PredicateBuilder {
      *
      * @return String value of limit clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     String getPage() {
         return makePage();
     }
 
-    /**
-     * Add AND to the SQL.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since
-     */
-    public PredicateBuilder and() {
-        getPredicates().add(Predicate.and());
-
-        return this;
-    }
-
-    /**
-     * Add OR to the SQL.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since
-     */
-    public PredicateBuilder or() {
-        getPredicates().add(Predicate.or());
-
-        return this;
-    }
+//    /**
+//     * Add AND to the SQL.
+//     *
+//     * @return Predicate builder for current WHERE clause.
+//     *
+//     * @since 2.0.2-SNAPSHOT
+//     */
+//    public PredicateBuilder and() {
+//        getPredicates().add(Predicate.and());
+//
+//        return this;
+//    }
+//
+//    /**
+//     * Add OR to the SQL.
+//     *
+//     * @return Predicate builder for current WHERE clause.
+//     *
+//     * @since 2.0.2-SNAPSHOT
+//     */
+//    public PredicateBuilder or() {
+//        getPredicates().add(Predicate.or());
+//
+//        return this;
+//    }
 
     /**
      * Add sorting for given columns by {@link Order}.
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder sort(Order order, String... cols) {
         for (String col : cols) {
@@ -115,7 +140,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
@@ -124,14 +149,14 @@ public class PredicateBuilder {
     }
 
     /**
-     * Set current page number for sql query. If this is being used the page size also must be
-     * provided. See {@link #setPageSize(Integer)}.
+     * Set current page number for sql query. 0 will be the first page. If this is being used
+     * the page size also must be provided. See {@link #setPageSize(Integer)}.
      *
      * @param page Integer current page.
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder setPage(Integer page) {
         this.page = page;
@@ -148,10 +173,12 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder in(String field, Object... args) {
         getPredicates().add(Predicate.in(field, args));
+
+        negateIfNecessary();
 
         return this;
     }
@@ -164,18 +191,23 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder in(String field, Collection<Object> args) {
-        getPredicates().add(Predicate.in(field, args));
-
-        return this;
+        return in(field, convertCollectionToArray(args));
     }
 
-    public PredicateBuilder in(Expression expression, Object... args) {
-        return in(expression.getValue(), args);
-    }
-
+    /**
+     * Creates IN statement for WHERE clause with expressions. E.g. lower(name) IN (lower(?),lower(?)).
+     * Given collection of objects can be collection of expressions or basic types e.g. Integer or String.
+     *
+     * @param expression Expression to use for first value before IN word.
+     * @param args Collection containing args that will be replaced by question marks (?) in query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
     public PredicateBuilder in(Expression expression, Collection<Object> args) {
         return in(expression.getValue(), args);
     }
@@ -188,32 +220,44 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder eq(String field, Object arg) {
         getPredicates().add(Predicate.eq(field, arg));
 
+        negateIfNecessary();
+
         return this;
     }
 
+    /**
+     * Create equals statement for WHERE clause by expressions. E.g. name = ?. Expression equals
+     * statement enables possibility to create fancy equals statements e.g. upper(name) = upper(?).
+     *
+     * @param fieldExpression Expression for field to be equal to something.
+     * @param argExpression Expression that is being compared to against the fieldExpression. Value
+     *                      will be substituted with ? for SQL query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
     public PredicateBuilder eq(Expression fieldExpression, Expression argExpression) {
         return eq(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
-     * Create inverse statement to WHERE clause. E.g. {@code builder.not(builder.in(name, "john", "matt"));}
+     * Create inverse statement to WHERE clause. Negation works with in, eq, between, isNull and like
+     * statements. E.g. {@code builder.not().in(name, "john", "matt");}
      *
      * <p>This above statement will be translated to: NOT IN (?,?) instead of IN (?,?).</p>
      *
-     * @param statement Predicate builder of which latest statement is being inverted.
-     *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
-    public PredicateBuilder not(PredicateBuilder statement) {
-        // Inverse last statement in predicate builder.
-        getPredicates().add(Predicate.not(statement.getPredicates().get(statement.getPredicates().size() - 1)));
+    public PredicateBuilder not() {
+        not = true; //Mark next statement to be negated.
 
         return this;
     }
@@ -225,12 +269,29 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder isNull(String field) {
         getPredicates().add(Predicate.isNull(field));
 
+        negateIfNecessary();
+
         return this;
+    }
+
+    /**
+     * Negates latest predicate if necessary. If not() was called before statement then the
+     * statement will be negated. Negation works with in, eq, between, isNull and like statements.
+     *
+     * @since 2.0.2-SNAPSHOT
+     *
+     * @hide
+     */
+    private void negateIfNecessary() {
+        if (not) {
+            not = false;
+            Predicate.not(getPredicates().get(getPredicates().size() - 1));
+        }
     }
 
     /**
@@ -243,10 +304,12 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder between(String field, Object arg0, Object arg1) {
         getPredicates().add(Predicate.between(field, arg0, arg1));
+
+        negateIfNecessary();
 
         return this;
     }
@@ -259,12 +322,28 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder gt(String field, Object arg) {
         getPredicates().add(Predicate.gt(field, arg));
 
         return this;
+    }
+
+    /**
+     * Create greater than for WHERE clause by expressions. E.g. age > ?. Expression greater than
+     * statement enables possibility to create fancy greater than statements e.g. max(age) > avg(?).
+     *
+     * @param fieldExpression Expression for field to be greater than something.
+     * @param argExpression Expression that is being compared to against the fieldExpression. Value
+     *                      will be substituted with ? for SQL query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public PredicateBuilder gt(Expression fieldExpression, Expression argExpression) {
+        return gt(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
@@ -275,12 +354,28 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder ge(String field, Object arg) {
         getPredicates().add(Predicate.ge(field, arg));
 
         return this;
+    }
+
+    /**
+     * Create greater than or equal for WHERE clause by expressions. E.g. age >= ?. Expression ge
+     * statement enables possibility to create fancy greater than or equal statements e.g. max(age) >= avg(?).
+     *
+     * @param fieldExpression Expression for field to be greater than or equal to something.
+     * @param argExpression Expression that is being compared to against the fieldExpression. Value
+     *                      will be substituted with ? for SQL query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public PredicateBuilder ge(Expression fieldExpression, Expression argExpression) {
+        return ge(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
@@ -291,12 +386,28 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder lt(String field, Object arg) {
         getPredicates().add(Predicate.lt(field, arg));
 
         return this;
+    }
+
+    /**
+     * Create less than for WHERE clause by expressions. E.g. age >= ?. Expression lt
+     * statement enables possibility to create fancy less than statements e.g. min(width) < avg(?).
+     *
+     * @param fieldExpression Expression for field to be less than something.
+     * @param argExpression Expression that is being compared to against the fieldExpression. Value
+     *                      will be substituted with ? for SQL query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public PredicateBuilder lt(Expression fieldExpression, Expression argExpression) {
+        return lt(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
@@ -307,12 +418,28 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder le(String field, Object arg) {
         getPredicates().add(Predicate.le(field, arg));
 
         return this;
+    }
+
+    /**
+     * Create less than or equal for WHERE clause by expressions. E.g. age <= ?. Expression le
+     * statement enables possibility to create fancy less than or equal statements e.g. min(width) <= avg(?).
+     *
+     * @param fieldExpression Expression for field to be less than or equal to something.
+     * @param argExpression Expression that is being compared to against the fieldExpression. Value
+     *                      will be substituted with ? for SQL query.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public PredicateBuilder le(Expression fieldExpression, Expression argExpression) {
+        return le(fieldExpression.getValue(), argExpression.getValue());
     }
 
     /**
@@ -326,10 +453,12 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder like(String field, Object arg) {
         getPredicates().add(Predicate.like(field, arg));
+
+        negateIfNecessary();
 
         return this;
     }
@@ -341,10 +470,10 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder min(String field) {
-        getPredicates().add(Predicate.min(field));
+        getPredicates().add(Predicate.forExpression(Expression.min(field)));
 
         return this;
     }
@@ -356,10 +485,10 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder max(String field) {
-        getPredicates().add(Predicate.max(field));
+        getPredicates().add(Predicate.forExpression(Expression.max(field)));
 
         return this;
     }
@@ -371,10 +500,10 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder avg(String field) {
-        getPredicates().add(Predicate.avg(field));
+        getPredicates().add(Predicate.forExpression(Expression.avg(field)));
 
         return this;
     }
@@ -386,10 +515,10 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder sum(String field) {
-        getPredicates().add(Predicate.sum(field));
+        getPredicates().add(Predicate.forExpression(Expression.sum(field)));
 
         return this;
     }
@@ -401,10 +530,10 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder count(String field) {
-        getPredicates().add(Predicate.count(field));
+        getPredicates().add(Predicate.forExpression(Expression.count(field)));
 
         return this;
     }
@@ -414,18 +543,14 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder count() {
-        getPredicates().add(Predicate.count("*"));
-
-        return this;
+        return count("*");
     }
 
     public PredicateBuilder sqlPredicate(String sql) {
-        getPredicates().add(Predicate.sqlPredicate(sql));
-
-        return this;
+        return sqlPredicate(sql, (Object[]) null);
     }
 
     public PredicateBuilder sqlPredicate(String sql, Object... args) {
@@ -435,35 +560,63 @@ public class PredicateBuilder {
     }
 
     public PredicateBuilder sqlPredicate(String sql, Collection<Object> args) {
-        getPredicates().add(Predicate.sqlPredicate(sql, args));
-
-        return this;
+        return sqlPredicate(sql, convertCollectionToArray(args));
     }
 
     /**
-     * Creates new junction for current WHERE clause. Junction stands for grouped
+     * Converts collection of object to Object array.
+     *
+     * @param args Collection of object to convert.
+     *
+     * @return Array of same objects that were given in collection.
+     *
+     * @since 2.0.2-SNAPSHOT
+     *
+     * @hide
+     */
+    private static Object[] convertCollectionToArray(Collection<Object> args) {
+        return args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size()));
+    }
+
+    /**
+     * Creates new conjunction for current WHERE clause. Conjunction stands for grouped
      * statement which is isolated with parentheses. E.g. (a AND b AND c...). This statement
-     * can contain only AND operators or only OR operators as well as both mixed. Junction cannot
-     * contain another junction instead all junctions is to be added to root predicate builder for
-     * root WHERE clause.
+     * can contain only AND operators. Conjunction cannot contain another junction instead all
+     * junctions is to be added to root predicate builder for root WHERE clause.
      *
      * @return New junction builder for current WHERE clause to create isolated criteria for query.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
-    public JunctionBuilder junction() {
-        Junction junction = Predicate.junction();
+    public JunctionBuilder conjunction() {
+        Junction junction = Predicate.conjunction();
         getPredicates().add(junction);
 
         return new JunctionBuilder(junction);
     }
 
     /**
+     * Creates new disjunction for current WHERE clause. Disjunction stands for grouped
+     * statement which is isolated with parentheses. E.g. (a OR b OR c...). This statement
+     * can contain only OR operators. Disjunction cannot contain another junction instead all
+     * junctions is to be added to root predicate builder for root WHERE clause.
+     *
+     * @return New junction builder for current WHERE clause to create isolated criteria for query.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public JunctionBuilder disjunction() {
+        Junction junction = Predicate.disjunction();
+        getPredicates().add(junction);
+
+        return new JunctionBuilder(junction);
+    }
+    /**
      * Generate order by statement for WHERE clause.
      *
      * @return String containing order by statement.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      *
      * @hide
      */
@@ -512,7 +665,7 @@ public class PredicateBuilder {
      *
      * @return String for order by statement without order by.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      *
      * @hide
      */
@@ -533,7 +686,7 @@ public class PredicateBuilder {
      *
      * @return String containing limit clause.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      *
      * @hide
      */
@@ -554,7 +707,7 @@ public class PredicateBuilder {
     /**
      * Sort class is wrapper to wrap columns and order together for order by statement.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      *
      * @hide
      */
@@ -570,14 +723,14 @@ public class PredicateBuilder {
 
     /**
      * Junction builder provides isolated operator clause for WHERE clause. These can be e.g.
-     * (A and B and C...), (A or B or C...),  (A and B or C...).
+     * (A and B and C...) or (A or B or C...).
      *
      * <p>This is handy for grouping some parts of criteria with parentheses.</p>
      *
      * <p>Junction cannot contain another junction instead it is to be added to root predicate
      * builder.</p>
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public static class JunctionBuilder extends PredicateBuilder {
 
@@ -593,8 +746,13 @@ public class PredicateBuilder {
         }
 
         @Override
-        public JunctionBuilder junction() {
-            throw new UnsupportedOperationException("Unsupported operation to add junction in junction");
+        public JunctionBuilder conjunction() {
+            throw new UnsupportedOperationException("Unsupported operation to add conjunction in junction");
+        }
+
+        @Override
+        public JunctionBuilder disjunction() {
+            throw new UnsupportedOperationException("Unsupported operation to add disjunction in junction");
         }
     }
 }

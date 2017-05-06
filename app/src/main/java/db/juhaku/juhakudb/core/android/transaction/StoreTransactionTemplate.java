@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 package db.juhaku.juhakudb.core.android.transaction;
 
 import android.content.ContentValues;
@@ -39,8 +40,7 @@ import javax.persistence.OneToOne;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.filter.Filter;
-import db.juhaku.juhakudb.filter.Predicate;
-import db.juhaku.juhakudb.filter.Predicates;
+import db.juhaku.juhakudb.filter.PredicateBuilder;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.Root;
 import db.juhaku.juhakudb.util.ReflectionUtils;
@@ -206,7 +206,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
          */
         Query where = getProcessor().createWhere(null, new Filter() {
             @Override
-            public void filter(Root root, Predicates predicates) {
+            public void filter(Root root, PredicateBuilder builder) {
                 String middleTableJoinColumn = null;
                 for (Reference reference : middleTable.getReferences()) {
                     if (reference.getReferenceTableName().equals(resolveTableName(item.getClass()))) {
@@ -214,7 +214,7 @@ public class StoreTransactionTemplate<T> extends TransactionTemplate {
                     }
                 }
 
-                predicates.add(Predicate.eq(middleTableJoinColumn, ReflectionUtils.getIdFieldValue(item)));
+                builder.eq(middleTableJoinColumn, ReflectionUtils.getIdFieldValue(item));
             }
         });
         getDb().delete(middleTable.getName(), where.getSql(), where.getArgs());

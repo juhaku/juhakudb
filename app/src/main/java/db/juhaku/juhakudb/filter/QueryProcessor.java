@@ -40,9 +40,8 @@ import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.exception.IllegalJoinException;
 import db.juhaku.juhakudb.exception.NameResolveException;
 import db.juhaku.juhakudb.exception.QueryBuildException;
-import db.juhaku.juhakudb.filter.Predicate.Conjunction;
-import db.juhaku.juhakudb.filter.Predicate.Disjunction;
-import db.juhaku.juhakudb.filter.Predicate.Junction2;
+import db.juhaku.juhakudb.filter.Predicate.BooleanOperator;
+import db.juhaku.juhakudb.filter.Predicate.Junction;
 import db.juhaku.juhakudb.filter.Root.Join;
 import db.juhaku.juhakudb.util.ReflectionUtils;
 import db.juhaku.juhakudb.util.ReservedWords;
@@ -87,23 +86,24 @@ public class QueryProcessor {
     public Query createQuery(Class<?> modelClass, Filter filter) {
         // initialize root and predicates for joins and restrictions
         Root<?> root = new Root<>(modelClass);
-        Predicates predicates = new Predicates();
+//        Predicates predicates = new Predicates();
+        PredicateBuilder builder = new PredicateBuilder();
 
         // create joins and restrictions
-        filter.filter(root, predicates);
+        filter.filter(root, builder);
 
         StringBuilder sql = new StringBuilder();
         createSelect(root, sql); // create select statement from root
 
         createJoins(root, sql);
 
-        if (!predicates.getPredicates().isEmpty()) {
+        if (!builder.getPredicates().isEmpty()) {
             sql.append("WHERE ");
         }
-        String[] args = createWhere(root, sql, predicates); // create where clause from predicates
+        String[] args = createWhere(root, sql, builder); // create where clause from predicates
 
-        String order = predicates.getSort();
-        String page = predicates.getPage();
+        String order = builder.getSort();
+        String page = builder.getPage();
         if (!StringUtils.isBlank(order)) {
             sql.append(order);
         }
@@ -204,14 +204,14 @@ public class QueryProcessor {
      *
      * @param root {@link Root} of where statement.
      * @param sql {@link StringBuilder} current sql.
-     * @param predicates {@link Predicates} WHERE statement query parameters and criterias.
+     * @param predicateBuilder {@link PredicateBuilder} WHERE statement query builder.
      * @return String array of parameters from predicates.
      *
      * @since 1.2.0
      *
      * @hide
      */
-    private String[] createWhere(Root<?> root, StringBuilder sql, Predicates predicates) {
+    private String[] createWhere(Root<?> root, StringBuilder sql, PredicateBuilder predicateBuilder) {
         String[] args = new String[0];
         String alias = null;
 
@@ -219,45 +219,51 @@ public class QueryProcessor {
             alias = Alias.forModel(root.getModel());
         }
 
-        Iterator<Predicate> junctionIterator = predicates.getPredicates().iterator();
+        Iterator<Predicate> iterator = predicateBuilder.getPredicates().iterator();
 
         // Loop through all predicates to create where clause
-        while (junctionIterator.hasNext()) {
-            Predicate predicate = junctionIterator.next();
+        while (iterator.hasNext()) {
+            Predicate predicate = iterator.next();
 
             // Create grouping for junctions
-            if (predicate instanceof Junction2) {
+            if (predicate instanceof Junction) {
                 sql.append("(");
-                Iterator<Predicate> predicateIterator = ((Junction2) predicate).getPredicates().iterator();
+                Iterator<Predicate> junctionIterator = ((Junction) predicate).getPredicates().iterator();
 
-                while (predicateIterator.hasNext()) {
-                    Predicate junction = predicateIterator.next();
+                while (junctionIterator.hasNext()) {
+                    Predicate junction = junctionIterator.next();
 
                     sql.append(formatClause(junction.getClause(), alias));
 
-                    if (predicate instanceof Disjunction && predicateIterator.hasNext()) {
-                        sql.append(" OR ");
-                    } else if (predicate instanceof Conjunction && predicateIterator.hasNext()) {
-                        sql.append(" AND ");
+                    if (junctionIterator.hasNext()) {
+                        sql.append(((Junction) predicate).getOperator().getValue());
                     }
 
-                    args = addArgsToArray(args, junction.getArgs());
+                    // Only add args to array from junction if there actually is arguments.
+                    if (junction.getArgs().length > 0) {
+                        args = addArgsToArray(args, junction.getArgs());
+                    }
                 }
                 sql.append(")");
 
-                if (junctionIterator.hasNext()) {
-                    sql.append(" AND ");
+                if (iterator.hasNext()) {
+                    sql.append(BooleanOperator.AND.getValue());
                 }
+
             } else {
                 /*
                  * Non junctions are just added to to where clause.
                  */
                 sql.append(formatClause(predicate.getClause(), alias));
 
-                if (junctionIterator.hasNext()) {
-                    sql.append(" AND ");
+                if (iterator.hasNext()) {
+                    sql.append(BooleanOperator.AND.getValue());
                 }
-                args = addArgsToArray(args, predicate.getArgs());
+
+                // Add args only if args are provided.
+                if (predicate.getArgs().length > 0) {
+                    args = addArgsToArray(args, predicate.getArgs());
+                }
             }
         }
 
@@ -387,10 +393,12 @@ public class QueryProcessor {
      */
     public Query createWhere(Class<?> modelClass, Filter filter) {
         Root<?> root = new Root<>(modelClass);
-        Predicates predicates = new Predicates();
-        filter.filter(root, predicates);
+//        Predicates predicates = new Predicates();
+        PredicateBuilder builder = new PredicateBuilder();
+
+        filter.filter(root, builder);
         StringBuilder sql = new StringBuilder();
-        String[] args = createWhere(root, sql, predicates);
+        String[] args = createWhere(root, sql, builder);
 
         if (modelClass != null) {
             Alias.clearCache();

@@ -30,5 +30,5 @@ package db.juhaku.juhakudb.filter;
  */
 public interface Filter<T> {
 
-    void filter(Root<T> root, Predicates predicates);
+    void filter(Root<T> root, PredicateBuilder builder);
 }

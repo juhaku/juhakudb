@@ -51,9 +51,9 @@ public class Filters implements Filter {
     }
 
     @Override
-    public void filter(Root root, Predicates predicates) {
+    public void filter(Root root, PredicateBuilder builder) {
         for (Filter filter : filters) {
-            filter.filter(root, predicates);
+            filter.filter(root, builder);
         }
     }
 }

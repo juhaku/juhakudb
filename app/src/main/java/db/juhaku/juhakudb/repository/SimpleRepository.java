@@ -60,7 +60,7 @@ public interface SimpleRepository<K, T> {
 
     /**
      * Stores given entity and returns it with populated database id if successful and entity is new.
-     * Given entity must be annotated with {@link db.juhaku.juhakudb.annotation.Entity} annotation.
+     * Given entity must be annotated with {@link javax.persistence.Entity} annotation.
      *
      * <p>Method will save a new one or update existing one if id is set. Store operation is cascading.</p>
      *
@@ -73,7 +73,7 @@ public interface SimpleRepository<K, T> {
 
     /**
      * Stores collection of given entities and returns them as a list with populated database id if
-     * entities are new. Entities provided must have {@link db.juhaku.juhakudb.annotation.Entity}
+     * entities are new. Entities provided must have {@link javax.persistence.Entity}
      * annotation.
      *
      * <p>Method will save a new one or update existing one if id is set. Store operation is cascading.</p>
