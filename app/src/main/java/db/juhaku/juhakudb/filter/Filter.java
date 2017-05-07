@@ -26,9 +26,19 @@ package db.juhaku.juhakudb.filter;
 /**
  * Created by juha on 17/04/16.
  *
+ * <p>Filter is used to create WHERE clause to query for database.</p>
+ *
  * @author juha
  */
 public interface Filter<T> {
 
+    /**
+     * Implement filter method to provide joins and/or predicate criteria for query made against the
+     * database.
+     *
+     * @param root Root of the SQL query.
+     * @param builder {@link PredicateBuilder} for creating advanced queries against the database.
+     *
+     */
     void filter(Root<T> root, PredicateBuilder builder);
 }

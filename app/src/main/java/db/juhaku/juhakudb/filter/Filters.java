@@ -30,20 +30,51 @@ import java.util.List;
 /**
  * Created by juha on 16/04/16.
  *
+ * <p>Filters is a grouping of {@link Filter} objects. Filters can be used to create more modular
+ * SQL queries against database without all criteria being inside one filter object.</p>
+ *
  * @author juha
  */
 public class Filters implements Filter {
 
     private List<Filter> filters;
 
+    /**
+     * Instantiates new empty filters grouping.
+     */
     public Filters() {
         this.filters = new ArrayList<>();
     }
 
+    /**
+     * Instantiates new filters grouping from given array of filter objects. E.g. new Filters(new Filter(){...},
+     * new Filter(...){}, ...).
+     *
+     * @param filters
+     */
     public Filters(Filter... filters) {
-        this.filters = new ArrayList<>(Arrays.asList(filters));
+        this();
+
+        for (Filter filter : filters) {
+
+            // If provided filter is actually another Filters object add all filters from it.
+            if (Filters.class.isAssignableFrom(filter.getClass())) {
+                this.filters.addAll(((Filters) filter).filters);
+
+            } else {
+                this.filters.add(filter);
+            }
+
+        }
     }
 
+    /**
+     * Add new filter to filters grouping.
+     *
+     * @param filter Instance of {@link Filter} to add for grouped query.
+     *
+     * @return Current filters grouping.
+     */
     public Filters add(Filter filter) {
         filters.add(filter);
 
@@ -55,5 +86,19 @@ public class Filters implements Filter {
         for (Filter filter : filters) {
             filter.filter(root, builder);
         }
+    }
+
+    /**
+     * Create new filters grouping of filter objects from provided filter array. This is alternative
+     * way for calling constructor {@link #Filters(Filter[])}.
+     *
+     * @param filters array of {@link Filter} to create grouping from.
+     *
+     * @return Filters grouping for SQL queries.
+     *
+     * @since
+     */
+    public static Filters of(Filter... filters) {
+        return new Filters(filters);
     }
 }
