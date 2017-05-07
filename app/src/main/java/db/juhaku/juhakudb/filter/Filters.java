@@ -96,7 +96,7 @@ public class Filters implements Filter {
      *
      * @return Filters grouping for SQL queries.
      *
-     * @since
+     * @since 2.0.2-SNAPSHOT
      */
     public static Filters of(Filter... filters) {
         return new Filters(filters);
