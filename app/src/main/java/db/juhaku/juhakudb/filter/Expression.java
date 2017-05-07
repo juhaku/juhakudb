@@ -365,7 +365,6 @@ public class Expression {
         return new StringBuilder(function).append("(").append(arg).append(")").toString();
     }
 
-
     @Override
     public String toString() {
         return getValue();

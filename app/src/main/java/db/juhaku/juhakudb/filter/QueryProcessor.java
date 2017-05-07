@@ -329,10 +329,17 @@ public class QueryProcessor {
                     if (token.equals("id")) {
                         token = NameResolver.ID_FIELD_SUFFIX;
                     }
-                    formattedBuilder.append(alias.concat(".").concat(token));
+                    if (token.contains("(")) {
+                        formattedBuilder.append(addDefaultAliasToExpressionToken(token, alias));
+
+                    } else {
+                        formattedBuilder.append(alias.concat(".").concat(token));
+                    }
+
                 } else {
                     formattedBuilder.append(token); // otherwise add token.
                 }
+
             } else {
                 formattedBuilder.append(token); // just add token as it does not contain relative information
             }
@@ -344,6 +351,34 @@ public class QueryProcessor {
         }
 
         return formattedBuilder.toString();
+    }
+
+
+    /**
+     * Add alias to expression token.
+     *
+     * @param token String value of token to add alias for.
+     * @param alias String value of alias to add to token.
+     *
+     * @return String value of token with alias.
+     *
+     * @since 2.0.2-SNAPSHOT
+     *
+     * @hide
+     */
+    private static String addDefaultAliasToExpressionToken(String token, String alias) {
+        StringBuilder aliasedToken = new StringBuilder();
+        for (int i = 0; i < token.length(); i ++) {
+            Character character = token.charAt(i);
+
+            if (character == '(') {
+                aliasedToken.append(character).append(alias).append(".");
+                continue;
+            }
+            aliasedToken.append(character);
+        }
+
+        return aliasedToken.toString();
     }
 
     /**
