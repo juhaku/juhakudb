@@ -42,20 +42,24 @@ public class StringUtils {
     }
 
     /**
-     * Converts array of strings to String for easy logging.
+     * Converts array of objects to comma separated String.
      *
-     * @param array String array of values to convert to loggable String.
+     * @param array Object array of values to convert.
      * @return Stringified array.
      *
      * @since 2.0.1
      */
-    public static final String arrayToString(String... array) {
+    public static final String arrayToString(Object... array) {
         StringBuilder builder = new StringBuilder();
-        for (String str : array) {
+
+        int index = 0;
+        for (Object str : array) {
             builder.append(str);
-            if (str != array[array.length - 1]) {
+
+            if (index < array.length - 1) {
                 builder.append(",");
             }
+            index++;
         }
 
         return builder.toString();

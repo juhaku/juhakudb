@@ -240,8 +240,9 @@ public class QueryProcessor {
                     }
 
                     // Only add args to array from junction if there actually is arguments.
-                    if (junction.getArgs().length > 0) {
-                        args = addArgsToArray(args, junction.getArgs());
+                    String[] junctionArgs = junction.getArgs();
+                    if (junctionArgs.length > 0) {
+                        args = addArgsToArray(args, junctionArgs);
                     }
                 }
                 sql.append(")");
@@ -261,8 +262,9 @@ public class QueryProcessor {
                 }
 
                 // Add args only if args are provided.
-                if (predicate.getArgs().length > 0) {
-                    args = addArgsToArray(args, predicate.getArgs());
+                String[] predicateArgs = predicate.getArgs();
+                if (predicateArgs.length > 0) {
+                    args = addArgsToArray(args, predicateArgs);
                 }
             }
         }
@@ -330,7 +332,11 @@ public class QueryProcessor {
                         token = NameResolver.ID_FIELD_SUFFIX;
                     }
                     if (token.contains("(")) {
-                        formattedBuilder.append(addDefaultAliasToExpressionToken(token, alias));
+                        if (!token.contains("?")) {
+                            formattedBuilder.append(addDefaultAliasToExpressionToken(token, alias));
+                        } else {
+                            formattedBuilder.append(token);
+                        }
 
                     } else {
                         formattedBuilder.append(alias.concat(".").concat(token));

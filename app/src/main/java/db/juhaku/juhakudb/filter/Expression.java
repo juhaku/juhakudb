@@ -23,8 +23,14 @@ SOFTWARE.
 */
 package db.juhaku.juhakudb.filter;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+import db.juhaku.juhakudb.util.StringUtils;
 
 /**
  * Created by juha on 04/05/17.
@@ -40,6 +46,7 @@ import java.util.List;
 public class Expression {
 
     private String value;
+    private Object arg;
 
     private Expression() {
         // Not instantiable.
@@ -57,20 +64,70 @@ public class Expression {
     }
 
     /**
-     * Create expression of value. Useful for wrapping given value as an expression for predicate
+     * Argument what is provided to expression that will be substituted with ? in SQL query.
+     *
+     * @return Object value of argument.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    Object getArg() {
+        return arg;
+    }
+
+    /**
+     * Create expression with given value and argument. Argument will be substituted with ? in SQL query.
+     *
+     * @param value Object value to be converted to expression.
+     * @param arg Object argument that will be substituted with ?.
+     *
+     * @return Expression of provided argument.
+     *
+     * @since 2.0.2-SNAPSHOT
+     *
+     * @hide
+     */
+    private static Expression of(Object value, Object arg) {
+        Expression expression = new Expression();
+        expression.value = value.toString();
+        expression.arg = arg;
+
+        return expression;
+    }
+
+    /**
+     * Create expression of value. Used for wrapping given value as an expression for predicate
      * builder for creating criteria for SQL query.
      *
-     * @param arg Object value to be converted to expression.
+     * @param value Object value to be converted to expression.
      *
      * @return Expression of provided argument.
      *
      * @since 2.0.2-SNAPSHOT
      */
-    public static Expression of(Object arg) {
-        Expression expression = new Expression();
-        expression.value = arg.toString();
+    public static Expression of(Object value) {
+        return of(value, null);
+    }
 
-        return expression;
+    /**
+     * Create expression array of provided collection of values. Used to wrap up object collection
+     * to expressions for predicate builder to create SQL query.
+     *
+     * @param values Collection of objects to be converted to array of expressions.
+     *
+     * @return Array of expressions containing values of provided objects.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public static Expression[] ofCollection(Collection<Object> values) {
+        Expression[] expressions = (Expression[]) Array.newInstance(Expression.class, values.size());
+
+        int index = 0;
+        for (Object value : values) {
+            expressions[index] = of(value);
+            index++;
+        }
+
+        return expressions;
     }
 
     /**
@@ -82,7 +139,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression min(Object arg) {
-        return of(function("MIN", arg));
+        return of(function("MIN", arg), arg);
     }
 
     /**
@@ -95,7 +152,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression min(Object... args) {
-        return of(function("MIN", arrayToString(args)));
+        return of(function("MIN", arrayToString(args)), args);
     }
 
     /**
@@ -107,7 +164,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression max(Object arg) {
-        return of(function("MAX", arg));
+        return of(function("MAX", arg), arg);
     }
 
     /**
@@ -120,7 +177,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression max(Object... args) {
-        return of(function("MAX", arrayToString(args)));
+        return of(function("MAX", arrayToString(args)), args);
     }
 
     /**
@@ -132,7 +189,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression avg(Object arg) {
-        return of(function("AVG", arg));
+        return of(function("AVG", arg), arg);
     }
 
     /**
@@ -144,7 +201,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression sum(Object arg) {
-        return of(function("SUM", arg));
+        return of(function("SUM", arg), arg);
     }
 
     /**
@@ -157,7 +214,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression count(Object arg) {
-        return of(function("COUNT", arg));
+        return of(function("COUNT", arg), arg);
     }
 
     /**
@@ -169,7 +226,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression lower(Object arg) {
-        return of(function("LOWER", arg));
+        return of(function("LOWER", arg), arg);
     }
 
     /**
@@ -194,7 +251,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression upper(Object arg) {
-        return of(function("UPPER", arg));
+        return of(function("UPPER", arg), arg);
     }
 
     /**
@@ -220,7 +277,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression coalesce(Object... args) {
-        return of(function("COALESCE", arrayToString(args)));
+        return of(function("COALESCE", arrayToString(args)), args);
     }
 
     /**
@@ -233,7 +290,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression abs(Object arg) {
-        return of(function("ABS", arg));
+        return of(function("ABS", arg), arg);
     }
 
     /**
@@ -258,7 +315,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression length(Object arg) {
-        return of(function("LENGTH", arg));
+        return of(function("LENGTH", arg), arg);
     }
 
     /**
@@ -284,7 +341,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression trim(Object arg) {
-        return of(function("TRIM", arg));
+        return of(function("TRIM", arg), arg);
     }
 
     /**
@@ -298,7 +355,7 @@ public class Expression {
      * @since 2.0.2-SNAPSHOT
      */
     public static Expression trim(Object arg, String letter) {
-        return of(function("TRIM", arrayToString(arg, letter)));
+        return of(function("TRIM", arrayToString(arg, letter)), arg);
     }
 
     /**
@@ -318,7 +375,7 @@ public class Expression {
     private static List<Expression> objectArrayToFunctionExpression(String function, Object... args) {
         List<Expression> expressions = new LinkedList<>();
         for (Object arg : args) {
-            expressions.add(of(function(function, arg.toString())));
+            expressions.add(of(function(function, arg.toString()), arg));
         }
 
         return expressions;
@@ -335,17 +392,7 @@ public class Expression {
      * @hide
      */
     private static String arrayToString(Object... args) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0 ; i < args.length ; i ++) {
-
-            builder.append(args[i]);
-
-            if (i < args.length - 1) {
-                builder.append(",");
-            }
-        }
-
-        return builder.toString();
+        return StringUtils.arrayToString(args);
     }
 
 
