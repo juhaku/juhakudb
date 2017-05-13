@@ -86,7 +86,6 @@ public class QueryProcessor {
     public Query createQuery(Class<?> modelClass, Filter filter) {
         // initialize root and predicates for joins and restrictions
         Root<?> root = new Root<>(modelClass);
-//        Predicates predicates = new Predicates();
         PredicateBuilder builder = new PredicateBuilder();
 
         // create joins and restrictions
@@ -403,7 +402,6 @@ public class QueryProcessor {
      */
     public Query createWhere(Class<?> modelClass, Filter filter) {
         Root<?> root = new Root<>(modelClass);
-//        Predicates predicates = new Predicates();
         PredicateBuilder builder = new PredicateBuilder();
 
         filter.filter(root, builder);
