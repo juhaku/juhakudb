@@ -177,7 +177,11 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder in(String field, Object... args) {
-        return in(Expression.of(field), Expression.ofCollection(Arrays.asList(args)));
+        getPredicates().add(Predicate.in(field, args));
+
+        negateIfNecessary();
+
+        return this;
     }
 
     /**
@@ -191,40 +195,7 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder in(String field, Collection<Object> args) {
-        return in(Expression.of(field), Expression.ofCollection(args));
-    }
-
-    /**
-     * Creates IN statement for WHERE clause with expressions. E.g. lower(name) IN (lower(?),lower(?)).
-     * This method is same as {@link #in(Expression, Expression...)} but is provided as easy access api.
-     *
-     * @param field Expression to use for first value before IN word.
-     * @param args Collection containing args that will be replaced by question marks (?) in query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder in(Expression field, Collection<Expression> args) {
         return in(field, convertCollectionToArray(args));
-    }
-
-    /**
-     * Creates IN statement for WHERE clause with expressions. E.g. lower(name) IN (lower(?),lower(?)).
-     *
-     * @param field Expression to use for first value before IN word.
-     * @param args Collection containing args that will be replaced by question marks (?) in query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder in(Expression field, Expression... args) {
-        getPredicates().add(Predicate.in(field, args));
-
-        negateIfNecessary();
-
-        return this;
     }
 
     /**
@@ -238,22 +209,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder eq(String field, Object arg) {
-        return eq(Expression.of(field), Expression.of(arg));
-    }
-
-    /**
-     * Create equals statement for WHERE clause by expressions. E.g. name = ?. Expression equals
-     * statement enables possibility to create more robust equals statements e.g. upper(name) = upper(?).
-     *
-     * @param field Expression for field to be equal to something.
-     * @param arg Expression that is being compared to against the fieldExpression. Value
-     *                      will be substituted with ? for SQL query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder eq(Expression field, Expression arg) {
         getPredicates().add(Predicate.eq(field, arg));
 
         negateIfNecessary();
@@ -322,23 +277,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder between(String field, Object arg0, Object arg1) {
-        return between(Expression.of(field), Expression.of(arg0), Expression.of(arg1));
-    }
-
-    /**
-     * Creates between statement by expression for given field where field values is between some values. E.g.
-     * age BETWEEN ? AND ?. Expression provides possibility to create more robust statements. E.g.
-     * sum(age) BETWEEN ? AND ?.
-     *
-     * @param field String field name to create between statement for.
-     * @param arg0 Object first argument for between statement.
-     * @param arg1 Object second argument for between statement.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder between(Expression field, Expression arg0, Expression arg1) {
         getPredicates().add(Predicate.between(field, arg0, arg1));
 
         negateIfNecessary();
@@ -357,22 +295,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder gt(String field, Object arg) {
-        return gt(Expression.of(field), Expression.of(arg));
-    }
-
-    /**
-     * Create greater than for WHERE clause by expressions. E.g. age > ?. Expression greater than
-     * statement enables possibility to create more robust greater than statements e.g. max(age) > avg(?).
-     *
-     * @param field Expression for field to be greater than something.
-     * @param arg Expression that is being compared to against the fieldExpression. Value
-     *                      will be substituted with ? for SQL query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder gt(Expression field, Expression arg) {
         getPredicates().add(Predicate.ge(field, arg));
 
         return this;
@@ -389,22 +311,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder ge(String field, Object arg) {
-        return ge(Expression.of(field), Expression.of(arg));
-    }
-
-    /**
-     * Create greater than or equal for WHERE clause by expressions. E.g. age >= ?. Expression ge
-     * statement enables possibility to create more robust greater than or equal statements e.g. max(age) >= avg(?).
-     *
-     * @param field Expression for field to be greater than or equal to something.
-     * @param arg Expression that is being compared to against the fieldExpression. Value
-     *                      will be substituted with ? for SQL query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder ge(Expression field, Expression arg) {
         getPredicates().add(Predicate.ge(field, arg));
 
         return this;
@@ -421,22 +327,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder lt(String field, Object arg) {
-        return lt(Expression.of(field), Expression.of(arg));
-    }
-
-    /**
-     * Create less than for WHERE clause by expressions. E.g. age >= ?. Expression lt
-     * statement enables possibility to create more robust less than statements e.g. min(width) < avg(?).
-     *
-     * @param field Expression for field to be less than something.
-     * @param arg Expression that is being compared to against the fieldExpression. Value
-     *                      will be substituted with ? for SQL query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder lt(Expression field, Expression arg) {
         getPredicates().add(Predicate.lt(field, arg));
 
         return this;
@@ -453,22 +343,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder le(String field, Object arg) {
-        return le(Expression.of(field), Expression.of(arg));
-    }
-
-    /**
-     * Create less than or equal for WHERE clause by expressions. E.g. age <= ?. Expression le
-     * statement enables possibility to create more robust less than or equal statements e.g. min(width) <= avg(?).
-     *
-     * @param field Expression for field to be less than or equal to something.
-     * @param arg Expression that is being compared to against the fieldExpression. Value
-     *                      will be substituted with ? for SQL query.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder le(Expression field, Expression arg) {
         getPredicates().add(Predicate.le(field, arg));
 
         return this;
@@ -488,23 +362,6 @@ public class PredicateBuilder {
      * @since 2.0.2-SNAPSHOT
      */
     public PredicateBuilder like(String field, Object arg) {
-        return like(Expression.of(field), arg);
-    }
-
-    /**
-     * Creates like statement for provided field expression. E.g. trim(field) LIKE ?. Like statement can contain
-     * wild carts in the beginning and/or at the end of provided argument value.
-     *
-     * <p>By default like statement is case insensitive.</p>
-     *
-     * @param field String name of the field to create like statement for.
-     * @param arg Object argument to be substituted with ?.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder like(Expression field, Object arg) {
         getPredicates().add(Predicate.like(field, arg));
 
         negateIfNecessary();
@@ -513,101 +370,33 @@ public class PredicateBuilder {
     }
 
     /**
-     * Create min statement for provided field. E.g. MIN(age).
+     * Creates SQL predicate what can be used to create more advanced queries from database.
+     * E.g. {@code builder.sqlPredicate("value = lower(?)", "PERMISSION 1");}.
      *
-     * @param field String field name to create statement for.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder min(String field) {
-        getPredicates().add(Predicate.forExpression(Expression.min(field)));
-
-        return this;
-    }
-
-    /**
-     * Create max statement for provided field. E.g. MAX(age).
-     *
-     * @param field String field name to create statement for.
+     * @param sql String value of sql to provide for SQL predicate.
+     * @param args Object array of arguments for sql predicate. These are substituted with ?.
      *
      * @return Predicate builder for current WHERE clause.
      *
      * @since 2.0.2-SNAPSHOT
      */
-    public PredicateBuilder max(String field) {
-        getPredicates().add(Predicate.forExpression(Expression.max(field)));
-
-        return this;
-    }
-
-    /**
-     * Create avg statement for provided field. E.g. AVG(age).
-     *
-     * @param field String field name to create statement for.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder avg(String field) {
-        getPredicates().add(Predicate.forExpression(Expression.avg(field)));
-
-        return this;
-    }
-
-    /**
-     * Create sum statement for provided field. E.g. SUM(age).
-     *
-     * @param field String field name to create statement for.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder sum(String field) {
-        getPredicates().add(Predicate.forExpression(Expression.sum(field)));
-
-        return this;
-    }
-
-    /**
-     * Create count statement for provided field. E.g. COUNT(age).
-     *
-     * @param field String field name to create statement for.
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder count(String field) {
-        getPredicates().add(Predicate.forExpression(Expression.count(field)));
-
-        return this;
-    }
-
-    /**
-     * Create count statement for all fields which will result following statement COUNT(*).
-     *
-     * @return Predicate builder for current WHERE clause.
-     *
-     * @since 2.0.2-SNAPSHOT
-     */
-    public PredicateBuilder count() {
-        return count("*");
-    }
-
-    public PredicateBuilder sqlPredicate(String sql) {
-        return sqlPredicate(sql, (Object[]) null);
-    }
-
     public PredicateBuilder sqlPredicate(String sql, Object... args) {
         getPredicates().add(Predicate.sqlPredicate(sql, args));
 
         return this;
     }
 
+    /**
+     * Creates SQL predicate what can be used to create more advanced queries from database.
+     * E.g. {@code builder.sqlPredicate("value = lower(?)", "PERMISSION 1");}.
+     *
+     * @param sql String value of sql to provide for SQL predicate.
+     * @param args Object collection of arguments for sql predicate. These are substituted with ?.
+     *
+     * @return Predicate builder for current WHERE clause.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
     public PredicateBuilder sqlPredicate(String sql, Collection<Object> args) {
         return sqlPredicate(sql, convertCollectionToArray(args));
     }

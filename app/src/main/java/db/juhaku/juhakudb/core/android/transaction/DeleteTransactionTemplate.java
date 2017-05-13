@@ -34,11 +34,8 @@ import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.core.android.ResultSet;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
-import db.juhaku.juhakudb.filter.Expression;
 import db.juhaku.juhakudb.filter.Filter;
-import db.juhaku.juhakudb.filter.Predicate;
 import db.juhaku.juhakudb.filter.PredicateBuilder;
-import db.juhaku.juhakudb.filter.Predicates;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.Root;
 
@@ -81,9 +78,8 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
     }
 
     private Query createCountQuery(String table, String column, Object value) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT ");
-        sqlBuilder.append(Expression.count(column)).append(" FROM ").append(table).append(" WHERE ")
-                .append(column).append(" = ?");
+        StringBuilder sqlBuilder = new StringBuilder("SELECT count(");
+        sqlBuilder.append(column).append(") FROM ").append(table).append(" WHERE ").append(column).append(" = ?");
 
         return new Query(sqlBuilder.toString(), new String[]{value.toString()});
     }

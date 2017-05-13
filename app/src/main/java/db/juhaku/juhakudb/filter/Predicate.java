@@ -107,12 +107,12 @@ public class Predicate {
         return null;
     }
 
-    static Predicate in(Expression field, Expression... args) {
+    static Predicate in(String field, Object... args) {
         Predicate predicate = new Predicate();
-        StringBuilder inBuilder = new StringBuilder(field.getValue());
+        StringBuilder inBuilder = new StringBuilder(field);
         inBuilder.append(" IN (");
-        for (Expression arg : args) {
-            inBuilder.append(stringifyArgument(arg));
+        for (Object arg : args) {
+            inBuilder.append(arg);
             if (arg != args[args.length - 1]) {
                 inBuilder.append(", ");
             }
@@ -124,9 +124,8 @@ public class Predicate {
         return predicate;
     }
 
-    static Predicate eq(Expression field, Expression arg) {
-        return operatorPredicate(field.getValue(), arg.getArg() != null ? arg.getArg() : arg,
-                PARAM_EQUALS, stringifyArgument(arg));
+    static Predicate eq(String field, Object arg) {
+        return operatorPredicate(field, arg, PARAM_EQUALS);
     }
 
     static Predicate not(Predicate predicate) {
@@ -162,54 +161,43 @@ public class Predicate {
         return predicate;
     }
 
-    static Predicate between(Expression field, Expression arg0, Expression arg1) {
+    static Predicate between(String field, Object arg0, Object arg1) {
         Predicate predicate = new Predicate();
 
-        StringBuilder between = new StringBuilder(field.getValue());
-        between.append(" BETWEEN ").append(stringifyArgument(arg0)).append(" AND ")
-                .append(stringifyArgument(arg1));
+        StringBuilder between = new StringBuilder(field);
+        between.append(" BETWEEN ").append(arg0).append(" AND ")
+                .append(arg1);
 
         predicate.between = between.toString();
-        predicate.addArgs(arg0.getArg() != null ? arg0.getArg() : arg0, arg1.getArg() != null ? arg1.getArg() : arg1);
+        predicate.addArgs(arg0, arg1);
 
         return predicate;
     }
 
-    static Predicate gt(Expression field, Expression arg) {
-        return operatorPredicate(field.getValue(), arg.getArg() != null ? arg.getArg() : arg, " > ",
-                stringifyArgument(arg));
+    static Predicate gt(String field, Object arg) {
+        return operatorPredicate(field, arg, " > ");
     }
 
-    static Predicate ge(Expression field, Expression arg) {
-        return operatorPredicate(field.getValue(), arg.getArg() != null ? arg.getArg() : arg, " >= ",
-                stringifyArgument(arg));
+    static Predicate ge(String field, Object arg) {
+        return operatorPredicate(field, arg, " >= ");
     }
 
-    static Predicate lt(Expression field, Expression arg) {
-        return operatorPredicate(field.getValue(), arg.getArg() != null ? arg.getArg() : arg, " < ",
-                stringifyArgument(arg));
+    static Predicate lt(String field, Object arg) {
+        return operatorPredicate(field, arg, " < ");
     }
 
-    static Predicate le(Expression field, Expression arg) {
-        return operatorPredicate(field.getValue(), arg.getArg() != null ? arg.getArg() : arg, " <= ",
-                stringifyArgument(arg));
+    static Predicate le(String field, Object arg) {
+        return operatorPredicate(field, arg, " <= ");
     }
 
-    static Predicate like(Expression field, Object arg) {
+    static Predicate like(String field, Object arg) {
         Predicate predicate = new Predicate();
 
-        StringBuilder like = new StringBuilder(field.getValue());
+        StringBuilder like = new StringBuilder(field);
         like.append(" LIKE ").append(PARAM_PLACE_HOLDER);
 
         predicate.like = like.toString();
         predicate.addArgs(arg);
-
-        return predicate;
-    }
-
-    static Predicate forExpression(Expression expression) {
-        Predicate predicate = new Predicate();
-        predicate.clause = expression.getValue();
 
         return predicate;
     }
@@ -222,14 +210,6 @@ public class Predicate {
         return predicate;
     }
 
-//    static Predicate and() {
-//        return generalJunction("AND");
-//    }
-//
-//    static Predicate or() {
-//        return generalJunction("OR");
-//    }
-
     static Junction disjunction() {
         return new Junction(BooleanOperator.OR);
     }
@@ -238,59 +218,15 @@ public class Predicate {
         return new Junction(BooleanOperator.AND);
     }
 
-//    private static Predicate generalJunction(String junction) {
-//        Predicate generalJunction = new Predicate();
-//        generalJunction.clause = new StringBuilder().append(" ").append(junction).append(" ").toString();
-//
-//        return generalJunction;
-//    }
-
-    private static Predicate operatorPredicate(String field, Object arg, String operator, String expressionValue) {
+    private static Predicate operatorPredicate(String field, Object arg, String operator) {
         Predicate predicate = new Predicate();
 
         StringBuilder eqBuilder = new StringBuilder();
-        eqBuilder.append(field).append(operator).append(expressionValue);
+        eqBuilder.append(field).append(operator).append(PARAM_PLACE_HOLDER);
         predicate.eq = eqBuilder.toString();
         predicate.addArgs(arg);
 
         return predicate;
-    }
-
-    /**
-     * Stringify argument expression. Expression is stringified for expectation side of SQL query.
-     * (What = Expected could be name = "john").
-     * E.g. if value is "name" then "?" will be returned. If value is "lower(myValue)" then "lower(?)"
-     * will be returned.
-     *
-     * @param expression Expression to be stringified.
-     *
-     * @return Stringfied value of expression.
-     *
-     * @since 2.0.2-SNAPSHOT
-     *
-     * @hide
-     */
-    private static String stringifyArgument(Expression expression) {
-        if (expression.getArg() != null) {
-
-            if (Object[].class.isAssignableFrom(expression.getArg().getClass())) {
-
-                // Create new array of substitute values.
-                String[] argArray = (String[]) Array.newInstance(String.class, ((Object[]) expression.getArg()).length);
-                Arrays.fill(argArray, PARAM_PLACE_HOLDER);
-
-                // Replace real values with substituting values.
-                return expression.getValue().replace(StringUtils.arrayToString((Object[]) expression.getArg()),
-                        StringUtils.arrayToString((Object[]) argArray));
-
-            } else {
-
-                return expression.getValue().replace(expression.getArg().toString(), PARAM_PLACE_HOLDER);
-            }
-
-        } else {
-            return PARAM_PLACE_HOLDER;
-        }
     }
 
     /**
