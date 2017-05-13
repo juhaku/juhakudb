@@ -14,3 +14,4 @@ gradlew.bat
 gradlew
 gradle
 findbugs*.xml
+javadoc
