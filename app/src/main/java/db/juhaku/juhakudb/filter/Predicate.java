@@ -24,8 +24,10 @@ SOFTWARE.
 package db.juhaku.juhakudb.filter;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import db.juhaku.juhakudb.util.StringUtils;
@@ -73,7 +75,14 @@ public class Predicate {
             String[] newArgs = new String[len + 1];
             System.arraycopy(stringArgs, 0, newArgs, 0, stringArgs.length);
             stringArgs = newArgs;
-            stringArgs[len] = arg.toString();
+
+            // Add custom processing for date formats.
+            if (Date.class.isAssignableFrom(arg.getClass())) {
+                stringArgs[len] = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(arg);
+
+            } else {
+                stringArgs[len] = arg.toString();
+            }
         }
 
         return stringArgs;
@@ -112,7 +121,7 @@ public class Predicate {
         StringBuilder inBuilder = new StringBuilder(field);
         inBuilder.append(" IN (");
         for (Object arg : args) {
-            inBuilder.append(arg);
+            inBuilder.append(PARAM_PLACE_HOLDER);
             if (arg != args[args.length - 1]) {
                 inBuilder.append(", ");
             }
@@ -165,8 +174,8 @@ public class Predicate {
         Predicate predicate = new Predicate();
 
         StringBuilder between = new StringBuilder(field);
-        between.append(" BETWEEN ").append(arg0).append(" AND ")
-                .append(arg1);
+        between.append(" BETWEEN ").append(PARAM_PLACE_HOLDER).append(" AND ")
+                .append(PARAM_PLACE_HOLDER);
 
         predicate.between = between.toString();
         predicate.addArgs(arg0, arg1);
