@@ -113,7 +113,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @param db SQLiteDatabase to add constraints for to specific table.
      * @param table {@link Schema} table to add constraints for.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     private void createConstrains(SQLiteDatabase db, Schema table) {
         for (Constraint ctx : table.getConstraints()) {

@@ -203,7 +203,7 @@ public class Schema implements Serializable {
      *
      * @return List idexes.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public List<Constraint> getConstraints() {
         if (constraints == null) {
@@ -218,7 +218,7 @@ public class Schema implements Serializable {
      *
      * @param constraints List of constraints.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     void setConstraints(List<Constraint> constraints) {
         this.constraints = constraints;

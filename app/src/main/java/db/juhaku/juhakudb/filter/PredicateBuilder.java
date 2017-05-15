@@ -39,7 +39,7 @@ import db.juhaku.juhakudb.filter.Predicate.Junction;
  *
  * @author Juha Kukkonen
  *
- * @since 2.0.2-SNAPSHOT
+ * @since 2.1.0
  */
 public class PredicateBuilder {
 
@@ -52,7 +52,7 @@ public class PredicateBuilder {
     /**
      * Instantiate new instance of predicate builder for creating advanced WHERE clauses.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder() {
         this.predicates = new ArrayList<>();
@@ -64,7 +64,7 @@ public class PredicateBuilder {
      *
      * @return List of {@link Predicate}.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     List<Predicate> getPredicates() {
         return predicates;
@@ -75,7 +75,7 @@ public class PredicateBuilder {
      *
      * @return String value of order by.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     String getSort() {
         return makeSort();
@@ -86,7 +86,7 @@ public class PredicateBuilder {
      *
      * @return String value of limit clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     String getPage() {
         return makePage();
@@ -97,7 +97,7 @@ public class PredicateBuilder {
 //     *
 //     * @return Predicate builder for current WHERE clause.
 //     *
-//     * @since 2.0.2-SNAPSHOT
+//     * @since 2.1.0
 //     */
 //    public PredicateBuilder and() {
 //        getPredicates().add(Predicate.and());
@@ -110,7 +110,7 @@ public class PredicateBuilder {
 //     *
 //     * @return Predicate builder for current WHERE clause.
 //     *
-//     * @since 2.0.2-SNAPSHOT
+//     * @since 2.1.0
 //     */
 //    public PredicateBuilder or() {
 //        getPredicates().add(Predicate.or());
@@ -123,7 +123,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder sort(Order order, String... cols) {
         for (String col : cols) {
@@ -141,7 +141,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
@@ -157,7 +157,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder setPage(Integer page) {
         this.page = page;
@@ -174,7 +174,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder in(String field, Object... args) {
         getPredicates().add(Predicate.in(field, args));
@@ -192,7 +192,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder in(String field, Collection<Object> args) {
         return in(field, convertCollectionToArray(args));
@@ -206,7 +206,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder eq(String field, Object arg) {
         getPredicates().add(Predicate.eq(field, arg));
@@ -224,7 +224,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder not() {
         not = true; //Mark next statement to be negated.
@@ -239,7 +239,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder isNull(String field) {
         getPredicates().add(Predicate.isNull(field));
@@ -253,7 +253,7 @@ public class PredicateBuilder {
      * Negates latest predicate if necessary. If not() was called before statement then the
      * statement will be negated. Negation works with in, eq, between, isNull and like statements.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -274,7 +274,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder between(String field, Object arg0, Object arg1) {
         getPredicates().add(Predicate.between(field, arg0, arg1));
@@ -292,7 +292,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder gt(String field, Object arg) {
         getPredicates().add(Predicate.ge(field, arg));
@@ -308,7 +308,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder ge(String field, Object arg) {
         getPredicates().add(Predicate.ge(field, arg));
@@ -324,7 +324,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder lt(String field, Object arg) {
         getPredicates().add(Predicate.lt(field, arg));
@@ -340,7 +340,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder le(String field, Object arg) {
         getPredicates().add(Predicate.le(field, arg));
@@ -359,7 +359,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder like(String field, Object arg) {
         getPredicates().add(Predicate.like(field, arg));
@@ -378,7 +378,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder sqlPredicate(String sql, Object... args) {
         getPredicates().add(Predicate.sqlPredicate(sql, args));
@@ -395,7 +395,7 @@ public class PredicateBuilder {
      *
      * @return Predicate builder for current WHERE clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public PredicateBuilder sqlPredicate(String sql, Collection<Object> args) {
         return sqlPredicate(sql, convertCollectionToArray(args));
@@ -408,7 +408,7 @@ public class PredicateBuilder {
      *
      * @return Array of same objects that were given in collection.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -424,7 +424,7 @@ public class PredicateBuilder {
      *
      * @return New junction builder for current WHERE clause to create isolated criteria for query.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public JunctionBuilder conjunction() {
         Junction junction = Predicate.conjunction();
@@ -441,7 +441,7 @@ public class PredicateBuilder {
      *
      * @return New junction builder for current WHERE clause to create isolated criteria for query.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public JunctionBuilder disjunction() {
         Junction junction = Predicate.disjunction();
@@ -454,7 +454,7 @@ public class PredicateBuilder {
      *
      * @return String containing order by statement.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -503,7 +503,7 @@ public class PredicateBuilder {
      *
      * @return String for order by statement without order by.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -524,7 +524,7 @@ public class PredicateBuilder {
      *
      * @return String containing limit clause.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -545,7 +545,7 @@ public class PredicateBuilder {
     /**
      * Sort class is wrapper to wrap columns and order together for order by statement.
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      *
      * @hide
      */
@@ -568,7 +568,7 @@ public class PredicateBuilder {
      * <p>Junction cannot contain another junction instead it is to be added to root predicate
      * builder.</p>
      *
-     * @since 2.0.2-SNAPSHOT
+     * @since 2.1.0
      */
     public static class JunctionBuilder extends PredicateBuilder {
 

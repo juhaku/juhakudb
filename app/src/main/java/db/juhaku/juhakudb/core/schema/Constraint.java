@@ -35,7 +35,7 @@ import db.juhaku.juhakudb.util.StringUtils;
  *
  * @author Juha Kukkonen
  *
- * @since 2.0.2-SNAPSHOT
+ * @since 2.1.0
  */
 public class Constraint implements Serializable {
 
