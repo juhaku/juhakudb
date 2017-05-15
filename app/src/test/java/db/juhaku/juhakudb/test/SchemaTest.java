@@ -3,6 +3,7 @@ package db.juhaku.juhakudb.test;
 import org.junit.Test;
 
 import db.juhaku.juhakudb.core.DatabaseConfiguration;
+import db.juhaku.juhakudb.core.schema.Constraint;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.core.schema.Schema.DDL;
 import db.juhaku.juhakudb.filter.Filter;
@@ -42,6 +43,9 @@ public class SchemaTest {
         for (Schema element : Schema.toSet(schema)) {
             System.out.println("schema: " + element.getName() + " " + element.getOrder());
             System.out.println("ddl:" + element.toDDL(DDL.CREATE));
+            for (Constraint ctx : element.getConstraints()) {
+                System.out.println("constraints: " + ctx.toString());
+            }
 //            for (Reference reference : element.getReferences()) {
 //                System.out.println(reference.toDDL());
 //            }

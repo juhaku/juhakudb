@@ -25,6 +25,7 @@ package db.juhaku.juhakudb.core.schema;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,6 @@ import java.util.TreeSet;
 
 import db.juhaku.juhakudb.core.DatabaseConfiguration;
 import db.juhaku.juhakudb.exception.SchemaInitializationException;
-import db.juhaku.juhakudb.util.StringUtils;
 
 /**
  * Created by juha on 7/3/15.
@@ -83,6 +83,7 @@ public class Schema implements Serializable {
     private Schema parent;
     private List<Reference> references;
     private Integer order;
+    private List<Constraint> constraints;
 
     static {
         factory = new SchemaFactory();
@@ -195,6 +196,32 @@ public class Schema implements Serializable {
      */
     void setReferences(List<Reference> references) {
         this.references = references;
+    }
+
+    /**
+     * Get list of table constraints. These also contain unique constraints as they are counted as constraints.
+     *
+     * @return List idexes.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    public List<Constraint> getConstraints() {
+        if (constraints == null) {
+            this.constraints = new ArrayList<>();
+        }
+
+        return constraints;
+    }
+
+    /**
+     * Set list of constraints to this database table. Also unique constraints are counted as constraints.
+     *
+     * @param constraints List of constraints.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    void setConstraints(List<Constraint> constraints) {
+        this.constraints = constraints;
     }
 
     /**

@@ -32,11 +32,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
 import db.juhaku.juhakudb.core.NameResolver;
 import db.juhaku.juhakudb.exception.NameResolveException;
@@ -120,6 +123,12 @@ public class SchemaFactory {
                     dbTable.addColumn(createColumn(column));
                 }
             }
+
+            // Add indexes and unique constraints.
+            if (table.isAnnotationPresent(Table.class)) {
+                addIndexesToTable(table.getAnnotation(Table.class), dbTable);
+            }
+
         } else {
             dbTable = schema.getElement(tableName);
             dbTable.setOrder(keys.incrementAndGet());
@@ -145,6 +154,16 @@ public class SchemaFactory {
         }
 
         return dbTable;
+    }
+
+    private static void addIndexesToTable(Table tableDef, Schema dbTable) {
+        for (UniqueConstraint ctx : tableDef.uniqueConstraints()) {
+            dbTable.getConstraints().add(new Constraint(ctx.name(), true, dbTable.getName(), ctx.columnNames()));
+        }
+
+        for (Index index : tableDef.indexes()) {
+            dbTable.getConstraints().add(new Constraint(index.name(), index.unique(), dbTable.getName(), index.columnList()));
+        }
     }
 
     private Schema createColumn(Field column) throws SchemaInitializationException {

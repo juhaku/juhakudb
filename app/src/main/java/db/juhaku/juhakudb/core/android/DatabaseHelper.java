@@ -38,6 +38,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 
+import db.juhaku.juhakudb.core.schema.Constraint;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.core.schema.Schema.DDL;
 import db.juhaku.juhakudb.core.schema.SchemaCreationMode;
@@ -75,6 +76,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         for (Schema table : Schema.toSet(schema)) {
             sqLiteDatabase.execSQL(table.toDDL(DDL.CREATE));
+            createConstrains(sqLiteDatabase, table);
         }
     }
 
@@ -106,6 +108,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * Create constraints if they do not exist in database.
+     *
+     * @param db SQLiteDatabase to add constraints for to specific table.
+     * @param table {@link Schema} table to add constraints for.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    private void createConstrains(SQLiteDatabase db, Schema table) {
+        for (Constraint ctx : table.getConstraints()) {
+            db.execSQL(ctx.toString());
+        }
+    }
+
+    /**
      * Create or update database tables based on comparison. Tables will be inserted or
      * altered but nothing will be removed.
      * @param db SQLiteDatabase to save tables for.
@@ -125,6 +141,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     }
                 }
             }
+            createConstrains(db, table);
         }
     }
 

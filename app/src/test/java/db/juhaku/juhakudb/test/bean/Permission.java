@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * Created by juha on 18/04/17.
@@ -11,6 +13,7 @@ import javax.persistence.Id;
  * @author juha
  */
 @Entity
+@Table(indexes = @Index(name = "value_idx", columnList = "value,date,integer,level"))
 public class Permission {
 
     @Id
