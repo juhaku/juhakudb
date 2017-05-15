@@ -1,4 +1,4 @@
-# JuhakuDB current release: 2.0.1
+# JuhakuDB current release: 2.1.0
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 Previous release: 1.3.2 docs can be found: [1.3.2 Release](https://github.com/juhaku/juhakudb/tree/b1.3.x). 
@@ -18,7 +18,7 @@ Library also provides annotated repositories with basic CRUD functionalities.
 ### ORM handling
 Annotation based ORM handling works with same javax persistence annotations as Hibernate would work. 
 If Hibernate is something you are already familiar with this should not be a too much to take. 
-Currently supported javax persistence annotations are ManyToOne, ManyToMany, OneToOne, OneToMany, Entiy, Id, 
+Currently supported javax persistence annotations are ManyToOne, ManyToMany, OneToOne, OneToMany, Entity, Id, 
 Column and Transient.
 
 Annotated classes will be mapped accordingly and database tables will be automatically created with 
@@ -40,7 +40,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <type>aar</type>
 </dependency>
 ```
@@ -48,7 +48,7 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile ('io.github.juhaku:juhaku-db:2.0.1@aar') {
+    compile ('io.github.juhaku:juhaku-db:2.1.0@aar') {
         transitive = true
     }
 ```
