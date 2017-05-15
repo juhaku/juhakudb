@@ -24,22 +24,17 @@ SOFTWARE.
 package db.juhaku.juhakudb.core.android;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.TypeVariable;
 import java.util.Enumeration;
 
 import dalvik.system.DexFile;
-import db.juhaku.juhakudb.annotation.Repository;
 import db.juhaku.juhakudb.core.Criteria;
 import db.juhaku.juhakudb.core.DatabaseConfiguration;
 import db.juhaku.juhakudb.core.DatabaseConfigurationAdapter;
 import db.juhaku.juhakudb.exception.SchemaInitializationException;
 import db.juhaku.juhakudb.repository.RepositoryFactory;
-import db.juhaku.juhakudb.util.ReflectionUtils;
 
 /**
  * Created by juha on 16/12/15.

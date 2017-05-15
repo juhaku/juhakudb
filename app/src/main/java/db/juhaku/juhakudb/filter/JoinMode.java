@@ -26,11 +26,29 @@ package db.juhaku.juhakudb.filter;
 /**
  * Created by juha on 24/04/16.
  *
+ * <p>Define join mode for joins defined in {@link Root}. Join mode represents type of a join to
+ * be made between two tables.</p>
+ *
  * @author juha
  */
 public enum JoinMode {
 
-    INNER_JOIN("INNER JOIN"), LEFT_JOIN("LEFT JOIN"), FULL_JOIN("FULL JOIN");
+    /**
+     * Inner join creates join between tables for matched elements in both table.
+     */
+    INNER_JOIN("INNER JOIN"),
+
+    /**
+     * Left join returns matched elements from right side of the join and all the records from left
+     * side of the join.
+     */
+    LEFT_JOIN("LEFT JOIN"),
+
+    /**
+     * Full join creates join between two tables for every record in both tables. Nevertheless there
+     * is a match in tables or not.
+     */
+    FULL_JOIN("FULL JOIN");
 
     private String value;
 

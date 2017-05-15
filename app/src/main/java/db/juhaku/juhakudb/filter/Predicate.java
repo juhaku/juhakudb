@@ -24,8 +24,10 @@ SOFTWARE.
 package db.juhaku.juhakudb.filter;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import db.juhaku.juhakudb.util.StringUtils;
@@ -42,16 +44,20 @@ public class Predicate {
     private String is;
     private String between;
     private String like;
+    private String clause;
 
     private Object[] args;
 
+    /**
+     * Describe parameter placeholder for SQL queries. Typically "?".
+     */
     static final String PARAM_PLACE_HOLDER = "?";
     static final String PARAM_EQUALS = " = ";
     static final String PARAM_NOT_EQUAL = " != ";
 
 
     private Predicate() {
-        // not intializable by outside world.
+        // Not instantiatable.
     }
 
     private void addArgs(Object... args) {
@@ -69,29 +75,48 @@ public class Predicate {
             String[] newArgs = new String[len + 1];
             System.arraycopy(stringArgs, 0, newArgs, 0, stringArgs.length);
             stringArgs = newArgs;
-            stringArgs[len] = arg.toString();
+
+            // Add custom processing for date formats.
+            if (Date.class.isAssignableFrom(arg.getClass())) {
+                stringArgs[len] = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(arg);
+
+            } else {
+                stringArgs[len] = arg.toString();
+            }
         }
 
         return stringArgs;
     }
 
+    /**
+     * Get generated clause for this predicate. E.g. id = ?.
+     *
+     * @return String value of clause.
+     */
     String getClause() {
         if (!StringUtils.isBlank(in)) {
             return in;
+
         } else if (!StringUtils.isBlank(eq)) {
             return eq;
+
         } else if (!StringUtils.isBlank(is)) {
             return is;
+
         } else if (!StringUtils.isBlank(between)) {
             return between;
+
         } else if (!StringUtils.isBlank(like)) {
             return like;
+
+        } else if (!StringUtils.isBlank(clause)) {
+            return clause;
         }
 
         return null;
     }
 
-    public static Predicate in(String field, Object... args) {
+    static Predicate in(String field, Object... args) {
         Predicate predicate = new Predicate();
         StringBuilder inBuilder = new StringBuilder(field);
         inBuilder.append(" IN (");
@@ -108,15 +133,11 @@ public class Predicate {
         return predicate;
     }
 
-    public static Predicate in(String field, Collection<Object> args) {
-        return in(field, args.toArray((Object[]) Array.newInstance(args.iterator().next().getClass(), args.size())));
-    }
-
-    public static Predicate eq(String field, Object arg) {
+    static Predicate eq(String field, Object arg) {
         return operatorPredicate(field, arg, PARAM_EQUALS);
     }
 
-    public static Predicate not(Predicate predicate) {
+    static Predicate not(Predicate predicate) {
         if (!StringUtils.isBlank(predicate.in)) {
             predicate.in = predicate.in.replace("IN", "NOT IN");
 
@@ -142,42 +163,43 @@ public class Predicate {
         }
     }
 
-    public static Predicate isNull(String field) {
+    static Predicate isNull(String field) {
         Predicate predicate = new Predicate();
         predicate.is = field.concat(" IS NULL");
 
         return predicate;
     }
 
-    public static Predicate between(String field, Object arg0, Object arg1) {
+    static Predicate between(String field, Object arg0, Object arg1) {
         Predicate predicate = new Predicate();
 
         StringBuilder between = new StringBuilder(field);
         between.append(" BETWEEN ").append(PARAM_PLACE_HOLDER).append(" AND ")
                 .append(PARAM_PLACE_HOLDER);
+
         predicate.between = between.toString();
         predicate.addArgs(arg0, arg1);
 
         return predicate;
     }
 
-    public static Predicate gt(String field, Object arg) {
+    static Predicate gt(String field, Object arg) {
         return operatorPredicate(field, arg, " > ");
     }
 
-    public static Predicate ge(String field, Object arg) {
+    static Predicate ge(String field, Object arg) {
         return operatorPredicate(field, arg, " >= ");
     }
 
-    public static Predicate lt(String field, Object arg) {
+    static Predicate lt(String field, Object arg) {
         return operatorPredicate(field, arg, " < ");
     }
 
-    public static Predicate le(String field, Object arg) {
+    static Predicate le(String field, Object arg) {
         return operatorPredicate(field, arg, " <= ");
     }
 
-    public static Predicate like(String field, Object arg) {
+    static Predicate like(String field, Object arg) {
         Predicate predicate = new Predicate();
 
         StringBuilder like = new StringBuilder(field);
@@ -189,12 +211,21 @@ public class Predicate {
         return predicate;
     }
 
-//    public Predicate ilike(String field, Object arg) {
-//        Predicate predicate = getLastPredicate(like(field, arg));
-//        predicate.like = predicate.like.replace("LIKE", "ILIKE");
-//
-//        return predicate;
-//    }
+    static Predicate sqlPredicate(String sql, Object... args) {
+        Predicate predicate = new Predicate();
+        predicate.clause = sql;
+        predicate.addArgs(args);
+
+        return predicate;
+    }
+
+    static Junction disjunction() {
+        return new Junction(BooleanOperator.OR);
+    }
+
+    static Junction conjunction() {
+        return new Junction(BooleanOperator.AND);
+    }
 
     private static Predicate operatorPredicate(String field, Object arg, String operator) {
         Predicate predicate = new Predicate();
@@ -218,65 +249,70 @@ public class Predicate {
     static boolean isSymbol(String value) {
         return value.equals(">") || value.equals("<") || value.equals(">=") || value.equals("<=")
                 || value.equals(PARAM_PLACE_HOLDER) || value.equals(PARAM_NOT_EQUAL.trim())
-                || value.equals(PARAM_EQUALS.trim());
+                || value.equals(PARAM_EQUALS.trim()) || value.equals("*");
     }
 
-    public static Disjunction disjunction() {
-
-        return new Disjunction();
-    }
-
-    public static Conjunction conjunction() {
-
-        return new Conjunction();
-    }
-
-    public interface Junction {
-
-        Junction add(Predicate predicate);
-
-        List<Predicate> getPredicates();
-    }
-
-    public static class Disjunction extends Predicate implements Junction {
+    /**
+     * Junction is parentheses grouped clause with one or more arguments. Junction can either
+     * be disjunction or conjunction. This is handled via {@link BooleanOperator} what defines
+     * type of junction.<br><br>
+     *
+     * E.g. (a AND b AND c, ...) or (a OR b OR c, ...).
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    static class Junction extends Predicate {
 
         private List<Predicate> predicates;
+        private BooleanOperator operator;
 
-        Disjunction() {
+        Junction(BooleanOperator operator) {
+            this.operator = operator;
             this.predicates = new ArrayList<>();
         }
 
-        @Override
-        public Disjunction add(Predicate predicate) {
-            this.predicates.add(predicate);
-
-            return this;
+        /**
+         * Get current junction operator used to combine clauses.
+         *
+         * @return {@link BooleanOperator} what is either AND or OR.
+         *
+         * @since 2.0.2-SNAPSHOT
+         */
+        BooleanOperator getOperator() {
+            return operator;
         }
 
-        @Override
-        public List<Predicate> getPredicates() {
+        /**
+         * Get clauses added to this junction. These clauses will be combined to sql separated with
+         * operator provided to this junction. See {@link #getOperator()}.
+         *
+         * @return List of predicates of this junction.
+         *
+         * @since 2.0.2-SNAPSHOT
+         */
+        List<Predicate> getPredicates() {
             return predicates;
         }
     }
 
-    public static class Conjunction extends Predicate implements Junction {
+    /**
+     * Predicate boolean operator is used in SQL queries to combine search criteria.
+     *
+     * @since 2.0.2-SNAPSHOT
+     */
+    enum BooleanOperator {
 
-        private List<Predicate> predicates;
+        AND(" AND "), OR(" OR ");
 
-        Conjunction() {
-            this.predicates = new ArrayList<>();
+        private String value;
+
+        BooleanOperator(String value) {
+            this.value = value;
         }
 
-        @Override
-        public Conjunction add(Predicate predicate) {
-            this.predicates.add(predicate);
-
-            return this;
-        }
-
-        @Override
-        public List<Predicate> getPredicates() {
-            return predicates;
+        public String getValue() {
+            return value;
         }
     }
+
 }

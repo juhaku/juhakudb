@@ -33,7 +33,8 @@ package db.juhaku.juhakudb.util;
 public enum ReservedWords {
 
     LEFT, JOIN, RIGHT, INNER, FULL, ON, FROM, SELECT, WHERE, AND, OR, IN, NOT, LIKE,
-    IS, NULL, BETWEEN, ASC, DESC, LIMIT, ORDER, BY, OFFSET;
+    IS, NULL, BETWEEN, ASC, DESC, LIMIT, ORDER, BY, OFFSET, MIN, MAX, AVG, SUM, COUNT,
+    LOWER, UPPER, ABS, COALESCE, LENGTH, TRIM;
 
     /**
      * Check if given word belongs to reserved words. Word match is searched case insensitive.

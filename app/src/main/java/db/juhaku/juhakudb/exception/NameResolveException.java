@@ -23,10 +23,12 @@ SOFTWARE.
 */
 package db.juhaku.juhakudb.exception;
 
+import db.juhaku.juhakudb.core.NameResolver;
+
 /**
  * Created by juha on 16/12/15.
  *<p>This exception is thrown when name cannot be resolved via
- * {@link db.juhaku.juhakudb.core.NameResolver} for any reason.</p>
+ * {@link NameResolver} for any reason.</p>
  *
  * @author Juha Kukkonen
  *

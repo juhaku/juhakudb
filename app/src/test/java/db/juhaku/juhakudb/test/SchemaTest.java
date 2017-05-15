@@ -2,16 +2,16 @@ package db.juhaku.juhakudb.test;
 
 import org.junit.Test;
 
+import db.juhaku.juhakudb.core.DatabaseConfiguration;
+import db.juhaku.juhakudb.core.schema.Constraint;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.core.schema.Schema.DDL;
-import db.juhaku.juhakudb.core.DatabaseConfiguration;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.Filters;
 import db.juhaku.juhakudb.filter.JoinMode;
 import db.juhaku.juhakudb.filter.Order;
-import db.juhaku.juhakudb.filter.Predicate;
-import db.juhaku.juhakudb.filter.Predicate.Disjunction;
-import db.juhaku.juhakudb.filter.Predicates;
+import db.juhaku.juhakudb.filter.PredicateBuilder;
+import db.juhaku.juhakudb.filter.PredicateBuilder.JunctionBuilder;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.QueryProcessor;
 import db.juhaku.juhakudb.filter.Root;
@@ -23,7 +23,6 @@ import db.juhaku.juhakudb.test.bean.Person;
 import db.juhaku.juhakudb.test.bean.Teacher;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by juha on 22/12/15.
@@ -44,6 +43,9 @@ public class SchemaTest {
         for (Schema element : Schema.toSet(schema)) {
             System.out.println("schema: " + element.getName() + " " + element.getOrder());
             System.out.println("ddl:" + element.toDDL(DDL.CREATE));
+            for (Constraint ctx : element.getConstraints()) {
+                System.out.println("constraints: " + ctx.toString());
+            }
 //            for (Reference reference : element.getReferences()) {
 //                System.out.println(reference.toDDL());
 //            }
@@ -64,25 +66,19 @@ public class SchemaTest {
         Filters filters = new Filters();
         filters.add(new Filter<Person>() {
             @Override
-            public void filter(Root<Person> root, Predicates predicates) {
+            public void filter(Root<Person> root, PredicateBuilder builder) {
                 root.join("this.rooms", "r", JoinMode.LEFT_JOIN).join("r.teacher", "t", JoinMode.FULL_JOIN);
                 root.join("this.groups", "g", JoinMode.INNER_JOIN);
 
-                predicates.add(Predicate.in("this.name", "matti", "kimmo")).add(Predicate.not(Predicate.eq("name", "lauri")));
+                builder.in("this.name", "matti", "kimmo").not().eq("name", "lauri");
 
-//                predicate.in("p.name", "matti", "kimmo").not(predicate.eq("p.name", "lauri"));
+                JunctionBuilder or = builder.disjunction();
+                or.eq("t.name", "laura").eq("t.name", "minna");
 
-                Disjunction or = Predicate.disjunction();
-                or.add(Predicate.eq("t.name", "laura")).add(Predicate.eq("t.name", "minna"));
-                predicates.add(or);
+                builder.conjunction().between("t.id", 1, 3).not().isNull("t.name");
 
-                predicates.add(Predicate.conjunction().add(Predicate.between("t.id", 1, 3))
-                        .add(Predicate.not(Predicate.isNull("t.name"))));
-
-                predicates.sort(Order.ASC, "p.name");
-                predicates.setPageSize(20).setPage(1);
-
-//                and.between("t.id", 1, 3).not(predicates.isNull("t.name"));
+                builder.sort(Order.ASC, "p.name");
+                builder.setPageSize(20).setPage(1);
             }
         });
 
@@ -109,7 +105,7 @@ public class SchemaTest {
         Filters filters = new Filters();
         filters.add(new Filter<Teacher>() {
             @Override
-            public void filter(Root<Teacher> root, Predicates predicates) {
+            public void filter(Root<Teacher> root, PredicateBuilder builder) {
                 root.join("classRoom", "r", JoinMode.INNER_JOIN);
             }
         });
@@ -133,7 +129,7 @@ public class SchemaTest {
         Filters filters = new Filters();
         filters.add(new Filter<Group>() {
             @Override
-            public void filter(Root<Group> root, Predicates predicates) {
+            public void filter(Root<Group> root, PredicateBuilder builder) {
                 root.join("person", "p", JoinMode.LEFT_JOIN);
             }
         });
@@ -157,7 +153,7 @@ public class SchemaTest {
         Filters filters = new Filters();
         filters.add(new Filter<ClassRoom>() {
             @Override
-            public void filter(Root<ClassRoom> root, Predicates predicates) {
+            public void filter(Root<ClassRoom> root, PredicateBuilder builder) {
                 root.join("persons", "p", JoinMode.INNER_JOIN);
             }
         });
@@ -180,20 +176,20 @@ public class SchemaTest {
 
         Filters filters = new Filters(new Filter<ClassRoom>() {
             @Override
-            public void filter(Root<ClassRoom> root, Predicates predicates) {
+            public void filter(Root<ClassRoom> root, PredicateBuilder builder) {
                 root.join("persons", JoinMode.INNER_JOIN);
             }
         }, new Filter<ClassRoom>() {
             @Override
-            public void filter(Root<ClassRoom> root, Predicates predicates) {
+            public void filter(Root<ClassRoom> root, PredicateBuilder builder) {
                 root.join("this.teacher", "t", JoinMode.LEFT_JOIN);
 
-                predicates.add(Predicate.ge("id", 1));
+                builder.ge("id", 1);
             }
         }, new Filter<ClassRoom>() {
             @Override
-            public void filter(Root<ClassRoom> root, Predicates predicates) {
-                predicates.add(Predicate.eq("t.name", "tester"));
+            public void filter(Root<ClassRoom> root, PredicateBuilder builder) {
+                builder.eq("t.name", "tester");
             }
         });
 
@@ -215,14 +211,14 @@ public class SchemaTest {
 
         Filters filters = new Filters(new Filter<Person>() {
             @Override
-            public void filter(Root<Person> root, Predicates predicates) {
+            public void filter(Root<Person> root, PredicateBuilder builder) {
                 root.fetch("groups", JoinMode.INNER_JOIN);
                 root.fetch("rooms", "r", JoinMode.LEFT_JOIN);
             }
         }, new Filter<Person>() {
             @Override
-            public void filter(Root<Person> root, Predicates predicates) {
-                predicates.add(Predicate.eq("this.name", "tester"));
+            public void filter(Root<Person> root, PredicateBuilder builder) {
+                builder.eq("this.name", "tester");
             }
         });
 
@@ -245,9 +241,9 @@ public class SchemaTest {
         Filters filters = new Filters();
         filters.add(new Filter<ClassRoom>() {
             @Override
-            public void filter(Root<ClassRoom> root, Predicates predicates) {
+            public void filter(Root<ClassRoom> root, PredicateBuilder builder) {
                 root.join("persons", "p", JoinMode.INNER_JOIN);
-                predicates.setPage(2).setPageSize(10).sort(Order.DESC, "c.name", "c._id").sort(Order.ASC, "p._id");
+                builder.setPage(2).setPageSize(10).sort(Order.DESC, "c.name", "c._id").sort(Order.ASC, "p._id");
             }
         });
 

@@ -21,32 +21,40 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package db.juhaku.juhakudb.core;
+package db.juhaku.juhakudb.core.schema;
+
+import java.io.Serializable;
+
+import db.juhaku.juhakudb.util.StringUtils;
 
 /**
- * Created by juha on 11/05/16.
+ * Created by juha on 15/05/17.
  *
- *<p>Define cascading type for database actions such like store and delete.</p>
+ * <p>This class represents index or unique constraint for specified columns in specified table
+ * at database.</p>
  *
- * <p>Currently Cascade definition is not required at all. All the operations are cascading.</p>
+ * @author Juha Kukkonen
  *
- * @author juha
- *
- * @since 1.0.2
+ * @since 2.0.2-SNAPSHOT
  */
-@Deprecated
-public enum Cascade {
-    /**
-     * If cascade store is used over reference then referenced entity is also stored.
-     */
-    STORE,
-    /**
-     * If cascade delete is used over reference then referenced entity is also deleted.
-     */
-    DELETE,
-    /**
-     * If cascade all is used over reference then both store and delete actions are performed
-     * to referenced entities as well.
-     */
-    ALL
+public class Constraint implements Serializable {
+
+    private String name;
+    private boolean unique;
+    private String tableName;
+    private String[] columns;
+
+    public Constraint(String name, boolean unique, String tableName, String... columns) {
+        this.name = name;
+        this.unique = unique;
+        this.tableName = tableName;
+        this.columns = columns;
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder("CREATE ").append(unique ? "UNIQUE " : "").append("INDEX ")
+                .append(name).append(" ON ").append(tableName).append("(").append(StringUtils.arrayToString(columns))
+                .append(")").toString();
+    }
 }

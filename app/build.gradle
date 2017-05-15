@@ -53,7 +53,8 @@ dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
-    compile 'javax.persistence:persistence-api:1.0.2'
+//    compile 'javax.persistence:persistence-api:1.0.2'
+    compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final'
 }
 
 release {
@@ -318,6 +319,7 @@ void formatSinceJavaDocVersion(int state) {
 
 void addLicence() {
     String licence = new File("LICENSE").text
+    licence = "/**\n$licence*/\n"
 
     String source = android.sourceSets.main.java.srcDirs.collect { it }.toList().get(0)
     FileTree tree = fileTree(new File(source)) {
@@ -331,10 +333,10 @@ void addLicence() {
         String newContent
 
         if (!content.startsWith(licence)) {
-            newContent = "/**\n".concat(licence).concat("*/\n").concat(content)
+            newContent = "$licence$content"
         }
 
-        if (content != newContent) {
+        if (newContent != null && content != newContent) {
             file.write(newContent)
         }
     }

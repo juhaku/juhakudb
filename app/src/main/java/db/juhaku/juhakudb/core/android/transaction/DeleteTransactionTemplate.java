@@ -35,8 +35,7 @@ import db.juhaku.juhakudb.core.android.ResultSet;
 import db.juhaku.juhakudb.core.schema.Reference;
 import db.juhaku.juhakudb.core.schema.Schema;
 import db.juhaku.juhakudb.filter.Filter;
-import db.juhaku.juhakudb.filter.Predicate;
-import db.juhaku.juhakudb.filter.Predicates;
+import db.juhaku.juhakudb.filter.PredicateBuilder;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.Root;
 
@@ -68,8 +67,8 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
         for (final T item : items) {
             Query query = getProcessor().createWhere(null, new Filter() {
                 @Override
-                public void filter(Root root, Predicates predicates) {
-                    predicates.add(Predicate.eq(resolveIdColumn(getRootClass()), item.toString()));
+                public void filter(Root root, PredicateBuilder builder) {
+                    builder.eq(resolveIdColumn(getRootClass()), item.toString());
                 }
             });
             deleted += getDb().delete(tableName, query.getSql(), query.getArgs());
@@ -165,9 +164,9 @@ public class DeleteTransactionTemplate<T> extends TransactionTemplate {
     private int executeDelete(final String table, final Object[][] columnValues) {
         Query query = getProcessor().createWhere(null, new Filter() {
             @Override
-            public void filter(Root root, Predicates predicates) {
+            public void filter(Root root, PredicateBuilder builder) {
                 for (Object[] column : columnValues) {
-                    predicates.add(Predicate.eq(column[0].toString(), column[1]));
+                    builder.eq(column[0].toString(), column[1]);
                 }
             }
         });

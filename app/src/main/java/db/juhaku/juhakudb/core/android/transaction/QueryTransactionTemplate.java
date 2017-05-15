@@ -45,8 +45,7 @@ import db.juhaku.juhakudb.core.android.ResultTransformer;
 import db.juhaku.juhakudb.exception.MappingException;
 import db.juhaku.juhakudb.filter.Filter;
 import db.juhaku.juhakudb.filter.JoinMode;
-import db.juhaku.juhakudb.filter.Predicate;
-import db.juhaku.juhakudb.filter.Predicates;
+import db.juhaku.juhakudb.filter.PredicateBuilder;
 import db.juhaku.juhakudb.filter.Query;
 import db.juhaku.juhakudb.filter.QueryProcessor.Alias;
 import db.juhaku.juhakudb.filter.Root;
@@ -158,7 +157,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
 
                     Query primaryKeySubQuery = getProcessor().createQuery(type, new Filter() {
                         @Override
-                        public void filter(Root root, Predicates predicates) {
+                        public void filter(Root root, PredicateBuilder builder) {
                             String alias = Alias.forModel(rootClass);
                             Object id = ReflectionUtils.getIdFieldValue(entity);
 
@@ -166,8 +165,8 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                             root.join(getAssociatedRootClassFieldNameByType(type, rootClass),
                                     alias, JoinMode.INNER_JOIN);
 
-                            predicates.add(Predicate.eq(String.valueOf(alias)
-                                    .concat(".").concat(resolveIdColumn(rootClass)), id));
+                            builder.eq(String.valueOf(alias)
+                                    .concat(".").concat(resolveIdColumn(rootClass)), id);
                         }
                     });
 
@@ -186,11 +185,11 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
 
                         Query associatedSubQuery = getProcessor().createQuery(type, new Filter() {
                             @Override
-                            public void filter(Root root, Predicates predicates) {
+                            public void filter(Root root, PredicateBuilder builder) {
                                 String alias = Alias.forModel(type);
                                 Object id = ReflectionUtils.getFieldValue(fieldValue, ReflectionUtils.findIdField(fieldValue.getClass()));
 
-                                predicates.add(Predicate.eq(alias.concat(".").concat(resolveIdColumn(type)), id));
+                                builder.eq(alias.concat(".").concat(resolveIdColumn(type)), id);
                             }
                         });
                         query(associatedSubQuery, type, entity, field);
