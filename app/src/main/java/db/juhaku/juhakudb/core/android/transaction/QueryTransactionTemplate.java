@@ -27,6 +27,7 @@ import android.database.Cursor;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -195,8 +197,56 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
                         query(associatedSubQuery, type, entity, field);
                     }
                 }
+
+                // Cascade query for fetched elements.
+                if (fieldValue != null && type.isAnnotationPresent(Entity.class)) {
+
+                    // Check cascading for first element in the list as rest of element's are from same template.
+                    if (Collection.class.isAssignableFrom(fieldValue.getClass())) {
+
+                        Object next;
+                        if ((next = ((Collection) fieldValue).iterator().hasNext()
+                                ? ((Collection) fieldValue).iterator().next() : null) != null) {
+
+                            if (allowCascadingToFetchElements(next)) {
+                                cascadeQuery((List<Object>) fieldValue, type);
+                            }
+                        }
+
+                    } else if (allowCascadingToFetchElements(fieldValue)) {
+                        cascadeQuery(Arrays.asList(fieldValue), type);
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Check is cascade allowed to fetched entity. This is determined if at least 2 fields has value
+     * in the entity. Currently this is only way to know that because id for entity might be filled
+     * without it being fetched from database.
+     *
+     * @param entity Object entity to check whether cascading is allowed for it.
+     * @return Boolean value true if cascading is allowed for the entity; false otherwise.
+     *
+     * @since 2.1.1-SNAPSHOT
+     *
+     * @hide
+     */
+    private static <T> boolean allowCascadingToFetchElements(T entity) {
+        int hasValue = 0;
+        for (Field field : entity.getClass().getDeclaredFields()) {
+
+            Object value = ReflectionUtils.getFieldValue(field.getName(), entity);
+            if (value != null) {
+                hasValue++;
+                if (hasValue == 2) {
+                    break;
+                }
+            }
+        }
+
+        return hasValue == 2;
     }
 
     /**
