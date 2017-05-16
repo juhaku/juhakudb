@@ -385,7 +385,7 @@ Since 2.1.0 the old criteria api is being changed to new predicate builder crite
 you to write more robust queries as well as SQL predicates without mentioning the size of the code. 
 Since 2.1.0 you only need write half as much as previously with more expressive api.
 
-For example compare below the statements. Above one is how it is written currently and below you can 
+For example compare statements below. Above one is how it is written currently and below you can 
 find old substitute.
 ```java
 builder.in("this.name", "john", "kimmo").not().eq("name", "kim");
