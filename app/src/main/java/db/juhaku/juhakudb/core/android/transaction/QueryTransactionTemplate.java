@@ -229,7 +229,7 @@ public class QueryTransactionTemplate<T> extends TransactionTemplate {
      * @param entity Object entity to check whether cascading is allowed for it.
      * @return Boolean value true if cascading is allowed for the entity; false otherwise.
      *
-     * @since 2.1.1-SNAPSHOT
+     * @since 2.1.1
      *
      * @hide
      */
