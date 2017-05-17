@@ -53,7 +53,7 @@ public class Constraint implements Serializable {
 
     @Override
     public String toString() {
-        return new StringBuilder("CREATE ").append(unique ? "UNIQUE " : "").append("INDEX ")
+        return new StringBuilder("CREATE ").append(unique ? "UNIQUE " : "").append("INDEX IF NOT EXISTS ")
                 .append(name).append(" ON ").append(tableName).append("(").append(StringUtils.arrayToString(columns))
                 .append(")").toString();
     }

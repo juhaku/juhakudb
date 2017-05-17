@@ -62,7 +62,11 @@ public interface SimpleRepository<K, T> {
      * Stores given entity and returns it with populated database id if successful and entity is new.
      * Given entity must be annotated with {@link javax.persistence.Entity} annotation.
      *
-     * <p>Method will save a new one or update existing one if id is set. Store operation is cascading.</p>
+     * <p>Store operation uses replace on conflict algorithm when storing items. This means when
+     * primary key or unique constraint or other constraint has conflict the row will be replaced with
+     * provided data.</p>
+     *
+     * <p>Store operation is cascading.</p>
      *
      * @param object Object that must be database entity.
      * @return Stored instance of given object.
@@ -76,7 +80,11 @@ public interface SimpleRepository<K, T> {
      * entities are new. Entities provided must have {@link javax.persistence.Entity}
      * annotation.
      *
-     * <p>Method will save a new one or update existing one if id is set. Store operation is cascading.</p>
+     * <p>Store operation uses replace on conflict algorithm when storing items. This means when
+     * primary key or unique constraint or other constraint has conflict the row will be replaced with
+     * provided data.</p>
+     *
+     * <p>Store operation is cascading.</p>
      *
      * @param objects
      * @return List of stored instances of given entities.

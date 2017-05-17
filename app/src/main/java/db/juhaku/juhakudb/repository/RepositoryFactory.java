@@ -34,6 +34,7 @@ import db.juhaku.juhakudb.annotation.Repository.NoRepository;
 import db.juhaku.juhakudb.core.android.EntityManager;
 import db.juhaku.juhakudb.repository.android.SimpleAndroidRepository;
 import db.juhaku.juhakudb.util.ReflectionUtils;
+import db.juhaku.juhakudb.util.StringUtils;
 
 /**
  * Created by juha on 18/04/17.
@@ -183,7 +184,8 @@ public class RepositoryFactory {
                 }
 
                 // Add some trace logging if enabled.
-                Log.v(getClass().getName(), "Executing method: " + method.getName() + " with args: " + args + " in: " + interf);
+                Log.v(getClass().getName(), "Executing method: " + method.getName() + " with args: "
+                        + (args != null ? StringUtils.arrayToString(args) : null) + " in: " + interf);
 
                 return repositoryMethod.invoke(simpleAndroidRepository, args);
             }
