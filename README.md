@@ -1,4 +1,4 @@
-# JuhakuDB current release: 2.1.1
+# JuhakuDB current release: 2.1.2
 Spring DATA like Android ORM Library for SQLite dabaseses
 
 ## Introduction
