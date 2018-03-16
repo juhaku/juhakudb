@@ -17,7 +17,7 @@ repositories {
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion '25.0.3'
 
     defaultConfig {
         minSdkVersion 16
@@ -49,11 +49,11 @@ android {
 }
 
 dependencies {
-//    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
+    //    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
     //compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
-//    compile 'javax.persistence:persistence-api:1.0.2'
+    //    compile 'javax.persistence:persistence-api:1.0.2'
     compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final'
 }
 
