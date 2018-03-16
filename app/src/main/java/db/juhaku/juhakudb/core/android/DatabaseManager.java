@@ -147,7 +147,7 @@ public class DatabaseManager {
      *
      * @param context Android context to look for sources.
      * @return Array of dex files.
-     * @since 2.1.2-SNAPSHOT
+     * @since 2.1.2
      */
     private DexFile[] getSourceDexFiles(Context context) {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
@@ -175,7 +175,7 @@ public class DatabaseManager {
      *
      * @param paths String array of of source paths to create dex files from.
      * @return Array of dex files.
-     * @since 2.1.2-SNAPSHOT
+     * @since 2.1.2
      */
     private DexFile[] getSources(String[] paths) {
         DexFile[] dexFiles = new DexFile[paths.length];
