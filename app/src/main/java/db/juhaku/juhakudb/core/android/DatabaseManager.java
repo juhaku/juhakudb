@@ -152,7 +152,7 @@ public class DatabaseManager {
     private DexFile[] getSourceDexFiles(Context context) {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
             boolean hasSplitSources = context.getApplicationInfo().splitSourceDirs != null;
-            String[] paths = hasSplitSources ? new String[context.getApplicationInfo().splitSourceDirs.length] : new String[1];
+            String[] paths = hasSplitSources ? new String[context.getApplicationInfo().splitSourceDirs.length + 1] : new String[1];
 
             // If application has split sources add them to paths
             if (hasSplitSources) {
@@ -186,7 +186,8 @@ public class DatabaseManager {
             }
 
         } catch (IOException e) {
-            Log.e(getClass().getName(), "Could not initialize classes from ", e);
+            Log.e(getClass().getName(), "Could not create dex file from paths: " + paths
+                    + ", returning empty array, cannot initialize repositories nor entities: " + e.getMessage(), e);
             dexFiles = new DexFile[0];
         }
 
