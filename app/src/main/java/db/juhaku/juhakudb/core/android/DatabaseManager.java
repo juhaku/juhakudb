@@ -171,7 +171,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Get array of dex filex from given source paths.
+     * Get array of dex files from given source paths.
      *
      * @param paths String array of of source paths to create dex files from.
      * @return Array of dex files.
