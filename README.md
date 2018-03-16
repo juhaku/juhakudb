@@ -37,7 +37,7 @@ Currently available from central repository.
 <dependency>
     <groupId>io.github.juhaku</groupId>
     <artifactId>juhaku-db</artifactId>
-    <version>2.1.1</version>
+    <version>2.1.2</version>
     <type>aar</type>
 </dependency>
 ```
@@ -45,7 +45,7 @@ Currently available from central repository.
 ### Gradle
 
 ```java
-    compile ('io.github.juhaku:juhaku-db:2.1.1@aar') {
+    compile ('io.github.juhaku:juhaku-db:2.1.2@aar') {
         transitive = true
     }
 ```
